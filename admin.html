@@ -1,0 +1,2417 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
+<title>Configuración de visualización — SSDR</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js">
+</script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+</script>
+<style>
+:root{
+--blue:#0F69B4;
+--navy:#0F69B4;
+--bg:#F4F7FA;
+--line:#D7DEE5}
+*{
+box-sizing:border-box}
+body{
+margin:0;
+background:var(--bg);
+font:14px Aptos,'Segoe UI',Arial,sans-serif;
+color:#1C244B}
+header{
+background:var(--navy);
+color:#fff;
+padding:22px 28px}
+header h1{
+margin:0 0 5px;
+font-size:22px}
+header p{
+margin:0;
+color:#D9E7F2}
+.wrap{
+max-width:1180px;
+margin:auto;
+padding:22px}
+.tabs{
+display:flex;
+gap:8px;
+flex-wrap:wrap;
+margin-bottom:18px}
+.tab,button{
+border:1px solid var(--blue);
+border-radius:5px;
+padding:9px 14px;
+background:#fff;
+color:var(--blue);
+cursor:pointer;
+font:inherit}
+.tab.active,button.primary{
+background:var(--blue);
+color:#fff}
+.panel{
+display:none;
+background:#fff;
+border:1px solid var(--line);
+border-radius:8px;
+padding:20px}
+.panel.active{
+display:block}
+.grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:18px}
+.field{
+margin:12px 0}
+.assignment-label{
+display:flex!important;
+align-items:center;
+gap:7px}
+.help-tip{
+display:inline-grid;
+place-items:center;
+width:17px;
+height:17px;
+border-radius:50%;
+background:#E7F1F8;
+color:#0F69B4;
+font-size:11px;
+font-weight:700;
+cursor:help}
+.custom-map-row{
+display:grid;
+grid-template-columns:1fr 1fr auto;
+gap:8px;
+align-items:end;
+padding:10px;
+margin:8px 0;
+border:1px solid var(--line);
+border-radius:6px;
+background:#F8FAFC}
+.custom-map-row label{
+display:block;
+font-size:12px;
+color:#56636F}
+.custom-map-row input,.custom-map-row select{
+margin-top:5px}
+.table-wrap table{
+width:max-content;
+min-width:100%}
+.table-wrap th,.table-wrap td{
+white-space:nowrap}
+.data-layout{
+grid-template-columns:minmax(0,1fr)!important}
+.data-layout>div{
+min-width:0}
+.data-layout>div:nth-child(2){
+grid-row:1}
+#mapping{
+display:grid;
+grid-template-columns:repeat(3,minmax(0,1fr));
+gap:0 14px}
+#mapping>.field{
+min-width:0}
+#datos .table-wrap{
+max-width:100%}
+@media(max-width:1000px){
+#mapping{
+grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:560px){
+#mapping{
+grid-template-columns:1fr}
+}
+@media(max-width:700px){
+.custom-map-row{
+grid-template-columns:1fr}
+.grid{
+grid-template-columns:1fr}
+}
+.field label{
+display:block;
+font-size:12px;
+color:#56636F;
+margin-bottom:5px}
+input,select{
+width:100%;
+padding:9px;
+border:1px solid var(--line);
+border-radius:5px;
+font:inherit}
+.chips{
+display:flex;
+gap:7px;
+flex-wrap:wrap}
+.chip{
+display:flex;
+gap:6px;
+align-items:center;
+padding:7px 10px;
+background:#F4F7FA;
+border:1px solid var(--line);
+border-radius:5px}
+.status{
+margin:12px 0;
+color:#56636F}
+.table-wrap{
+max-height:320px;
+min-width:0;
+width:100%;
+overflow:auto;
+overscroll-behavior-x:contain;
+border:1px solid var(--line)}
+table{
+border-collapse:collapse;
+width:100%;
+font-size:12px}
+th,td{
+padding:7px;
+border-bottom:1px solid var(--line);
+text-align:left}
+th{
+background:#0F69B4;
+color:#fff;
+position:sticky;
+top:0}
+.map-preview{
+margin:14px 0;
+padding:12px;
+border:1px solid var(--line);
+border-radius:6px;
+background:#fff}
+.map-preview h3{
+margin:0 0 10px}
+#adminMap{
+height:260px;
+border:1px solid var(--line);
+border-radius:5px}
+.preview{
+border:1px solid var(--line);
+border-radius:8px;
+background:#fff;
+min-height:210px;
+padding:18px}
+.swatch{
+width:30px;
+height:30px;
+border:1px solid var(--line);
+vertical-align:middle}
+.danger{
+color:#B91B1B}
+.filter-list{
+display:grid;
+gap:8px}
+.filter-item{
+display:grid;
+grid-template-columns:auto minmax(130px,1fr) minmax(200px,1fr) auto;
+gap:7px;
+align-items:center;
+padding:8px;
+background:#F4F7FA;
+border:1px solid var(--line);
+border-radius:6px}
+.filter-item small,.filter-item .filter-description{
+grid-column:2/4}
+.filter-item .filter-kind{
+color:#56636F;
+font-size:12px}
+.filter-item .filter-description{
+width:100%}
+.filter-item input,.filter-item select{
+margin:0}
+.drag-handle{
+cursor:grab;
+color:#64748B;
+padding:5px}
+.step-nav{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:12px;
+margin:16px 0;
+padding:14px;
+background:#fff;
+border:1px solid var(--line);
+border-radius:8px}
+.step-nav span{
+color:#56636F;
+font-weight:600}
+.step-nav button:disabled{
+opacity:.45;
+cursor:not-allowed}
+.palette-reference{
+padding:12px;
+border:1px solid var(--line);
+border-radius:6px;
+background:#fff}
+.palette-reference>div{
+display:flex;
+gap:12px;
+flex-wrap:wrap}
+.palette-swatches{
+display:grid!important;
+grid-template-columns:1fr 1fr;
+gap:8px!important}
+.palette-swatches span{
+display:grid;
+grid-template-columns:20px 1fr auto;
+align-items:center;
+gap:6px;
+font-size:12px}
+.palette-swatches i{
+display:inline-block;
+width:18px;
+height:18px;
+border:1px solid #CBD5E1;
+border-radius:3px}
+.palette-swatches code{
+font-family:ui-monospace,Consolas,monospace;
+color:#334155}
+.palette-reference span{
+display:flex;
+align-items:center;
+gap:5px;
+font-size:12px}
+.palette-reference i{
+display:inline-block;
+width:18px;
+height:18px;
+border:1px solid #CBD5E1;
+border-radius:3px}
+.palette-reference small{
+display:block;
+margin-top:7px;
+color:#56636F}
+.color-control label{
+display:flex;
+justify-content:space-between;
+align-items:center;
+font-weight:600}
+.color-control label span{
+font-family:ui-monospace,Consolas,monospace;
+color:#334155}
+.color-row{
+display:flex;
+align-items:center;
+gap:10px}
+.color-row input[type=color]{
+width:48px;
+height:38px;
+padding:3px;
+cursor:pointer}
+.color-sample{
+width:58px;
+height:28px;
+border:1px solid #CBD5E1;
+border-radius:4px;
+display:inline-block}
+.logo-required{
+display:flex;
+align-items:center;
+gap:12px;
+border:1px solid var(--line);
+background:#F8FAFC;
+border-radius:6px;
+padding:12px}
+.logo-required img{
+width:56px;
+height:56px;
+object-fit:contain}
+.design-sample{
+border:1px solid var(--line);
+border-radius:7px;
+overflow:hidden;
+background:#F4F7FA}
+.design-sample-head{
+display:flex;
+align-items:center;
+gap:12px;
+padding:15px;
+color:#fff;
+min-height:92px}
+.design-sample-head img{
+width:58px;
+height:58px;
+object-fit:contain;
+background:#fff;
+border-radius:4px;
+padding:2px}
+.design-sample-head strong,.design-sample-head small{
+display:block}
+.design-sample-head strong{
+font-size:17px}
+.design-sample-head small{
+margin-top:4px}
+.design-sample-body{
+padding:15px;
+display:flex;
+align-items:center;
+gap:12px;
+flex-wrap:wrap}
+.design-sample-body button{
+background:#0F69B4;
+color:white}
+.design-sample-body span{
+font-size:12px;
+color:#56636F}
+#sampleKpi{
+background:#fff;
+border:1px solid var(--line);
+padding:9px 12px;
+border-radius:5px;
+color:#1C244B;
+font-size:19px;
+font-weight:700}
+#sampleKpi small{
+font-size:11px;
+font-weight:400}
+.preview-filter-section{
+margin:16px 0}
+.preview-filter-section>h3{
+margin:0 0 10px;
+font-size:15px;
+color:#1C244B}
+.preview-filter-grid{
+display:grid;
+gap:12px;
+align-items:start}
+.preview-filter-card{
+display:flex;
+flex-direction:column;
+align-items:stretch;
+gap:8px;
+min-width:0;
+padding:13px;
+background:#fff;
+border:1px solid #D7DEE5;
+border-radius:7px;
+box-shadow:0 1px 3px rgba(15,35,55,.06);
+color:#1C244B}
+.preview-filter-title{
+display:block;
+font-size:13px;
+line-height:1.35;
+font-weight:700;
+overflow-wrap:anywhere}
+.preview-filter-help{
+margin:0;
+color:#64748B;
+font-size:12px;
+line-height:1.45;
+min-height:34px}
+.preview-filter-input,.preview-choice,.preview-date>select{
+width:100%;
+min-width:0;
+padding:9px 10px;
+border:1px solid #CBD5E1;
+border-radius:5px;
+background:#fff;
+color:#1C244B;
+font:inherit}
+.preview-choice{
+padding:0}
+.preview-choice summary{
+padding:9px 10px;
+cursor:pointer;
+list-style:none}
+.preview-choice summary::-webkit-details-marker{
+display:none}
+.preview-choice summary:after{
+content:"▾";
+float:right;
+color:#64748B}
+.preview-choice[open] summary{
+border-bottom:1px solid #E2E8F0}
+.preview-choice-list{
+display:grid;
+gap:5px;
+max-height:120px;
+overflow:auto;
+padding:8px 10px}
+.preview-choice-list label{
+display:flex;
+align-items:center;
+gap:8px;
+font-size:12px;
+line-height:1.35}
+.preview-choice-list input{
+flex:0 0 auto;
+width:15px;
+height:15px;
+margin:0}
+.preview-range{
+display:grid;
+gap:12px;
+padding:10px;
+border:1px solid #E2E8F0;
+border-radius:5px;
+background:#F8FAFC}
+.preview-range-row{
+display:grid;
+gap:3px}
+.preview-range-values{
+display:flex;
+align-items:center;
+justify-content:space-between;
+color:#64748B;
+font-size:11px}
+.preview-range-values strong{
+color:#1C244B;
+font-size:12px;
+font-variant-numeric:tabular-nums}
+.preview-range-row input{
+width:100%;
+margin:0}
+.preview-date{
+display:grid;
+gap:9px}
+.preview-date-range{
+display:grid;
+grid-template-columns:repeat(2,minmax(0,1fr));
+gap:8px}
+.preview-date-range label{
+display:grid;
+gap:4px;
+min-width:0;
+color:#64748B;
+font-size:11px}
+.preview-date-range input{
+width:100%;
+min-width:0;
+padding:8px 6px;
+font-size:12px}
+.preview-filter-card input[type=search]{
+width:100%;
+padding:9px 10px;
+border:1px solid #CBD5E1;
+border-radius:5px}
+.preview-filter-card input:disabled,.preview-filter-card select:disabled{
+opacity:1;
+color:#334155;
+background:#fff}
+@media(max-width:900px){
+.preview-filter-grid{
+grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+@media(max-width:560px){
+.preview-filter-grid{
+grid-template-columns:1fr!important}
+.preview-date-range{
+grid-template-columns:1fr}
+}
+.inline-check{
+display:flex;
+align-items:center;
+gap:9px;
+padding:12px;
+border:1px solid #D7DEE5;
+border-radius:6px;
+background:#F8FAFC;
+font-weight:600}
+.inline-check input{
+width:17px;
+height:17px;
+margin:0}
+.viz-stage{
+display:grid;
+grid-template-columns:repeat(2,minmax(0,1fr));
+gap:12px;
+align-items:start}
+.viz-card{
+min-width:0;
+padding:14px;
+background:#fff;
+color:#1C244B;
+border:1px solid #D7DEE5;
+border-radius:7px;
+box-shadow:0 1px 3px rgba(15,35,55,.06)}
+.viz-card.preview-sortable{
+position:relative;
+cursor:grab;
+padding-top:32px;
+transition:opacity .15s ease,outline-color .15s ease,box-shadow .15s ease}
+.viz-card.preview-sortable:active{cursor:grabbing}
+.viz-card.preview-sortable:before{
+content:"⠿ Arrastra para mover";
+position:absolute;
+top:8px;
+right:10px;
+color:#64748B;
+font-size:11px;
+font-weight:500;
+pointer-events:none}
+.viz-card.preview-sortable.is-dragging{opacity:.4}
+.viz-card.preview-sortable.is-drop-target{outline:2px dashed #0F69B4;outline-offset:2px;box-shadow:0 0 0 4px rgba(15,105,180,.1)}
+.preview-sort-help{margin:8px 0 12px;color:#64748B;font-size:12px}
+.viz-card h3{
+margin:0 0 12px;
+font-size:15px}
+.viz-kpi{
+display:grid;
+gap:5px;
+border-top:4px solid #0F69B4}
+.viz-kpi small,.viz-kpi span{
+color:#64748B}
+.viz-kpi strong{
+font-size:28px;
+font-variant-numeric:tabular-nums}
+.viz-bars{
+display:grid;
+gap:9px}
+.viz-bar-row{
+display:grid;
+grid-template-columns:minmax(75px,1fr) 2fr 28px;
+gap:7px;
+align-items:center;
+font-size:12px}
+.viz-bar-row span{
+overflow:hidden;
+text-overflow:ellipsis}
+.viz-bar-row i{
+display:block;
+height:11px;
+border-radius:6px}
+.viz-record{
+display:flex;
+justify-content:space-between;
+gap:8px;
+padding:8px;
+border-bottom:1px solid #E2E8F0}
+.viz-map{
+grid-column:1/-1}
+.viz-map-placeholder{
+display:grid;
+place-items:center;
+height:230px;
+background:#EEF4F7;
+border-radius:5px;
+color:#64748B}
+#adminMap{
+height:260px;
+border-radius:5px}
+.viz-map small{
+display:block;
+margin-top:8px;
+color:#64748B}
+.preview-identity{
+display:flex;
+align-items:center;
+gap:14px;
+padding:14px;
+color:#fff;
+border-bottom:4px solid}
+.preview-identity img{
+max-width:80px;
+max-height:60px;
+object-fit:contain}
+.preview-identity h2{
+margin:0}
+.preview-identity p{
+margin:5px 0}
+.preview-main{
+padding:14px}
+.preview-summary{
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:10px;
+margin:12px 0}
+.map-output{
+grid-column:1/-1}
+.institutional-banner{
+display:block;
+width:100%;
+height:auto;
+object-fit:contain}
+#sampleBanner{
+padding:0 12px;
+background:#F1F5F9}
+@media(max-width:700px){
+.viz-stage{
+grid-template-columns:1fr}
+.viz-map{
+grid-column:auto}
+.preview-summary{
+align-items:flex-start;
+flex-direction:column}
+}
+.map-coordinate-selectors{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px}
+.map-coordinate-selectors .field{
+margin:8px 0}
+.viz-color-control{
+display:flex;
+align-items:center;
+gap:10px;
+padding:7px 10px;
+border:1px solid #D7DEE5;
+border-radius:6px;
+background:#F8FAFC}
+.viz-color-control input[type=color]{
+width:42px;
+height:34px;
+padding:2px;
+flex:0 0 auto;
+cursor:pointer}
+.viz-color-control span{
+font-size:12px;
+color:#64748B}
+.viz-draft{
+margin:14px 0;
+padding:14px;
+border:1px dashed #93A4B3;
+border-radius:7px;
+background:#F8FAFC}
+.viz-draft>strong{
+display:block;
+margin-bottom:9px;
+font-size:13px;
+color:#334155}
+.category-colors{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+gap:4px 16px}
+.category-colors .color-row{
+justify-content:space-between}
+.category-colors input[type=color]{
+width:48px;
+height:34px;
+padding:2px;
+cursor:pointer}
+@media(max-width:650px){
+.map-coordinate-selectors{
+grid-template-columns:1fr}
+}
+.viz-draft .viz-card{
+margin-top:8px}
+.viz-table-fields{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+gap:7px;
+max-height:190px;
+overflow:auto;
+padding:10px;
+border:1px solid #D7DEE5;
+border-radius:6px;
+background:#F8FAFC}
+.viz-table-field-row{
+display:flex;
+align-items:center;
+gap:8px;
+font-size:13px}
+.viz-table-field-row input{
+width:auto}
+.viz-bar-group{
+margin:8px 0}
+.viz-bar-series{
+display:flex;
+flex-wrap:wrap;
+gap:4px 12px;
+padding-left:12px;
+font-size:11px;
+color:#475569}
+.viz-bar-series span{
+display:inline-flex;
+align-items:center;
+gap:4px}
+.viz-bar-series i{
+width:9px;
+height:9px;
+border-radius:50%;
+display:inline-block}
+.draft-note{
+display:block;
+margin-top:9px;
+color:#64748B;
+font-size:12px;
+line-height:1.45}
+.viz-donut{
+width:156px;
+height:156px;
+margin:12px auto;
+border-radius:50%;
+box-shadow:inset 0 0 0 1px #fff}
+.viz-legend{
+display:grid;
+gap:5px;
+max-height:170px;
+overflow:auto}
+.viz-legend>div{
+display:grid;
+grid-template-columns:13px 1fr auto;
+gap:7px;
+align-items:center;
+font-size:12px}
+.viz-legend i{
+width:11px;
+height:11px;
+border-radius:50%}
+.viz-legend span{
+overflow-wrap:anywhere}
+.viz-bar-group .viz-row{
+margin-bottom:2px}
+.map-coordinate-selectors{
+align-items:start}
+.inline-check{
+margin:8px 0}
+.category-colors .color-row input[type=color]{
+background:#fff}
+.export-options-panel{
+margin:0 0 18px;
+padding:14px 16px;
+border:2px solid #0F69B4;
+border-left:6px solid #0F69B4;
+border-radius:7px;
+background:#EFF6FC}
+.export-options-panel h3{
+margin:0 0 5px;
+color:#0F4678}
+.export-options-panel p{
+margin:0 0 8px;
+color:#475569;
+font-size:12px}
+.export-options-panel .field{
+margin:0;
+max-width:520px}
+.export-options-panel label{
+font-weight:700}
+</style>
+</head>
+<body>
+<header>
+<h1>Administrador del visor</h1>
+<p>Departamento de Estudios y Planificación Sanitaria · Servicio de Salud Reloncaví</p>
+</header>
+<main class="wrap">
+<div class="tabs">
+<button class="tab active" data-tab="datos">1. Datos</button>
+<button class="tab" data-tab="filtros">2. Filtros</button>
+<button class="tab" data-tab="diseno">3. Diseño</button>
+<button class="tab" data-tab="visualizaciones">4. Visualizaciones</button>
+<button class="tab" data-tab="vista">5. Vista previa</button>
+<button id="saveBtn">Guardar configuración</button>
+<button id="loadBtn">Cargar configuración</button>
+<input id="configFile" type="file" accept=".json,application/json" hidden>
+</div>
+<section id="datos" class="panel active">
+<h2>Cargar datos</h2>
+<input id="file" type="file" accept=".xlsx,.xls,.csv">
+<div class="field">
+<label>Hoja del archivo</label>
+<select id="sheetSelect" disabled>
+<option>Primero carga un archivo</option>
+</select>
+</div>
+<div id="status" class="status">Aún no has cargado un archivo.</div>
+<div id="quality" class="chips">
+</div>
+<div class="grid data-layout">
+<div>
+<h3>Asignación de campos</h3>
+<p class="status">Puedes asignar varias columnas; los campos sin uso se omiten.</p>
+<div id="mapping">
+</div>
+<h3>Asignaciones personalizadas</h3>
+<p class="status">Crea campos para variables nuevas o espec&iacute;ficas del archivo.</p>
+<div id="customMapping">
+</div>
+<button type="button" id="addCustomMapping">Agregar asignaci&oacute;n</button>
+</div>
+<div>
+<h3>Vista rápida</h3>
+<p class="status">Se muestran las primeras 12 filas con todas las columnas; desplázate horizontalmente para revisarlas.</p>
+<div class="table-wrap">
+<table>
+<thead id="thead">
+</thead>
+<tbody id="tbody">
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</section>
+<section id="filtros" class="panel">
+<h2>Filtros del visor</h2>
+<p>Selecciona las columnas que quieres ofrecer como filtros y define c&#243;mo se distribuir&#225;n en el visor.</p>
+<div class="field layout-control">
+<label for="filterLayout">Distribuci&#243;n de filtros</label>
+<select id="filterLayout">
+<option value="auto">Autom&#225;tico adaptable</option>
+<option value="1">1 filtro por fila</option>
+<option value="2">2 filtros por fila</option>
+<option value="3">3 filtros por fila (recomendado)</option>
+<option value="4">4 filtros por fila</option>
+</select>
+<small>En pantallas estrechas, la cantidad de columnas se reduce para mantener los controles legibles.</small>
+</div>
+<div class="grid">
+<div>
+<div class="field">
+<label>Columna que filtrará</label>
+<select id="filterField">
+<option value="">Carga datos primero</option>
+</select>
+</div>
+<div class="field">
+<label>Nombre que verá quien use el visor</label>
+<input id="filterLabel" placeholder="Ej. Provincia">
+</div>
+<div class="field">
+<label>Control del filtro</label>
+<select id="filterControl">
+<option value="single">Lista interactiva (una opci&oacute;n)</option>
+<option value="multi">Lista interactiva (varias opciones)</option>
+<option value="search">B&uacute;squeda de texto</option>
+<option value="range">Rango num&eacute;rico (deslizadores)</option>
+<option value="date">Fecha o per&iacute;odo</option>
+</select>
+<small id="filterControlHelp" class="status">Elige el control adecuado al tipo de dato; puedes cambiar la sugerencia.</small>
+<div class="field">
+<label for="filterHelp">Explicaci&oacute;n breve para quien use el filtro (opcional)</label>
+<input id="filterHelp" placeholder="Ej. Elige una o varias opciones para acotar los resultados">
+</div>
+</div>
+<button id="addFilter" class="primary">Agregar filtro</button>
+</div>
+<div>
+<h3>Así quedarán los filtros</h3>
+<div id="filterList" class="filter-list">
+</div>
+<p class="status">Arrastra ☰ para cambiar el orden. Puedes editar el nombre o quitar cada filtro.</p>
+</div>
+</div>
+</section>
+<section id="diseno" class="panel">
+<h2>Dise&#241;o del visor</h2>
+<p>Configura la identidad visual. El logotipo y la franja institucional son obligatorios; mapa, indicadores y gr&aacute;ficos se administran en Visualizaciones.</p>
+<div class="grid">
+<div>
+<div class="field">
+<label for="viewTitle">T&#237;tulo principal</label>
+<input id="viewTitle" value="Visor de datos">
+<small>Texto principal que aparecer&#225; junto al logo.</small>
+</div>
+<div class="field">
+<label for="viewSubtitle">Subt&#237;tulo</label>
+<input id="viewSubtitle" value="Configuraci&oacute;n general">
+<small>Por ejemplo: nombre del piloto, regi&#243;n o periodo.</small>
+</div>
+<div class="field">
+<label for="presentationPalette">Paleta institucional de presentaci&#243;n</label>
+<select id="presentationPalette">
+<option value="gobierno">A color (azul y rojo institucionales)</option>
+<option value="mono">Monocroma (grises institucionales)</option>
+<option value="negativa">Contraste (azul marino y fondo claro)</option>
+<option value="marino">Azul marino (sobre blanco)</option>
+</select>
+<small>Opciones tomadas de las tres aplicaciones que aparecen en el kit RGB del ZIP. No se admiten colores personalizados para la presentaci&#243;n.</small>
+</div>
+<div class="field palette-reference">
+<label>Colores aplicados</label>
+<div class="palette-swatches">
+<span>
+<i id="headerSwatch">
+</i>Encabezado <code id="headerHex">
+</code>
+</span>
+<span>
+<i id="primarySwatch">
+</i>Primario <code id="primaryHex">
+</code>
+</span>
+<span>
+<i id="backgroundSwatch">
+</i>Fondo <code id="backgroundHex">
+</code>
+</span>
+<span>
+<i id="accentSwatch">
+</i>Acento <code id="accentHex">
+</code>
+</span>
+</div>
+</div>
+<div class="field">
+<label for="logoPosition">Posici&#243;n del logo institucional</label>
+<select id="logoPosition">
+<option value="left">A la izquierda del t&#237;tulo</option>
+<option value="right">A la derecha del t&#237;tulo</option>
+<option value="top">Sobre el t&#237;tulo</option>
+</select>
+</div>
+<div class="field">
+<label>Logo institucional obligatorio</label>
+<div id="logoRequired" class="logo-required">
+<img id="mandatoryLogoPreview" alt="Logo institucional del Servicio de Salud Reloncav?">
+<span>
+<b>Logo institucional incluido</b>
+<br>Se mostrar&#225; siempre en el visor generado.</span>
+</div>
+<small>El logo institucional no se puede quitar ni reemplazar desde esta pantalla.</small>
+</div>
+</div>
+<div>
+<h3>Ejemplo en vivo</h3>
+<div id="designSample" class="design-sample">
+<img id="sampleBanner" class="institutional-banner" alt="Gobierno de Chile - Trabajando para usted">
+<div class="design-sample-head" id="designSampleHead">
+<img id="previewLogo" src="" alt="Logo institucional">
+<div>
+<strong id="sampleTitle">Visor de datos</strong>
+<small id="sampleSubtitle">Configuraci&oacute;n general</small>
+</div>
+</div>
+<div class="design-sample-body">
+<button type="button" id="sampleButton">Bot&#243;n de ejemplo</button>
+<span id="sampleKpi">300 <small>registros</small>
+</span>
+<span>Este bloque muestra c&#243;mo se ver&#225; el fondo.</span>
+</div>
+</div>
+<div class="field">
+<label for="bannerPosition">Posici&oacute;n de la franja &laquo;Trabajando para usted&raquo;</label>
+<select id="bannerPosition">
+<option value="below">Debajo del encabezado</option>
+<option value="above">Sobre el encabezado</option>
+</select>
+<small>La franja institucional se incluir&aacute; siempre en el visor.</small>
+</div>
+</div>
+</div>
+</section>
+<section id="visualizaciones" class="panel">
+<h2>Visualizaciones</h2>
+<p>Agrega los componentes del visor. Cada KPI, tarjeta o gr&aacute;fico usa campos del archivo cargado; el mapa requiere coordenadas.</p>
+<div class="grid">
+<div>
+<section class="export-options-panel">
+<h3>Descargas del visor</h3>
+<p>Elige qu&eacute; formatos podr&aacute;n descargar las personas que consulten el visor.</p>
+<div class="field">
+<label for="exportFormat">Descargas disponibles</label>
+<select id="exportFormat">
+<option value="xlsx">Libro de Excel (.xlsx)</option>
+<option value="csv">CSV para Excel (separado por punto y coma)</option>
+<option value="both">Excel y CSV</option>
+<option value="none">Sin descarga</option>
+</select>
+</div>
+</section>
+<label class="inline-check">
+<input id="showMap" type="checkbox" disabled> Incluir mapa de registros</label>
+<div class="map-coordinate-selectors">
+<div class="field">
+<label for="mapLat">Columna de latitud</label>
+<select id="mapLat">
+<option value="">Selecciona latitud</option>
+</select>
+</div>
+<div class="field">
+<label for="mapLon">Columna de longitud</label>
+<select id="mapLon">
+<option value="">Selecciona longitud</option>
+</select>
+</div>
+</div>
+<button id="confirmMapColumns" type="button">Confirmar coordenadas</button>
+<p id="mapCoordinateStatus" class="status">Selecciona las columnas de latitud y longitud y confirma antes de mostrar el mapa.</p>
+<div class="grid map-layout-controls">
+<div class="field">
+<label for="mapWidth">Ancho del mapa</label>
+<select id="mapWidth">
+<option value="full">Ancho completo</option>
+<option value="half">Media fila</option>
+</select>
+</div>
+<div class="field">
+<label for="mapHeight">Alto del mapa</label>
+<select id="mapHeight">
+<option value="320">Compacto &middot; 320 px</option>
+<option value="440">Mediano &middot; 440 px</option>
+<option value="560">Amplio &middot; 560 px</option>
+</select>
+</div>
+</div>
+<hr>
+<h3>Agregar visualizaci&oacute;n</h3>
+<div class="field">
+<label for="vizKind">Tipo de visualizaci&oacute;n</label>
+<select id="vizKind">
+<option value="kpi">Indicador (KPI)</option>
+<option value="cards">Tarjetas de registros</option>
+<option value="bar">Gr&aacute;fico de barras</option>
+<option value="donut">Gr&aacute;fico circular</option>
+<option value="table">Tabla</option>
+</select>
+</div>
+<div class="field">
+<label for="vizTitle">T&iacute;tulo</label>
+<input id="vizTitle" placeholder="Ej. Registros por estado">
+</div>
+<div class="field" id="vizFieldWrap">
+<label for="vizField">Campo que se medir&aacute;</label>
+<select id="vizField"><option value="">Selecciona una columna</option></select>
+</div>
+<div class="field" id="vizAggregateWrap">
+<label for="vizAggregate">C&aacute;lculo</label>
+<select id="vizAggregate">
+<option value="count">Contar registros</option>
+<option value="sum">Sumar valores num&eacute;ricos</option>
+<option value="average">Promedio</option>
+</select>
+<small id="vizMetricHelp">Elige qu&eacute; valor se calcular&aacute;.</small>
+</div>
+<div class="field" id="vizCategoryWrap">
+<label for="vizCategory">Categor&iacute;a principal</label>
+<select id="vizCategory"><option value="">Selecciona una columna</option></select>
+<small>Este campo define las categor&iacute;as del gr&aacute;fico.</small>
+</div>
+<div class="field" id="vizBreakdownWrap">
+<label for="vizBreakdown">Desglosar por (opcional)</label>
+<select id="vizBreakdown"><option value="">Sin desglose</option></select>
+<small>Permite comparar, por ejemplo, cada sexo dentro de cada comuna.</small>
+</div>
+<div class="field" id="vizTableFieldsWrap" style="display:none">
+<label>Columnas de la tabla</label>
+<div id="vizTableFields" class="viz-table-fields"></div>
+<small>Marca una o m&aacute;s columnas. El orden de selecci&oacute;n determina el orden de la tabla.</small>
+</div>
+<div class="field">
+<label for="vizColor">Color principal</label>
+<div class="viz-color-control">
+<input type="color" id="vizColor" value="#0F69B4">
+<span id="vizColorHelp">Acento principal del componente.</span>
+</div>
+</div>
+<div id="vizDraftPreview" class="viz-draft">
+<strong>Vista previa provisional</strong>
+<p>Elige el tipo y los campos para ver el resultado antes de agregarlo.</p>
+</div>
+<button id="addVisualization" type="button" class="primary">Agregar visualizaci&oacute;n</button>
+<h3>Visualizaciones agregadas</h3>
+<div id="visualizationList" class="filter-list">
+</div>
+</div>
+<div>
+<h3>Composici&oacute;n de la vista previa</h3>
+<div id="visualizationStage" class="viz-stage">
+<p class="status">Agrega KPI, tarjetas o gr&aacute;ficos. El mapa aparecer&aacute; si est&aacute; habilitado y hay coordenadas v&aacute;lidas.</p>
+</div>
+</div>
+</div>
+<div class="field">
+<label>Colores de categor&iacute;as</label>
+<div id="categoryColors" class="category-colors">
+</div>
+<small id="categoryColorHelp">Estos colores se aplican a gr&aacute;ficos con categor&iacute;as. El color principal se usa como acento o respaldo.</small>
+</div>
+</section>
+<section id="vista" class="panel">
+<h2>Vista previa</h2>
+<div class="preview" id="preview">
+<h2>Visor de datos</h2>
+<p>Carga datos y configura filtros para revisar la maqueta.</p>
+</div>
+</section>
+<div class="step-nav">
+<button id="prevStep" type="button">Anterior</button>
+<span id="stepText">Paso 1 de 5 · Datos</span>
+<button class="primary" id="nextStep" type="button">Siguiente</button>
+<button class="primary" id="generateBtn" type="button" hidden>Generar visor</button>
+</div>
+</main>
+<script>
+const institutionalBannerData = 'data:image/png;base64,' +
+  'iVBORw0KGgoAAAANSUhEUgAAB24AAAAcCAYAAACpip+yAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAADc6SURBVHhe7Z1hrF3Vdef/x9jYGBtDje0kuHhi1WYypaQhIahTu0UpU3UCn+ADI2gz0VRVhfOhhRmqADOVP0yAUdSQSjMh7ahVSgsjRvV0RsLJjJREJDhtHSbQAm0G' +
+  'uwKZmKY2uPhhA7YBn/mw1tp77bXX3uecd++rCtr/5+Pf/Z+z91pr733ffe/dc8+93bpbH+0xizoAfYGj5HWssOuAXiUoNBufvy4JF7xOr8rpujy9zw49+kVRCpJ8WYKllJfPMmlo/RiKlPea2eZLKS+vU15sTuslR7x1LNNJo+9flnk5gOMnKSvABsxHnDcsUWS9ktet0nzuyvLKhBcbVCjO+ih3XS0L0adSlPis4WzjJVlf' +
+  'kRdmQvfJyvI4D6jWF7kIeWFUOLFjmi+KXYe+711Ky/jzxkZYhLwwlksp9xtqCdfXygs7Q3jpbn2gs65Fjvn545RrfSKvY7XDVA3MgLfOYb1Fcy2I5I3XclGaNl5ZXxkvtRq3voui8+2UTfckSSDrC0zGL7tnKqCuQhlYdDovUIXueMfnl+bWj6bzbVUqx1Iy0v1xZAVuAuONvvf7d9tdTU1NTU1NTU1NTU1NTU3vSnXrdu3t' +
+  '6Q9h+TtZP/ETn9iTBv4TfdZPoPcEgHnexf59bv0khQROARLZ+iyj9RPkhZ0h3LBMIm+iB8cbJUeHfKCTJqPXbwRFqTdPDLkJh8Zr/Qzy0swxfBbYG2eJSyAJb8uR8XrTMI3eCQdFfSKKxxlPTJHmOv2ivNCci5IXSNFb1yVc30yFskrjlcNlX1hXu77Wd102fFuOpWjIJ/ICVTtY5SPOA5UotjDApZRXjqWraeNNf9+Q9Yzj' +
+  'nbK+s1LKDd9OfKD+7SUNrR9DkfJeM9t8nvLy2Hx2grKGY+nIa6aai7XNrV80nYfR9P6Wn3iSxydpYX0yACuvmeVSysuX5PUOjOUIed0mdLeS7kXvrWvC2gsbhuiXb6fTPp5kHZZSWd5aQUOcIK+75ZzUTtw2NTU1NTU1NTU1NTU1vVfUzXzFrcj7Q9xylKSD9QXmz6wNPbM6XxXKkfEOj8Z7AmgsvSee8uHb6bd+kvIBTAzo' +
+  'dRzLwu5J+WeUl7eaP20o6zfkx6xvdrefSFHVex1th0Rew7F05DWrNJ9ZXh6bL/Few7HMlTx+VB5PlozO87jp40m8fxYiVOjIa2a5lMryyYCLDSoUWV+RF6bSXQ4P+SKzxw85UWG99/MmpSj3xfKdgoY6zFl6fe2EZAVZiqwfIS+c5Rwk4YLXL8QbvOLW0i9zEp3pTR9P5qzSA6jHrOI5yAs7x/C5TCJvnGq86e8bsXch2nQ6' +
+  'aQO99s70WJ/K9HQT5eOuRZxJ3kBmSicBrC/QnWAZ93SVsgfvTG8pvVPtCHqPQ+r3DeeFeXa87cRtU1NTU1NTU1NTU1NT03tF+Ynb7C9p7wmQMktPDBXp/P2d0evnUDTkE2WBpo3Xr2CCvDAzhBtUGJ8zXstiQdaPl4SXsItZ58VSCrBP/MQrMm0PyxnkhbOciySgWGddl3B9M3lpKuFN9W63lPLEHvvqFZn2xIXEqZ94sr6q' +
+  'vMCJAYY0MEPeOof1Fs21IJI3XstFKQ2U/nwprGu2vvOhKPFjvp0myQtUYe0BdClUKKM8QUPyAlU4MF6xi4w+TOfbyn57qXIcn0WsszZem2gp5OWr5pUG1o+hSHmvmW0+QYPVOetaJJD//HFOOCUnnhJPSnxW0GzjnSwvb5J/cAYrFFlfaG65FDJ5ZH0ln7eO45mFz6kfP/jA0OPJTJI81mcFFRtUKLJeyetWab4YtRO3TU1N' +
+  'TU1NTU1NTU1NTe8VLbM7wh/1gXyj72mfJVL22qPnJ9k16Vjw3LbKXiihOY4pQbaY3ffJlg2HKws5DW1tmhw1Jd3KPVPNmaVsfSiSx8IUHzhG0jn0NUE1e24YKAUZn2x8LPNEmSuJkcxhCGnXu0A3Q5kUmvb0ap2D57lOyLURKQr1TdeTjwSfkWOkpKICudgiCcGLUitZxdogir1l7xSkGCsYzxArP+Rt0nxMdyLdCp7HF/aL' +
+  '98jrSP/iusp+uY9IND5aZYzFNTGT6dXkYy4JhlKT9czw2BiDBS9j7pWvFVSowKWzK6O3r0ZnZzZ6rtVlz9+zmnSQ18rMmZ1LQ9kSz+X0ep2FzmbbJt7JOUh3THrMSB63qKlKrL3JEKV82jSlbNrbNpruzgEmtcukxgkmqzy3dWnnMmSxXtErQ6fkxpmXNlA/TziTpuQOnmu1j02RdCyQ27pMMqgxFSiG6nC8t4UG1tvoHkOQ' +
+  'eLu35GN6gvUi1BiiW69Y6OqyR1wDWK8IInXRXvYqz+saycd6Xkdm8GDPFM/lTGcyFkNKEsYuByhdbBh8Fj10Mj4EDzFcuougKDK2Kl2ODhXKinNOZVQIS1rDKntuzTESrx7PgocmUqal+57byv7gA3kEvcxFWpNLjhbHJtHFx9v0L0vKhx1yTSGkZlNTU1NTU1NTU1NTU1PTe1zdhbv29n0fX2qevLVe9gpyS/+F01V6Vy4M' +
+  'vOJ8rvIS2wKKnIO8sHMMn4sTeOO1dAoSZ6JlvkgnTaDXvkKR9alMTzdxebwzS8JZ73FRGkjgjTP7hpqpgERZNZzOLSevdgTl8cZ6Q5WoD1dUSyA7/jkqL3jG6c1m1Ak8NMFLOF6rQlky/tJooi+sZ4nJlbX14TvlAI6fJG+ckwLmM5AHKrGwe1L+ifLyWFbldShT1lkCew9jpfWdlaLEew1th0Rew7Es7Lb5rJ+nvLzVfF7D' +
+  'sXTkNVPNxY5pPone/ctQMsrjUSFShY68ZpXmc1eWVwZcbFChyHolaW69x0VoMHy2rvLzRNoVfu64lLhyfyBVy88KGuowJ2UTYL1XkKXI+oq8MBO6L0btitumpqampqampqampqam94rOWfmxm3fbnTPJ+wN9pj/UvUAO82dk8mZLoUI5pXxy2PpI7wmiCsecyDDlDPmqhgcwEHBKAEuxAwNcSnllVfNPG2924gJQ61y4mxem' +
+  'YypFia89r+dKGlg/hiLlvWa2+VLKy2snKDswlo68Zs50jGm+KHr3K1l/zmhPXFhf5gh53SZ0nywvj50Q/8AIjpDXbUJ3K+lufZHZOuu3mnZ+3lQosuUnPivANnD8PJXlrT3ADXER8sLMEG5QJk/ywrzsrcX9dY3Mwg3Tmd708WTew5dEYrM7eF5QVoH1E2TS5xMyW/hc8x3vlPJdOmkDvfbVajxfqNBNaMcvshlmkDeQOYb3' +
+  'Ayt648zGOz9ls++kHbvePr3HHfX7RfLCPOMBXLp9C2696jTeefIgzr6lCm1qampqampqampqampqehdqwmfcFhsklD+0pQPttb5C7wmAmZ4IiBQlPmuoxis+i1Sim6EuL8yE7jPLnWh54scWZDldEl7CJF52z2m9XSYnulNKy/KJqDnICzvH8Jm8dbXMCpljQV7YSng5POTLNE/4OetcPlHhxcvLtT6R17HERWlgRrz1Dess' +
+  'mqmAurxxzjFd+vNF/bzhcbrrHNbbL2smOt9G2XRPkgSyvsBknWX3TAXUNaW8UZoScHi8pWjWL5rOt1VWToFSAT3eTKzIG69tthQqlDM+n9dxLAu7J+VPJd1He2+dC9NP9H6ujKMUYB9PsvFaP095eav5vIZj6chrVmk+s0weWd/EJ839nz/jmKXz71eF+5fI+plULKjYoEKR9UpetxInaxVu+IV/iv984TM4+Ru/iRN/ccY2' +
+  'aGpqampqampqampqamp6V2nCZ9zKZj6HCCl77dHzkxzWa9KxQO7rUn9GHXX3SojkrELZEp99rBJXFmKZz5viWnpbmzsm8ZppC/pXIBch5G6cL/rAxUiCeewVuaaUXJQwKch6osyVxEi8hJL9XkpNN8MAeXweezXXwXMtRFrDQFCR+otyxSPiAzmWS+qUEhUSAkWJzzo57BW5lrwQ2fhY5gtMYsohyZlvcth2FzkZDOlWII/T' +
+  'ZW/JK5cQwfPeEF18wl6TCss9TzcXPUhCkjv3ulafsvVJAZaSWLaYaZhyUwZrmnibbaPpqDR6qd1dZ2F1fVU064tMp6y33ttM24QqtvVFmvto4mXMmkCRNqP4yPRm4j16+zJOCQiarECeVPFqrMGbPuJpzxCz7Gl6SylHkzv33IbWiD1nGkWzvqkft74ZqTpFUkI1BtkZvLeNCTCatQmVDSlRYYhufVTmC6GKZbFxiTp7yBrq' +
+  '3zX4GK9v9LSOPVJSbeypVJVDfIXJWAw5aEKuRTcMPo9u6GxZMvGgfZbQlNByY4R0Obqr9mqT9ZSaxHvrmZPWNCHHcsnrLZR1RVhvKiVwxMaVR2+mWGIjLIGpxdaoyVEpTz5WSdLH4DZ5SgpcXl/xoovWYucHzsM5m7dj5ce2Le7cb1NTU1NTU1NTU1NTU1PTPyJ163btpb+8+ZXOcoWSvOS//gpz2Wv9BHqvNJf0LGlf8pOk' +
+  'X1FuC5DI1mcZrZ8gL+wM4YZlEnkTPTjeKDk65AOdNBm9fiMoSr3cP8V6CYfGa/0M8tLMMXwW2BtniUsgCW/LkfF60zCN3pUsigNvpYd5T78oLzTnouQFUvTWdQnXN1OhrNJ45XDZF9bVrq/1XZcN35ZjKRryibxA1Q5W+YjzQCWKLQxwKeWVY+lq2njT3zdkPeN4p6zvrJRyw7cTH6h/e0lD68dQpLzXzDafp7w8Np+doKzh' +
+  'WDrymqnmYm1z6xdN52E0vb+Z3y/U45O0sD4ZgJXXzHIp5eVL8noHxnKEvG4TultJ96L31jVh7R05huiXb6fTPp5kHZZSWd5aQUOcIK+75Yy69Md/DA///CZsOxd459u/h2O/9oc484Zt1dTU1NTU1NTU1NTU1NT07lH+VsmLlfeHuOUoSQfrC8yfWRt6ZnW+KpQj4x0ejfcE0Fh6Tzzlw7fTb/0k5QOYGNDrOJaF3ZPyzygv' +
+  'bzV/2lDWb8iPWd/sbj+Roqr3OtoOibyGY+nIa1ZpPrO8PDZf4r2GY5krefyoPJ4sGZ3ncdPHk3j/LESo0JHXzHIpleWTARcbVCiyviIvTKW7HB7yRWaPH3Kiwnrv501KUe6L5TsFDXWYs/T62gnJCrIUWT9CXjjLOUjCBa9fiJe9dbi/rsnPH6fMSXSmN308mbNKD6Aes4rnIC/sHMPnMom8carxpr9vxN6FaNPppA302jvT' +
+  'Y30q09Mk2vVL/xy7tyyPzU8dx+7fehpf4oi7fvGnkuMLh17Atj86TObqn8DBay/EunAUwLG/w8YvHwSwGXv+7QexE8ex+7eewZectgf+8nHs2LsZe27/IHauUgfwBh6653u4DQCu/yiOXrE63Ydt2HfX+7D92N9h4+/8DY+P92UxnPFfdyXHVDp2BBt/9yCbS7DnNlNTcjyqwyX4Y9P2wNP7sOPly3Hw5y4EDr2AbQ+/RNN9' +
+  'Vdy3/b+9hP6TVMeBp/dh51eBL/zKDtyy/g08dN+TuF1VTftV0lPHsfuLz+JLQOFxSP2+4bwwj3gebviFf4Yvfvg8rASAv/tzLPzGb+LE/tnfLnntg49i3dVr7G7g+b04/C9fxIYnbsXKC+z+z6sdN4U2Z/c/gL/91CPhyEVfewznb1VNcQivX/av8aredc8fYPONW/xjAIA7sOm567DitSexcNXtOMF7Q91mf4iX1MkxZF/I' +
+  'GWVrh1P/W3uuwZG7dIso29bWNVhv0Emcvvd6vPwVtWtwjqDWQbX59BfwgTuvxDIZt3jp8tqTWLjqh1j93HVYkcRCrGO7rY/j21jw7htNTU1NTU1NTU1NTU115W+VLM+YBPKNrqN9JYLYMcl07Jlw2FlS38R3FXJtaSkSnb26nW3ZcCQW5Rgk10ikqBQjHav1gWrOMnJRZeZLpClKbJiz6IukiVCkukOA4JkjNgofY4inEEMM' +
+  '3XxylhIpFO3R6xw8z22ZvIolul/gNkT6V/C0c/T6BhKYlDP4sN45eQIoDhWQ+1CIQ3eLlVDbClUN0t2G9roFAmG0wfOkhP3iPfKaUt64jjDrGrx8JZ5yBXYV8txG5hvVRuPJfDIy65nOOgeGMVuviEhuGH2hAmo7gt5mwuRMd9rc7roK7dg8whLRm7mVvYnnGjsZYhf3j9pCH9PX5HRzh1pB96kwBiYnKa1vOmfWSyZDro13' +
+  'pZ43qquwybFA3WEEuTYiT6JQjdX6uN7UN86VeMpRp6SXdU/LkU2VE7204b4uOVNCs74u1QbrTQzxPIoBxtpdUqGGPDfiIXMVOwYfszBlU95PwpPpbKAaqLvyTEodc9AtodulzA4858rTfy6pScwoX4n31lfoblRDICpMcoEdMXieOpcUTI1d+7iuRRaq6GIwimN8IM91Qgg3Y8+/+xns3gI8/vXHsfFzj2Pj517A46/LCOWk' +
+  'rTr+l29g3ZYP4uAvbpYmAJ/M3XjP49h96G1g/cXYc3VMBXA5pu2me/Zhx14V5tRx7L5nHzbdcwQHsBq3/Op2NXYAWI3rb9nM34tqTjoA2I7v3PU+bD92BJvu3YeN976AfadW45a7PooveuvNEQ8+vQ+b7t2HTd84joX1m3D0tsuxi493UtN93OZ3D2ZT2WEb9t3JJ6fv24dN9+3Dpm8s4GhSuV5PLVlPqae8zrT/TTx833ew' +
+  '6T99B5u++Fd4gO/P1MSnLALNWfToOn6b5JV00hYANmzHyp+cz9sln/jU9Th82TVY2H+ST9Zdg8OXXcMn4C7Fsgv4hNxl1+D15wFsvQ6b7on91z74S+HE7rINl8YDuAnLL+aTgyH+Fpz34E2qzR3YFE4KrsfyT6tDok+/H+cAwCs/jCc7P/0FrJWTzResh3opA9Zu5rPmW38WGyQexzj78ouqTRzrwv6TWHb1rfhAqO0mbHji' +
+  'MZy/9RBev4zavP48sOLGR2PMRM5YL7gSayXeYL1cy71P4izWYOVnvoC1ocWIOQLiWr12DG/Lru3rsQzAW099nuLceSWWcY2HL9uLt175IU7g8zgiHnGtD19GJ4/tXB2Wk8ISew/v33MI2HodNn/tDl1UU1NTU1NTU1NTU1NTVfmJ296Sb/T2A5X8zyXqtUfPr+7XpGPBc9sqw+csSWiOYz8SibeY3ffJlg2HK7Of7TTpM540' +
+  '6VbumWrOLGXrQ5E8Fqb4wDGSzqGvCarZc8NAKcj4ZONjmSfKXEmMZA5DSLveBboZyqTQtEc+LyzxPNcJuTYiRaG+6XrykeAzcoyUVFQgF1skIXhRaiWrWBtEsbfsnYIUYwXjGWLlh7xNmo/pTqRbwfP4wn7xHnkd6V9cV9kv9xGJxkerjLG4JmYyvZp8zCXBUGqynhkeG2Ow4GXMvfK1ggoVuHR2ZfT21ejszEbPtbrs+XtW' +
+  'kw7yWpk5s3NpKFviuZxer7PQ2WzbxDs5B+mOSY8ZyeMWNVWJtTcZopRPm6aUTXvbRtPdOcCkdpnUOMFklee2Lu1chizWK3pl6JTcOPPSBurnCWfSlNzBc632sSmSjgVyW5dJBjWmAsVQHY73ttDAehvdYwgSb/eWfExPsF6EGkN06xULXV32iGsA6xVBpC7ay17leV0j+VjP68gMHuyZ4rmc6UzGYkhJwtjlAKWLDYPPoodO' +
+  'xofgIYZLdxGY12/CzlXAgb/8M9z455wCh3Hjl5/BlwAA23DzluXAsVdw434+/Oj38NAxYN2WTbhfyhL1wLY1ywGcwYv7Yyo5ljTnNeKbyYEeb+DIKQDnr8Su0ApYOPU21m35UfzxVdKO2QO7blmPbXgbjz91gKflMG7YdxwLWI3rbr5ErTdPS8jG/O6zuP/Q28CqNbj242kbXXuvfQ/cejPn/c6zeECW5IlncMPeJHpY33ys' +
+  'Mor4f9zPWzJ3zvpaQvNc7LhqKx76V1dg7y1mu/5Hcd169efsOT+ClTf9OjY8/F+wMdm+gA2/9ctYve3c2Haklm9YA+AY3k6u9LwcK9QJz7dfPqkOAsAdWH31GuD5J3H6NQAXvz+ecPz01VhxAXD2+/vjCVecxFvfjFe1rn3wZ7ECJ3F6/yEAa7AsXoIdlZx8JF1005VYhkM4vf+kOZl5E1Z9aA3w2kk6AXoTn0TkGO8cfiS2' +
+  'UWM98alv4S0Ayz50Ndaqk9Fv7YlXt776FNW44hP6xDOLxyonl08cPpYcHqxXavnKD/FO0nPkHEGdnFbzLSddzx7wToB/Hkf01bHm5DZJ5vMATun7BYCLPrIlxgaAu75K94Gtl+OitGlTU1NTU1NTU1NTU1NRy+yrlxPvvOo5pX4VtUP7amvoV+Fbz620168sp7D8wmuOFjxzzBb6OuRgOqd4IkUpkrOkpFvB8zhd8kCEsiWe' +
+  'SuEbhq5Mpxo7S6k5FOL7ZMxIfcfeYzbHElp5ap6UFry7mYq8dRby3EY6G1JS7eypmiQn/Yv7g/fIRSdEhRKVveyV/QT2WWdOIJOYeLVlBSlKDsUkd6iNcyhvQxWZdldzZjMaqnWNXtaKvbeFNiVSjiK5RqHUbKfT+kBYypzJmClXkWq9KX/0snW6AOtrBXGmKimZe0iHDj7rTjtdwiHXRuSxCGVs1ifrDfLcpuNY3GuAPG2Q' +
+  '9RYfp3Noo9pin+jDCCvksZTISVLCzJX4UED0JmPcxQXHJilrW+jrMAsElZsCpLXX15eI1IO9RzPHsiWey3XpbeD15FqC98iZIqVmqj/zYUxMLiYhKkxGR+PISKGSncHz1qnbPJhI3cEyZkkD6k2Ce1Traz2lGGDIbj2nGSBtNJ5R6yvkjO6XWe+EkkMxyc3FUZ/UQ4+tRgqpSLEoD/sCpSGlCx2i9zZuk/lAVYzk0OQaLe/f' +
+  'vBrA2zj6Modmyc3u+guwHcDCyTeTrgdPvg3gXGy5OvZZt+WDOHr3TtyyHjj49JO4TcoTSZmq7dG7fgr/4+M8d6ph9/GLcMUqYOHIq3gA8fjRAz/AvlPLsXPH5dgV9nfouktw7SY6YfyDJ9T6P3EaRwGsW7NarXecSeod+cDCGQDLsWmDarPqQuy+cweO3rkDB26+hPaF9d7Med/CD57g/XQgEDLeO3fgyGd34OjPyVtFUwY1' +
+  'iqSaDun60pHzcPNnd+DIZ38aR35lG4cYWu8z2HfgGJ54czm2bV6Lj+ntA+dhnXkZcnfJNpz70R9PthXvA8786bfx5sGpb6EsV4yqqzXV1avpCc9DOMNvFxxOKj5yO95+xVxNyidLl119KzY/9xjWfegAFvgqTpKc9P0WXv7mMZwFcM7m/KRocvIRdPXqeVuBs/u/ipcPHzMnM/mq01e+hRP7T4arbimG1C1XET9bfMthO04A' +
+  'wAGqMb2qmMVjlZOedFKT521MvTLvcqI8nHwdN0cAsPYT29XJaVJyMv4r+/HWa3TF9OYn9BW9rOTktojru+BKrHvuMWx+Tq44lvtLfkK3qampqampqampqalpipaFq22Yie/ZF+ld0VQh5Kofn7316sqCQXLtKc0LuN02ijZmRmcztSd0vmQupE0yR1zoJKo1Y0Ty/705WPTJZOma4ia1Wu+Sx5mSawrxuYYR7Lk0ih99IEVO' +
+  'Gdo67C1HbFy7S3sbHDtpK97mJtL0iadB9X0vS0UjI2t8n8yNSw5KcbXnZJ7n2rmQlDzGZPa5lthX1Zjk9ijdlKf/eAza9zQHQh5nnCuZ77h/UVuI4ZDHVWQ/RGcLMazvkxEH32tSkOA56CSiTNrinEOvBSVNyeOMA6KbIVQPzq1oYiYEtws0NdoxmLHJlnhuWyblDuRaXPJ4I73NHLMxNG1u2NoMOWgYm/JFct9IqjGsM9dS' +
+  'JRUcNg7HG42HB8UNClQ5JYBfY2EsY8gFRnKNnFtVQb6v0N3kWIE2hiaoziJls762mRiyvrQk0Y9ab5oUw75ORPJkRx9nOXo/CZHHJLe1j5Tc7NX6ZuTMsSZOl3mdksZB8+uQ+2YeVFNCb5/mqE1ySV/2HmHJYwLHUXMj4wXnGEeOToGUV1l7U4V4bpN43np1OylOewDAGRzaD+DjP4GDd+/E0bt34sjdP4U9H6eMAHDk+GFV' +
+  'Y5S2C4deCG+lvO2KHdh3nUrBjcWGtvf8GW7YH/Ng1YXYfdcOHLl2DZ7++uPY9tDhMO8U4jBuOPAGsOpC3HbLSt6v1uHUGRzguQ3rLH31flV7mFneT/vihlPHsfvefdh47z5se/ilpG3oc+o0DuicITdFXDj0AjZyjI3fOI4FlUXaSFXR8ToGgj6zl9+OeeN/PUj7eZAlou+BhQXc/z//CrseP4aDp3iQo3QG73zvT3D89s9i' +
+  'Yc9BrmGCzBWjIjrxB6y48TFsfu5WrPj+A/GtcuXtf5//ljoZG68mTd9idy/euuBKrHvuD8LVmBd97To+6Ruv+vROiqZXAt+EDZ+hq1ffVJ9HG05mqqtGT3zzAM5iDVZ84g6+apRPjrpXlrLM+BOZk7NacoJbTlKfv1U+D3dcveHE6I3A65ddEz5rd+wcIcyTOsGNO3DuVn0y/hG8fNUDdFWsWQt4V9BCzdX+B5K3T44nyJ35' +
+  'Mif/m5qampqampqampqaasrfKjm+UJopr3aWzXlVtCK9upo78NUDwYdXZVfIr8yOpL5kK+RaU6pSCOTV7XwYXIn2XYVcG5HGEbzzZY9QrelcBXIRVXKNPOyUaqxaiVdzJj7QmyCujSeBfYHORuFjm+gppng6bEnNUFhfvlknj88jDSnOrfhIXrUS3S+kvmPvMcvNYws1yhgKJKRU61tkx0GY0VMBlD8piKN7m2SWtuw9qpyh' +
+  'ufVhIHl3c4hJtwJ5clx2ljxWTS6K1sh4zpKwm0Bv08O3VCOzPtBbX2EYm/WKKNNmdD0l8zlmi2FzAuXcHfsa7VjNevrUWRx2kZ31YzYuPVJiyUa5iuQa0/sme05SJSypb2G0oH+Op13sQ/Hk1W1pE6n6ys4QwCHXFoJqr8ZW9NxHz1WgP+KUXFtShi2nwK7jSPQv+EDO5JJrtuud0NtMG6o1xhBvRhlpak7ojDEj4pxJx+BN' +
+  'NvGRNpihuyH1YM+k1KXcckv5PESkVxb9x/c75T0mFfAXB/LWLlvTjuYyPcbeI2eLlC16Li9MpXjoMSbk9RSiQmfEaXYK2pkkwUtR4Xb0dOXsalx1PYDvPoNtn+PPqAW3f/kMFgBs37yNc5G2rVkOnDqJb3w37CJ1CH02XZh+Bm5ymz3VqA6dOo7d97xAV9VeS1fjxrHzrUefxMPHgHVbLgRdYNih617Ci68DWLUGP3e1mtur' +
+  'V2ITgIMvHQxzHdc1xqTmHXatOzdcgazbUDu1hSl8CT/gvNd+XE8x59JZVG4dVfbI/5GUTdYx2a/Wl8g9OYcmTQbQdafx9T/9f7j5/xzG14+dDRUU9c7f48x/fwDHPvPbeP0vpl5py3JPSurPbaUTfvJWwghv/8tXcPLJSq30hOuLOPuaOshXoQJrsPLOx7D5To6ViWuQq2Pv+SR/nu4WnP/cY9gcPvuVtX09lsnbMX/ldrz5' +
+  'PLDs6uuoj5xkdK4spSuH7fhTyYlN/VbPIhpr/Dzcw5ddgyN3ja2XPyd2zyEAW3CufH7w6DnSUm917bx1Mp285c8qNm/ZvPxi5G+V7cwVUDj5LWP1TuY2NTU1NTU1NTU1NTUVlP+do1+qDX6Vs3h51bMmUtKrqmMH+9rv+GpsIR0L5L4u5dXa/CpwkzonZxXKlngznPgKdImVvvIcXEtva3PHJF4zbUH/CuQi4ivOuXam+MDF' +
+  'SIJ57BW5ppRclDApyHqizJXESLyEkv1eSk03wwB5fB57Ndf6SoNIWsNAUJH6i3LFI+IDOZZL6pQSFRICRYnPOjnsFbmWvBDZ+FjmC0xiyiHJmW9y2HYXORkM6VYgj9Nlb8krZ68OUeuto4tP2GtSYbnn6eaiB0lIcude1+pTtj4pwFISyxYzDVNuymBNE2+zbTQdlUYvtbvrLKyur4pmfZHplPXWe5tpm1DFtr5Icx9NvIxZ' +
+  'EyjSZhQfmd5MvEdvX8YpAUGTFciTKl6NNXjTRzztGWKWPU1vKeVocuee29AasedMo2jWN/Xj1jcjVadISqjGIDuD97YxAUazNqGyISUqDNGtj8p8IVSxLDYuUWcPWUP9uwYf4/WNntaxR0qqjT2VqnKIrzAZiyEHTci16IbB59ENnS1LJh60zxLEL/3RKzgAYPuHP4r7Zb/W/mfw6DEA6y/GHnlb5Os/ilvWAweeewZfsl16' +
+  'ABvOxTq5Slcfd9raOSbJZ9Mux44dlyefcSsr9Ou/cwTxAj6au9ueoj47f/LHeBouwR//9IVYd+o4HtpL402mIfTm7borsXvLcuDYMdzw3bRN0o6N8Nf/gmv96ctxqyzBJz+Cxz8pvYhh3VVM8rRH/o9UGSWf8kWq9VWBg3/x+4fwb/7X3+D3/7Zy/eLpH+LN3/6PeOU//AnO+O/7O0rpWyKzkqtwH+G3Qt6OVZ9WJxWf3xtO' +
+  'VNKJR3kbYHO1p8RiTyd95Wrca3CYTwwnn5GLeDKQPt/2Jmz4F1vMCdK99Nm0fBUqnVyNJx9ffeRJyKnv9G2M07deXnv1GuC1J3HiU48AeASnvn8SwBac9yBfGXvPH+D8rcDZ/X+ori4W2StbRWPr5Vr4rZhXfIQ+l3f0HLHo84fjiV/5XF260vcmbPiavD2yd5LWvGUzK5srVv62zHdg0408Vv25uU1NTU1NTU1NTU1NTQNa' +
+  'Jq9ilpdPd8E7r3bOXgVtXyVtXj1tX23tsaPkHuXV3jCvMI8+KS2nt8mr1ENb8eZV7F5u2sF9tWfasXkMc+WQiyoRXVwaumHoyjSSzh47S7VRIVxrwfNIiew79jWGuZZQylMzl7LxLlMBb3o9LXluI2VTHhWGjNrLHq6lq7Cz5LFposKQLTrw+PLGDr0tK0BRcoTb2hMpPI0n8yGUXW/FtHtKilgnj0+vc/C8Uf7CBkuJJV+U' +
+  'K2PnUWpnT43DbS5tgJSjSLXeGdVYddLES0GBklg2ylUkJTOH2DtbElp1j+FoZ2G0cT2t58AJnTmg+ERZX5kzPpr5hFwbkadROGbL+qqYamTWhz1JzeKZnKRKoEiqKmYUD3DBZldGb8v6ildUgdLcsWZ02hfG5pH7unTnOLKTtMzMuxuvp2xQ62vJmSLlS3leXyHVzl7GqAmqYRSzUdN/JcqWet4h9DqGDpbO1lXIcxsnV3si' +
+  'pSowZLdekW+47MBzrUtgj7iu1gd6X2Z9c1KOuIlnIiXVyl7GFEYtXpGnziUFrZNr1B2DH7NRMEWVnCauTggPYsfnXsC+U6txy7//GRy9eyedvMQZvLifmt325cex+xCw81p6G+WjH16Ng08/jh2PxlDQn1v74dVYOPQCduxNj4cyk8+43YmDt2wO+6Vh991n6YTxqgtxmzoe1/8gdj79RtzbAd0Tz2L7vUdwcP37cPSuHTh6' +
+  '1wexE8ex+/5n8QCg1jvOJABsv4I+v/boFVT3pt89GI53SD/j9uhtl2MXKEgnfOJZbL/vCA6qdkeuWM3xVeXUIdyvJEO8n4kHgNW45bP0mbhHPvtR3B/mbnX8jFveX19fXUL0p88Cq1bkrz8OWrkSy86J53wXq/xtdvOrcF99ik7MrvjEPfz2v+lb+IrO2XxT/hbAd16JZa89iYWrbscJPgmavsUyiz8jd+2Dj2IzX6FKbzkM' +
+  'rH3wl7DyAvqs2Owc9cXvx1rvc3r5qtt4payctOSrWLk27H8Ah6+6PVwpeuJT12Nh/8nw1sdSh7yFcSIZq7nSdHS92WfQXo6LRsyR1YlPXY/Xn5e3tX4M5289idP38tta41Is2yqfU3srnQzfI8dKY3Dmij8bN30L7cew+bnrsOL5vfFttJuampqampqampqamkaqW3fro7P+TUvq+BXRNY6SdLC+wK6jV2B3ndrN/h9ChXJk' +
+  'vMOj6dCjXyTN8A1Fdvqtn6R8ABMDeh3HsrB7Uv4Z5eWt5k8byvoN+THrm93tJ1JU9V5H2yGR13AsHXnNKs1nlpfH5ku813AscyWPH5XHkyWjfvzgA+njSbx/FiJU6MhrZrmUyvLJgIsNKhRZX5EXptJdDg/5IrPHjw593zve+3mTUpT7YvlOQUMd5iy9vnZCsoIsRdaPkBfOcg6ScMHzeso4p6yvLW9RdKY3fTyZs0oPoB6z' +
+  'iucgL+wcw+cyibxxqvGmv2/E3oVo0+mkDfTaO9NjfSrT002Uj7sWcSZ5A5kpnQSwvkB3gmXc01XKHrwzvaX0TrUj6D0Oqd831OMX+h6XXr4ND//8Jmw7VxVp9M63fw/Hfu0PcUbOjzc1NTU1NTU1NTU1NTU1vUuUv1RZ/t4P5Bud82poTRA7JpmOPRMOO0vqm3j7Kn9Nri0tRaKzV7ezLRuOxOJXvw+RayRSVIqRjtX6QDVn' +
+  'GbmoMvMl0hQlNsxZ9EXSRChS3SFA8MwRG4WPMcRTiCGGbj45S4kUivbodQ6e57ZMXsUS3S9wGyL9K3jaOXp9AwlMyhl8WO+cPAEUhwrIfSjEobvFSqhthaoG6W5De90CgTDa4HlSwn7xHnlNKW9cR5h1DV6+Ek+5ArsKeW4j841qo/FkPhmZ9UxnnQPDmK1XRCQ3jL5QAbUdQW8zYXKmO21ud12FdmweYYnozdzK3sRzjZ0M' +
+  'sYv7R22hj+lrcrq5Q62g+1QYA5OTlNY3nTPrJZMh18a7Us8b1VXY5Fig7jCCXBuRJ1Goxmp9XG/qG+dKPOWoU9LLuqflyKbKiV7acF+XnCmhWV+XaoP1JoZ4HsUAY+0uqVBDnhvxkLmKHYOPWZiyKe8n4cl0NlAN1F15JqWOOeiW0O1SZgeec+XpP5fUJGaUr8R76yt0N6ohEBUmucCOGDxPnUsKpsaufVzXIgtVdDEYxTE+' +
+  'kOc6IUaQM7oyTZIuPKdV0n8+7Rg98vhojfScxfWFt85CaCL13iZtrGdCx3JyU20FhjEZr6nWNyMXUSIH5jkD0J2Hj/3oGlyqTtouvLqAN799EO+8E/eds/3HsfJDlTO7TU1NTU1NTU1NTU1NTU3/SJWfuJWXVwfyjd75fKmeGyr22qPnV/dr0rHguW2V/NleMTTHsR+JxFvM7vtky4bDlYWchrY2TY6akm7lnqnmzFK2PhTJ' +
+  'Y2GKDxwj6Rz6mqCaPTcMlIKMTzY+lnmizJXESOYwhLTrXaCboUwKTXvcz4XjuU7ItREpCvVN15OPBJ+RY6SkogK52CIJwYtSK1nF2iCKvWXvFKQYKxjPECs/5G3SfEx3It0KnscX9ov3yOtI/+K6yn65j0g0PlpljMU1MZPp1eRjLgmGUpP1zPDYGIMFL2Pula8VVKjApbMro7evRmdnNnqu1WXP37OadJDXysyZnUtD2RLP' +
+  '5fR6nYXOZtsm3sk5SHdMesxIHreoqUqsvckQpXzaNKVs2ts2mu7OASa1y6TGCSarPLd1aecyZLFe0StDp+TGmZc2UD9POJOm5A6ea7WPTZF0LJDbukwyqDEVKIbqcLy3hQbW2+geQ5B4u7fkY3qC9SLUGKJbr1jo6rJHXANYrwgiddFe9irP6xrJx3peR2bwYM8Uz+VMZzIWQ0oSxi4HKF1sGHwWPXQyPgQPMVy6i6AoMrYq' +
+  'XY4OFcqKc05lVAhLWsMqe27NMRKvHs+ChyZSpqX7ntvK/uADeQS9zEVak0uOFscm0cXH2/QvS8qHHXJNIaTmuvNx1fvPw0oAOPs2nvnrQ9j1yLM49iufwbHdf4LTL52hdhu249yf2MadmpqampqampqampqamprePeou3LW37/v4nledfmu9wltWRdILoSfRe4st845mwS+FvMS2gCLnIC/sHMPn4gTeeC2dgsSZaJkv0kkT' +
+  '6LWvUGR9KtPTTVwe78yScNZ7XJQGEnjjzL6hZiogUVYNp3PLyasdQXm8sd5QJerDW+lJIDv+OSoveMbpzWbUCTw0wUs4XqtCWTL+0miiL6xnifqtXgeG75QDOH6SvHFOCpjPQB6oxMLuSfknystjWZXXoUxZZwnsPYyV1ndWihLvNbQdEnkNx7Kw2+azfp7y8lbzeQ3H0pHXTDUXO6b5JHr3L0PJKI9HhUgVOvKaVZrPXVle' +
+  'GXCxQYUi65WkufUeF6HB8Nm6qreKB/KfN1VKXLk/kKrlZwUNdZiTsgmw3ivIUmR9RV6YCd1r2rj9n+DhT16C7acW8ND+Q7jvqRNYAPC937+bGmz9GVxw+y9jzSfej7Pf/D0c+41H8FZ7u+Smpqampqampqampqamd5HOWfmxm3fbnTPJ+wN9pj/UvUAO82dk8mZLoUI5pXxy2PpI7wmiCsecyDDlDPmqhgcwEHBKAEuxAwNc' +
+  'SnllVfNPG2924gJQ61y4mxemYypFia89r+dKGlg/hiLlvWa2+VLKy2snKDswlo68Zs50jGm+KHr3K1l/zmhPXFhf5gh53SZ0nywvj50Q/8AIjpDXbUJ3K+lufZHZOk/5DNSUIlt+4rMCbAPHz1NZ3toD3BAXIS/MDOEGZfIkL8z7h/jMW2d608eTeQ9fEonN7uB5QVkF1k+QSZ9PyGzhc813vFPKd+mkDfTaV6vxfKFCN6Ed' +
+  'v8hmmEHeQOYY3g+s6I0zG+/8lM2+k3bsevv0HnfU7xfh8WoFPrLtYnzo9Ku493//Db78wmmc5pp+9alv0o1XD+H0V7+OM6//CFZ84Byc/ev/i7f+XhXf1NTU1NTU1NTU1NTU1PSPXN26Wx/Vf4c7f0nLX+LFBgnlD23pQHutr9B7AmCmJwIiRYnPGqrxis8ilehmqMsLM6H7zHInWp74sQVZTpeElzCJl91zWm+XyYnulNKy' +
+  'fCJqDvLCzjF8Jm9dLbNC5liQF7YSXg4P+TLNE37OOpdPVHjx8nKtT+R1LHFRGpgRb33DOotmKqAub5xzTJf+fFE/b3ic7jqH9fbLmonOt1E23ZMkgawvMFln2T1TAXVNKW+UpgQcHm8pmvWLpvNtlZVToFRAjzcTK/LGa5sthQrljM/ndRzLwu5J+VNJ99HeW+fC9BO9nyvjKAXYx5NsvNbPU17eaj6v4Vg68ppVms8sk0fW' +
+  'N/FJc//nzzhm6fz7VeH+JbJ+JhULKjaoUGS9ktetxEUqXHHb1NTU1NTU1NTU1NTU1PQu14TPuJXNfA4RUvbao+cnOazXpGOB3Nel/ow66u6VEMlZhbIlPvtYJa4sxDKfN8W19LY2d0ziNdMW9K9ALkLI3Thf9IGLkQTz2CtyTSm5KGFSkPVEmSuJkXgJJfu9lJpuhgHy+Dz2aq6D51qItIaBoCL1F+WKR8QHciyX1CklKiQE' +
+  'ihKfdXLYK3IteSGy8bHMF5jElEOSM9/ksO0ucjIY0q1AHqfL3pJXLiGC570huviEvSYVlnuebi56kIQkd+51rT5l65MCLCWxbDHTMOWmDNY08TbbRtNRafRSu7vOwur6qmjWF5lOWW+9t5m2CVVs64s099HEy5g1gSJtRvGR6c3Ee/T2ZZwSEDRZgTyp4tVYgzd9xNOeIWbZ0/SWUo4md+65Da0Re840imZ9Uz9ufTNSdYqk' +
+  'hGoMsjN4bxsTYDRrEyobUqLCEN36qMwXQhXLYuMSdfaQNdS/a/AxXt/oaR17pKTa2FOpKof4CpOxGHLQhFyLbhh8Ht3Q2bJk4kH7LKEpoeXGCOlydFft1SbrKTWJ99YzJ61pQo7lktdbKOuKsN5USuCIjSuP3kyxxEZYAlOLrVGTo1KefKySpI/BbfKUFLi8vuKbmpqampqampqampqamt6j6tbt2kt/efMrnZO30tNXNHED' +
+  '/xXk1k+g90pzSc+S9iU/SfoV5bYAiWx9ltH6CfLCzhBuWCaRN9GD442So0M+0EmT0es3gqLUy/1TrJdwaLzWzyAvzRzDZ4G9cZa4BJLwthwZrzcN0+hdyaKor6DmcQbPmuv0i/JCcy5KXiBFb12XcH0zFcoqjVcOl31hXe36Wt912fBtOZaiIZ/IC1TtYJWPOA9UotjCAJdSXjmWrqaNN/19Q9YzjnfK+s5KKTd8O/GB+reX' +
+  'NLR+DEXKe81s83nKy2Pz2QnKGo6lI6+Zai7WNrd+0XQeRtP7m/n9Qj0+SQvrkwFYec0sl1JeviSvd2AsR8jrNqG7lXQvem9dE9bekWOIfvl2Ou3jSdZhKZXlrRU0xAnyulvOSe2K26ampqampqampqampqb3ivK3Sl6svD/ELUdJOlhfYP7M2tAzq/NVoRwZ7/BovCeAxtJ74ikfvp1+6ycpH8DEgF7HsSzsnpR/Rnl5q/nT' +
+  'hrJ+Q37M+mZ3+4kUVb3X0XZI5DUcS0des0rzmeXlsfkS7zUcy1zJ40fl8WTJ6DyPmz6exPtnIUKFjrxmlkupLJ8MuNigQpH1FXlhKt3l8JAvMnv8kBMV1ns/b1KKcl8s3yloqMOcpdfXTkhWkKXI+hHywlnOQRIueP1CvOytw/11TX7+OGVOojO96ePJnFV6APWYVTwHeWHnGD6XSeSNU403/X0j9i5Em04nbaDX3pke61OZ' +
+  'nm6ifNy1iDPJG8hM6SSA9QW6Eyzjnq5S9uCd6S2ld6odQe9xSP2+4bwwz463nbhtampqampqampqampqeq8oP3Gb/SXtPQFSZumJoSKdv78zev0cioZ8oizQtPH6FUyQF2aGcIMK43PGa1ksyPrxkvASdjHrvFhKAfaJn3hFpu1hOYO8cJZzkQQU66zrEq5vJi9NJbyp3u2WUp7YY1+9ItOeuJA49RNP1leVFzgxwJAGZshb' +
+  '57DeorkWRPLGa7kopYHSny+Fdc3Wdz4UJX7Mt9MkeYEqrD2ALoUKZZQnaEheoAoHxit2kdGH6Xxb2W8vVY7js4h11sZrEy2FvHzVvNLA+jEUKe81s80naLA6Z12LBPKfP84Jp+TEU+JJic8Kmm28k+XlTfIPzmCFIusLzS2XQiaPrK/k89ZxPLPwOfXjBx8YejyZSZLH+qygYoMKRdYred0qzRejduK2qampqampqampqamp' +
+  '6b2i/w8++/3lKFpSvAAAAABJRU5ErkJggg==';
+const institutionalLogoData = 'data:image/png;base64,' +
+  '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';
+document.getElementById('mandatoryLogoPreview').src = institutionalLogoData;
+const state = {
+  rows: [],
+  headers: [],
+  mapping: {},
+  filters: [],
+  visualizations: [],
+  mapCoordinatesConfirmed: false,
+  workbook: null,
+  sheet: '',
+  cardFields: [],
+  logoData: institutionalLogoData,
+  categoryColors: {},
+  customFieldLabels: {},
+  design: {
+    title: 'Visor de datos',
+    subtitle: 'Configuraci\u00f3n general',
+    primary: '#0F69B4',
+    header: '#0F69B4',
+    bg: '#FFFFFF',
+    accent: '#EB3B46',
+    palette: 'gobierno',
+    filterLayout: '3',
+    showMap: false,
+    showExport: true,
+    exportFormat: 'xlsx',
+    logoPosition: 'left'
+  }
+};
+const $ = id => document.getElementById(id);
+const parseCoordinate = value => {
+  if (value === null || value === undefined || String(value).trim() === '') return NaN;
+  return Number(String(value).trim().replace(',', '.'))
+};
+const validGeoRows = (rows, mapping) => mapping.lat && mapping.lon ? rows.filter(row => {
+  const lat = parseCoordinate(row[mapping.lat]),
+    lon = parseCoordinate(row[mapping.lon]);
+  return Number.isFinite(lat) && Number.isFinite(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180
+}) : [];
+let adminMap = null;
+const steps = ['datos', 'filtros', 'diseno', 'visualizaciones', 'vista'];
+const stepNames = ['Datos', 'Filtros', 'Diseño', 'Visualizaciones', 'Vista previa'];
+let stepIndex = 0;
+
+function goStep(i) {
+  stepIndex = Math.max(0, Math.min(steps.length - 1, i));
+  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.tab === steps[stepIndex]));
+  document.querySelectorAll('.panel').forEach(x => x.classList.toggle('active', x.id === steps[stepIndex]));
+  $('prevStep').disabled = stepIndex === 0;
+  $('nextStep').hidden = stepIndex === steps.length - 1;
+  $('generateBtn').hidden = stepIndex !== steps.length - 1;
+  $('stepText').textContent = `Paso ${stepIndex+1} de ${steps.length} · ${stepNames[stepIndex]}`;
+  if (steps[stepIndex] === 'filtros') $('filterLayout').value = state.design.filterLayout || '3';
+  if (steps[stepIndex] === 'diseno') {
+    $('presentationPalette').value = state.design.palette || 'gobierno';
+    $('filterLayout').value = state.design.filterLayout || '3';
+    syncDesign();
+    renderDesignFields()
+  }
+  if (steps[stepIndex] === 'visualizaciones') {
+    renderVisualizationFields();
+    renderVisualizationList();
+    renderMapColumnFields();
+    renderPreview()
+  }
+  if (steps[stepIndex] === 'vista') renderPreview()
+}
+document.querySelectorAll('.tab').forEach(b => b.onclick = () => goStep(steps.indexOf(b.dataset.tab)));
+$('prevStep').onclick = () => goStep(stepIndex - 1);
+$('nextStep').onclick = () => {
+  if (stepIndex === 0 && !state.rows.length) {
+    alert('Carga primero un archivo para continuar.');
+    return
+  }
+  if (stepIndex === 0) {
+    renderFilterFields();
+    renderQuality()
+  }
+  goStep(stepIndex + 1)
+};
+goStep(0);
+$('file').onchange = async e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  try {
+    if (!window.XLSX) throw Error('No se pudo cargar el lector Excel. Revisa la conexión.');
+    state.workbook = XLSX.read(await f.arrayBuffer(), {
+      cellDates: true
+    });
+    $('sheetSelect').innerHTML = state.workbook.SheetNames.map((n, i) => `<option value="${i}">${n}</option>`).join('');
+    $('sheetSelect').disabled = false;
+    state.sheet = state.workbook.SheetNames[0];
+    loadSheet();
+  } catch (err) {
+    $('status').textContent = 'No se pudo leer el archivo: ' + err.message
+  }
+};
+$('sheetSelect').onchange = () => {
+  state.sheet = state.workbook.SheetNames[Number($('sheetSelect').value)];
+  loadSheet()
+};
+
+function loadSheet() {
+  const ws = state.workbook.Sheets[state.sheet];
+  state.rows = XLSX.utils.sheet_to_json(ws, {
+    defval: null
+  });
+  state.headers = state.rows.length ? Object.keys(state.rows[0]) : [];
+  for (const k of Object.keys(state.customFieldLabels))
+    if (!state.headers.includes(state.mapping[k])) state.mapping[k] = '';
+  inferMapping();
+  $('status').textContent = `Hoja ${state.sheet}: ${state.rows.length} registros - ${state.headers.length} columnas detectadas. Asigna los campos que necesites`;
+  state.filters = state.filters.filter(f => state.headers.includes(f.field));
+  state.cardFields = state.cardFields.filter(k => state.mapping[k]);
+  renderMapping();
+  renderTable();
+  renderFilterFields();
+  renderFilterList();
+  renderDesignFields();
+  renderQuality();
+  renderPreview()
+}
+
+function inferMapping() {
+  const rules = {
+    id: ['id', 'identificador', 'id_registro', 'codigo_registro', 'folio', 'correlativo', 'record_id'],
+    nombre: ['nombre', 'name', 'titulo', 'title', 'descripcion', 'description'],
+    tipo: ['categoria', 'category', 'tipo', 'type', 'tema', 'topic', 'linea_trabajo'],
+    estado: ['estado', 'status', 'situacion', 'situation'],
+    fecha: ['fecha', 'date', 'fecha_registro', 'fecha_actualizacion', 'periodo'],
+    region: ['region'],
+    provincia: ['provincia', 'province'],
+    comuna: ['comuna', 'localidad', 'commune', 'locality'],
+    lat: ['latitud', 'latitude', 'lat'],
+    lon: ['longitud', 'longitude', 'lon', 'lng']
+  };
+  for (const [k, opts] of Object.entries(rules)) {
+    state.mapping[k] = state.headers.find(h => opts.includes(String(h).trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''))) || ''
+  }
+}
+
+function renderMapping() {
+  const target = [
+    ['id', 'Identificador', 'C&oacute;digo &uacute;nico que permite distinguir este registro, por ejemplo un correlativo o c&oacute;digo interno. Evita usar identificadores personales si no son necesarios.'],
+    ['nombre', 'Nombre o descripci&oacute;n', 'Nombre, t&iacute;tulo o descripci&oacute;n breve del registro.'],
+    ['tipo', 'Categor&iacute;a', 'Clasificaci&oacute;n general del registro, tema o l&iacute;nea de trabajo.'],
+    ['estado', 'Estado', 'Situaci&oacute;n actual del registro, usando los valores presentes en el archivo.'],
+    ['fecha', 'Fecha', 'Fecha asociada al registro, por ejemplo creaci&oacute;n, actualizaci&oacute;n o periodo de referencia.'],
+    ['region', 'Regi&oacute;n', 'Regi&oacute;n asociada al registro, si el archivo incluye ese dato.'],
+    ['provincia', 'Provincia', 'Provincia asociada al registro, si est&aacute; disponible.'],
+    ['comuna', 'Comuna', 'Comuna o localidad asociada al registro, si est&aacute; disponible.'],
+    ['lat', 'Latitud', 'Coordenada norte-sur en grados decimales.'],
+    ['lon', 'Longitud', 'Coordenada este-oeste en grados decimales.']
+  ];
+  $('mapping').innerHTML = target.map(([k, l, d]) => `<div class="field"><label class="assignment-label" for="map-${k}">${l}<span class="help-tip" tabindex="0" role="img" aria-label="Ayuda: ${d}" title="${d}">i</span></label><select id="map-${k}" data-map="${k}"><option value="">Sin asignar</option>${state.headers.map(h=>`<option value="${escapeAdminHtml(h)}">${escapeAdminHtml(h)}</option>`).join('')}</select></div>`).join('');
+  document.querySelectorAll('#mapping [data-map]').forEach(x => {
+    x.value = state.mapping[x.dataset.map] || '';
+    x.onchange = () => {
+      state.mapping[x.dataset.map] = x.value;
+      if (['lat', 'lon'].includes(x.dataset.map)) {
+        state.mapCoordinatesConfirmed = false;
+        state.design.showMap = false;
+        $('showMap').checked = false;
+        $('showMap').disabled = true
+      }
+      state.cardFields = state.cardFields.filter(k => state.mapping[k]);
+      renderFilterFields();
+      renderDesignFields();
+      renderPreview();
+      renderQuality()
+    }
+  });
+  const customKeys = Object.keys(state.customFieldLabels);
+  $('customMapping').innerHTML = customKeys.map(k => `<div class="custom-map-row"><label>Nombre del campo<input type="text" data-custom-label="${k}" value="${escapeAdminHtml(state.customFieldLabels[k])}" placeholder="Ej. Prioridad"></label><label>Columna del archivo<select data-map="${k}"><option value="">Sin asignar</option>${state.headers.map(h=>`<option value="${escapeAdminHtml(h)}">${escapeAdminHtml(h)}</option>`).join('')}</select></label><button type="button" data-remove-custom="${k}">Quitar</button></div>`).join('');
+  document.querySelectorAll('#customMapping [data-map]').forEach(x => {
+    x.value = state.mapping[x.dataset.map] || '';
+    x.onchange = () => {
+      state.mapping[x.dataset.map] = x.value;
+      renderDesignFields();
+      renderPreview();
+      renderQuality()
+    }
+  });
+  document.querySelectorAll('[data-custom-label]').forEach(x => x.oninput = () => {
+    state.customFieldLabels[x.dataset.customLabel] = x.value;
+    renderDesignFields();
+    renderPreview()
+  });
+  document.querySelectorAll('[data-remove-custom]').forEach(x => x.onclick = () => {
+    const k = x.dataset.removeCustom;
+    delete state.customFieldLabels[k];
+    delete state.mapping[k];
+    state.cardFields = state.cardFields.filter(c => c !== k);
+    renderMapping();
+    renderPreview()
+  });
+  renderDesignFields()
+}
+
+function escapeAdminHtml(v) {
+  return String(v ?? '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  } [c]))
+}
+
+function renderQuality() {
+  const n = state.rows.length;
+  const count = k => {
+    const h = state.mapping[k];
+    return h ? state.rows.filter(r => r[h] !== null && String(r[h]).trim() !== '').length : 0
+  };
+  const geo = state.mapping.lat && state.mapping.lon ? state.rows.filter(r => {
+    const va = r[state.mapping.lat],
+      vb = r[state.mapping.lon];
+    if (va === null || vb === null || String(va).trim() === '' || String(vb).trim() === '') return false;
+    const a = parseCoordinate(va),
+      b = parseCoordinate(vb);
+    return Number.isFinite(a) && Number.isFinite(b) && Math.abs(a) <= 90 && Math.abs(b) <= 180
+  }).length : 0;
+  $('quality').innerHTML = `<div class="chip"><b>${n}</b> registros</div><div class="chip"><b>${state.headers.length}</b> columnas</div><div class="chip"><b>${state.mapping.id?count('id'):0}</b> con identificador</div><div class="chip"><b>${state.mapping.tipo?count('tipo'):0}</b> con categor&iacute;a</div><div class="chip"><b>${geo}</b> coordenadas válidas</div><div class="chip"><b>${n-geo}</b> sin coordenadas válidas</div>`
+}
+
+function formatAdminValue(v) {
+  if (v instanceof Date && !Number.isNaN(v.getTime())) return `${v.getFullYear()}-${String(v.getMonth()+1).padStart(2,'0')}-${String(v.getDate()).padStart(2,'0')}`;
+  return v
+}
+
+function renderTable() {
+  if (!state.rows.length) return;
+  $('thead').innerHTML = '<tr>' + state.headers.map(h => `<th>${escapeAdminHtml(h)}</th>`).join('') + '</tr>';
+  $('tbody').innerHTML = state.rows.slice(0, 12).map(r => '<tr>' + state.headers.map(h => `<td>${escapeAdminHtml(formatAdminValue(r[h]))}</td>`).join('') + '</tr>').join('')
+}
+const filterControlDescriptions = {
+  single: 'Permite elegir una sola opci\u00f3n de la lista.',
+  multi: 'Permite marcar varias opciones al mismo tiempo.',
+  search: 'Busca coincidencias escribiendo parte de un valor.',
+  range: 'Filtra valores num\u00e9ricos entre un m\u00ednimo y un m\u00e1ximo.',
+  date: 'Permite indicar fechas desde/hasta o usar un per\u00edodo r\u00e1pido.'
+};
+
+function parseFlexibleNumber(value) {
+  if (typeof value === 'number') return Number.isFinite(value) ? value : NaN;
+  if (value === null || value === undefined) return NaN;
+  let s = String(value).trim().replace(/[^0-9,.-]/g, '');
+  if (!s) return NaN;
+  if (s.includes(',') && s.includes('.')) {
+    if (s.lastIndexOf(',') > s.lastIndexOf('.')) s = s.replace(/\./g, '').replace(',', '.');
+    else s = s.replace(/,/g, '')
+  } else if (s.includes(',')) {
+    if (/,\d{3}$/.test(s)) s = s.replace(/,/g, '');
+    else s = s.replace(',', '.')
+  }
+  const n = Number(s);
+  return Number.isFinite(n) ? n : NaN
+}
+
+function parseFlexibleDate(value) {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) return value;
+  if (value === null || value === undefined || String(value).trim() === '') return null;
+  const s = String(value).trim();
+  let m = s.match(/^(\d{1,2})[/.\-](\d{1,2})[/.\-](\d{4})$/);
+  if (m) {
+    const d = new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]));
+    return Number.isNaN(d.getTime()) ? null : d
+  }
+  const d = new Date(s);
+  return Number.isNaN(d.getTime()) ? null : d
+}
+
+function suggestedFilterControl(field) {
+  if (!field) return 'single';
+  const name = String(field).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  if (/fecha|date|periodo|period/.test(name)) return 'date';
+  if (/(^|[_\s-])(id|identifier|identificador|codigo|folio|correlativo|rut|run)([_\s-]|$)/.test(name)) return 'single';
+  const values = state.rows.map(r => r[field]).filter(v => v !== null && v !== undefined && String(v).trim() !== '').slice(0, 100);
+  if (values.length >= 3 && values.filter(v => parseFlexibleDate(v)).length / values.length >= .8 && values.some(v => /[/-]/.test(String(v)))) return 'date';
+  if (values.length >= 3 && values.filter(v => Number.isFinite(parseFlexibleNumber(v))).length / values.length >= .9) return 'range';
+  return 'single'
+}
+
+function updateFilterControlHelp() {
+  const type = $('filterControl').value,
+    field = $('filterField').value,
+    recommended = suggestedFilterControl(field);
+  $('filterControlHelp').textContent = (field ? (type === recommended ? 'Sugerencia autom\u00e1tica: ' : 'Elecci\u00f3n manual: ') : '') + (filterControlDescriptions[type] || filterControlDescriptions.single)
+}
+
+function renderFilterFields() {
+  const sel = $('filterField');
+  const old = sel.value;
+  sel.innerHTML = '<option value="">Selecciona una columna</option>' + state.headers.map(h => `<option value="${escapeAdminHtml(h)}">${escapeAdminHtml(h)}</option>`).join('');
+  if (state.headers.includes(old)) sel.value = old;
+  updateFilterControlHelp()
+}
+$('filterField').onchange = () => {
+  if ($('filterField').value) $('filterControl').value = suggestedFilterControl($('filterField').value);
+  updateFilterControlHelp()
+};
+$('filterControl').onchange = updateFilterControlHelp;
+updateFilterControlHelp();
+
+function renderFilterList() {
+  const box = $('filterList');
+  box.innerHTML = state.filters.map((f, i) => `<div class="filter-item" draggable="true" data-index="${i}"><span class="drag-handle" title="Arrastrar para ordenar">\u2630</span><input data-label="${i}" value="${escapeAdminHtml(f.label)}" aria-label="Nombre del filtro"><select data-control="${i}"><option value="single" ${f.control==='single'?'selected':''}>Lista interactiva: una opci&oacute;n</option><option value="multi" ${f.control==='multi'?'selected':''}>Lista interactiva: varias opciones</option><option value="search" ${f.control==='search'?'selected':''}>B&uacute;squeda de texto</option><option value="range" ${f.control==='range'?'selected':''}>Rango num&eacute;rico</option><option value="date" ${f.control==='date'?'selected':''}>Fecha o per&iacute;odo</option></select><button type="button" data-del="${i}">Quitar</button><small class="filter-kind">${filterControlDescriptions[f.control]||filterControlDescriptions.single} Columna: ${escapeAdminHtml(f.field)}</small><input class="filter-description" data-help="${i}" value="${escapeAdminHtml(f.description||'')}" placeholder="Explicaci&oacute;n breve opcional para quien use este filtro"></div>`).join('');
+  box.querySelectorAll('[data-label]').forEach(x => x.oninput = () => {
+    state.filters[+x.dataset.label].label = x.value;
+    renderPreview()
+  });
+  box.querySelectorAll('[data-control]').forEach(x => x.onchange = () => {
+    state.filters[+x.dataset.control].control = x.value;
+    renderFilterList();
+    updateFilterControlHelp();
+    renderPreview()
+  });
+  box.querySelectorAll('[data-help]').forEach(x => x.oninput = () => {
+    state.filters[+x.dataset.help].description = x.value;
+    renderPreview()
+  });
+  box.querySelectorAll('[data-del]').forEach(b => b.onclick = () => {
+    state.filters.splice(+b.dataset.del, 1);
+    renderFilterList();
+    renderPreview()
+  });
+  let drag = null;
+  box.querySelectorAll('.filter-item').forEach(el => {
+    el.ondragstart = () => {
+      drag = +el.dataset.index
+    };
+    el.ondragover = e => e.preventDefault();
+    el.ondrop = e => {
+      e.preventDefault();
+      const to = +el.dataset.index;
+      if (drag === null || drag === to) return;
+      const [m] = state.filters.splice(drag, 1);
+      state.filters.splice(to, 0, m);
+      renderFilterList();
+      renderPreview()
+    }
+  })
+}
+let customMappingSeq = 0;
+$('addCustomMapping').onclick = () => {
+  const k = 'custom_' + Date.now() + '_' + (++customMappingSeq);
+  state.customFieldLabels[k] = '';
+  state.mapping[k] = '';
+  renderMapping();
+  $('customMapping').querySelector(`[data-custom-label="${k}"]`)?.focus()
+};
+$('addFilter').onclick = () => {
+  const field = $('filterField').value;
+  if (!field) {
+    alert('Selecciona una columna.');
+    return
+  }
+  if (state.filters.some(f => f.field === field)) {
+    alert('Ese campo ya está configurado como filtro.');
+    return
+  }
+  state.filters.push({
+    field,
+    label: $('filterLabel').value.trim() || field,
+    control: $('filterControl').value,
+    description: $('filterHelp').value.trim()
+  });
+  renderFilterList();
+  renderPreview();
+  $('filterLabel').value = '';
+  $('filterHelp').value = '';
+  $('filterField').value = '';
+  updateFilterControlHelp()
+};
+const presentationPalettes = {
+  gobierno: {
+    label: 'A color',
+    primary: '#0F69B4',
+    header: '#0F69B4',
+    bg: '#FFFFFF',
+    accent: '#EB3B46'
+  },
+  mono: {
+    label: 'Monocroma',
+    primary: '#4D4B4B',
+    header: '#4D4B4B',
+    bg: '#FFFFFF',
+    accent: '#E7E7E7'
+  },
+  negativa: {
+    label: 'Contraste',
+    primary: '#0F69B4',
+    header: '#1F3A73',
+    bg: '#F4F7FA',
+    accent: '#E31837'
+  },
+  marino: {
+    label: 'Azul marino',
+    primary: '#1F3A73',
+    header: '#1F3A73',
+    bg: '#FFFFFF',
+    accent: '#EB3B46'
+  }
+};
+
+function syncDesign() {
+  const p = presentationPalettes[$('presentationPalette').value] || presentationPalettes.gobierno;
+  state.design = {
+    ...state.design,
+    title: $('viewTitle').value.trim() || 'Visor de datos',
+    subtitle: $('viewSubtitle').value.trim(),
+    primary: p.primary,
+    header: p.header,
+    bg: p.bg,
+    accent: p.accent,
+    palette: $('presentationPalette').value,
+    filterLayout: $('filterLayout').value,
+    showMap: $('showMap').checked,
+    mapWidth: $('mapWidth').value,
+    mapHeight: Number($('mapHeight').value) || 440,
+    bannerPosition: $('bannerPosition').value,
+    showExport: $('exportFormat').value !== 'none',
+    exportFormat: $('exportFormat').value,
+    logoPosition: $('logoPosition').value
+  };
+  for (const [key, id] of [
+      ['header', 'header'],
+      ['primary', 'primary'],
+      ['bg', 'background'],
+      ['accent', 'accent']
+    ]) {
+    $(id + 'Swatch').style.background = state.design[key];
+    $(id + 'Hex').textContent = state.design[key]
+  }
+  $('previewLogo').src = state.logoData;
+  $('sampleBanner').src = institutionalBannerData;
+  const sampleBanner = $('sampleBanner'),
+    sampleHead = $('designSampleHead');
+  if (state.design.bannerPosition === 'above') $('designSample').insertBefore(sampleBanner, sampleHead);
+  else sampleHead.after(sampleBanner);
+  $('sampleTitle').textContent = state.design.title;
+  $('sampleSubtitle').textContent = state.design.subtitle;
+  $('designSampleHead').style.background = state.design.header;
+  $('designSampleHead').style.borderBottom = '4px solid ' + state.design.accent;
+  $('sampleButton').style.background = state.design.primary;
+  $('sampleButton').style.color = state.design.primary.toUpperCase() === '#FFFFFF' ? state.design.header : '#FFFFFF';
+  $('designSample').style.background = state.design.bg;
+  $('designSampleHead').style.flexDirection = state.design.logoPosition === 'right' ? 'row-reverse' : state.design.logoPosition === 'top' ? 'column' : 'row';
+  renderPreview()
+} ['presentationPalette', 'filterLayout', 'showMap', 'exportFormat', 'viewTitle', 'viewSubtitle', 'logoPosition', 'bannerPosition', 'mapWidth', 'mapHeight'].forEach(id => $(id).addEventListener('input', syncDesign));
+['presentationPalette', 'filterLayout', 'showMap', 'exportFormat', 'logoPosition', 'bannerPosition', 'mapWidth', 'mapHeight'].forEach(id => $(id).addEventListener('change', syncDesign));
+
+function renderDesignFields() {
+  renderVisualizationFields();
+  renderVisualizationList();
+  renderCategoryColors();
+  renderMapColumnFields()
+}
+
+function parseAdminMetricNumber(value) {
+  if (typeof value === 'number') return Number.isFinite(value) ? value : NaN;
+  if (value === null || value === undefined) return NaN;
+  let s = String(value).trim().replace(/[^0-9,.-]/g, '');
+  if (!s) return NaN;
+  if (s.includes(',') && s.includes('.')) {
+    if (s.lastIndexOf(',') > s.lastIndexOf('.')) s = s.replace(/\./g, '').replace(',', '.');
+    else s = s.replace(/,/g, '')
+  } else if (s.includes(',')) {
+    if (/,\d{3}$/.test(s)) s = s.replace(/,/g, '');
+    else s = s.replace(',', '.')
+  }
+  const n = Number(s);
+  return Number.isFinite(n) ? n : NaN
+}
+
+function safeVizColor(value, fallback = '#0F69B4') {
+  return /^#[0-9a-f]{6}$/i.test(String(value || '')) ? value : fallback
+}
+
+function renderVisualizationFields() {
+  const oldField = $('vizField').value;
+  const oldCategory = $('vizCategory').value;
+  const oldBreakdown = $('vizBreakdown').value;
+  const options = state.headers.map(h => `<option value="${escapeAdminHtml(h)}">${escapeAdminHtml(h)}</option>`).join('');
+  $('vizField').innerHTML = '<option value="">Selecciona una columna</option>' + options;
+  $('vizCategory').innerHTML = '<option value="">Selecciona una columna</option>' + options;
+  $('vizBreakdown').innerHTML = '<option value="">Sin desglose</option>' + options;
+  if (state.headers.includes(oldField)) $('vizField').value = oldField;
+  if (state.headers.includes(oldCategory)) $('vizCategory').value = oldCategory;
+  if (state.headers.includes(oldBreakdown)) $('vizBreakdown').value = oldBreakdown;
+  const kind = $('vizKind').value,
+    aggregate = $('vizAggregate').value;
+  const needsCategory = ['bar', 'donut'].includes(kind),
+    needsMetric = ['kpi', 'bar', 'donut'].includes(kind);
+  $('vizCategoryWrap').style.display = needsCategory ? 'block' : 'none';
+  $('vizBreakdownWrap').style.display = kind === 'bar' ? 'block' : 'none';
+  $('vizAggregateWrap').style.display = needsMetric ? 'block' : 'none';
+  $('vizFieldWrap').style.display = kind === 'kpi' || (needsMetric && aggregate !== 'count') || kind === 'cards' ? 'block' : 'none';
+  $('vizTableFieldsWrap').style.display = kind === 'table' ? 'block' : 'none';
+  $('vizFieldWrap').querySelector('label').textContent = kind === 'cards' ? 'Campo que se mostrar? en cada tarjeta' : kind === 'kpi' ? 'Campo del indicador' : 'Campo num?rico que se calcular?';
+  $('vizAggregateWrap').querySelector('label').textContent = kind === 'kpi' ? 'C?lculo del indicador' : 'C?lculo del gr?fico';
+  $('vizMetricHelp').textContent = aggregate === 'count' ? 'Cuenta todos los registros de cada grupo. No requiere elegir un campo num&eacute;rico.' : 'Suma o promedia los valores num?ricos del campo seleccionado.';
+  if (kind === 'table') {
+    const selected = new Set([...document.querySelectorAll('.viz-table-field:checked')].map(x => x.value));
+    $('vizTableFields').innerHTML = state.headers.map((h, i) => `<label class="viz-table-field-row"><input class="viz-table-field" type="checkbox" value="${escapeAdminHtml(h)}" ${selected.has(h)||(!selected.size&&i===0)?'checked':''}><span>${escapeAdminHtml(h)}</span></label>`).join('');
+  }
+  $('vizColorHelp').textContent = needsCategory ? 'Color del borde; colores de barras y sectores se editan por categor&iacute;a abajo.' : 'Color de acento del componente.';
+  refreshVisualizationDraft();
+}
+
+function renderVisualizationList() {
+  const names = {
+    kpi: 'Indicador KPI',
+    cards: 'Tarjetas de registros',
+    bar: 'Gr&aacute;fico de barras',
+    donut: 'Gr&aacute;fico circular',
+    table: 'Tabla'
+  };
+  $('visualizationList').innerHTML = state.visualizations.length ? state.visualizations.map((v, i) => {
+    const fields = v.kind === 'table' ? (v.fields || [v.field]).join(', ') : v.kind === 'bar' && v.breakdown ? `${v.category} por ${v.breakdown}` : v.category || v.field || 'Registros';
+    return `<div class="filter-item"><span class="drag-handle">${i+1}</span><strong>${names[v.kind]}</strong><span>${escapeAdminHtml(v.title)} &middot; ${escapeAdminHtml(fields)} &middot; ${v.aggregate==='count'?'Cuenta registros':v.aggregate==='sum'?'Suma':'Promedio'}</span><button type="button" data-remove-viz="${v.id}">Quitar</button></div>`
+  }).join('') : '<p class="status">A&uacute;n no hay visualizaciones.</p>';
+  document.querySelectorAll('[data-remove-viz]').forEach(x => x.onclick = () => {
+    state.visualizations = state.visualizations.filter(v => v.id !== x.dataset.removeViz);
+    renderVisualizationList();
+    renderPreview()
+  });
+  renderCategoryColors();
+  renderVisualizationStage();
+}
+
+function renderCategoryColors() {
+  const activeKind = $('vizKind').value,
+    activeCategory = $('vizCategory').value,
+    categoryFields = [...state.visualizations.filter(v => ['bar', 'donut'].includes(v.kind) && v.category).flatMap(v => [v.category, v.kind === 'bar' ? v.breakdown : ''].filter(Boolean)), ...(['bar', 'donut'].includes(activeKind) && activeCategory ? [activeCategory, $('vizBreakdown').value].filter(Boolean) : [])],
+    cats = [...new Set(categoryFields.flatMap(h => state.rows.map(r => r[h]).filter(x => x !== null && x !== '').map(String)))].slice(0, 20),
+    palette = ['#0F69B4', '#E0701E', '#833CA3', '#2D717C', '#B91B1B', '#D4A017', '#4D7C0F', '#0E7490'];
+  cats.forEach((v, i) => {
+    if (!state.categoryColors[v]) state.categoryColors[v] = palette[i % palette.length]
+  });
+  $('categoryColors').innerHTML = cats.length ? cats.map(v => `<label class="color-row"><span>${escapeAdminHtml(v)}</span><input type="color" data-cat="${escapeAdminHtml(v)}" value="${safeVizColor(state.categoryColors[v])}"></label>`).join('') : '<p class="status">Configura colores aqu&iacute; cuando agregues un gr&aacute;fico por categor&iacute;a.</p>';
+  $('categoryColorHelp').style.display = cats.length ? 'block' : 'none';
+  document.querySelectorAll('[data-cat]').forEach(x => x.oninput = () => {
+    state.categoryColors[x.dataset.cat] = x.value;
+    renderPreview();
+    renderVisualizationStage();
+    refreshVisualizationDraft()
+  })
+}
+
+function metricForValues(values, aggregate) {
+  if (aggregate === 'count') return values.filter(x => x !== null && x !== '').length;
+  const nums = values.map(parseAdminMetricNumber).filter(Number.isFinite);
+  if (!nums.length) return 0;
+  return aggregate === 'sum' ? nums.reduce((a, b) => a + b, 0) : nums.reduce((a, b) => a + b, 0) / nums.length
+}
+
+function groupedMetrics(rows, v) {
+  const groups = new Map(),
+    seriesField = v.kind === 'bar' ? v.breakdown : '';
+  rows.forEach(r => {
+    const raw = r[v.category],
+      category = raw === null || raw === '' ? 'Sin informaci?n' : String(raw);
+    const rawSeries = seriesField ? r[seriesField] : 'Todos',
+      series = rawSeries === null || rawSeries === '' ? 'Sin informaci?n' : String(rawSeries);
+    const key = JSON.stringify([category, series]),
+      entry = groups.get(key) || {
+        category,
+        series,
+        count: 0,
+        values: []
+      };
+    entry.count++;
+    const n = parseAdminMetricNumber(r[v.field]);
+    if (Number.isFinite(n)) entry.values.push(n);
+    groups.set(key, entry);
+  });
+  let entries = [...groups.values()].map(e => ({
+    category: e.category,
+    series: e.series,
+    value: v.aggregate === 'count' ? e.count : v.aggregate === 'sum' ? e.values.reduce((a, b) => a + b, 0) : e.values.length ? e.values.reduce((a, b) => a + b, 0) / e.values.length : 0
+  }));
+  return entries.sort((a, b) => a.category.localeCompare(b.category, 'es') || a.series.localeCompare(b.series, 'es'));
+}
+
+function tableColumns(v) {
+  return v.fields && v.fields.length ? v.fields : [v.field].filter(Boolean)
+}
+
+function previewVisualization(v) {
+  const rows = state.rows,
+    values = v.field ? rows.map(r => r[v.field]).filter(x => x !== null && x !== '') : [],
+    title = escapeAdminHtml(v.title || v.field || v.category || 'Vista previa'),
+    color = safeVizColor(v.color);
+  if (v.kind === 'kpi') {
+    if (!v.field) return `<article class="viz-card"><h3>${title}</h3><p>Selecciona el campo del indicador.</p></article>`;
+    const n = metricForValues(values, v.aggregate);
+    return `<article class="viz-card viz-kpi" style="border-top-color:${color}"><small>${title}</small><strong>${Number(n).toLocaleString('es-CL',{maximumFractionDigits:1})}</strong><span>${v.aggregate==='sum'?'Suma':v.aggregate==='average'?'Promedio':'Registros con dato'}</span></article>`;
+  }
+  if (v.kind === 'cards') return `<article class="viz-card" style="border-top:3px solid ${color}"><h3>${title}</h3><div class="viz-cards">${rows.slice(0,3).map(r=>`<div class="viz-record"><b>${escapeAdminHtml(r[state.mapping.nombre]||r[state.mapping.id]||'Registro')}</b><span>${escapeAdminHtml(r[v.field]??'Sin dato')}</span></div>`).join('')}</div><small>Vista resumida de 3 registros; el visor completo muestra hasta 100 por bloque.</small></article>`;
+  if (v.kind === 'table') {
+    const fields = tableColumns(v);
+    return `<article class="viz-card" style="border-top:3px solid ${color}"><h3>${title}</h3><div class="table-wrap"><table><thead><tr>${fields.map(f=>`<th>${escapeAdminHtml(f)}</th>`).join('')}</tr></thead><tbody>${rows.slice(0,5).map(r=>`<tr>${fields.map(f=>`<td>${escapeAdminHtml(r[f]??'')}</td>`).join('')}</tr>`).join('')}</tbody></table></div><small>Muestra de 5 filas; los filtros del visor reducir&aacute;n el conjunto.</small></article>`;
+  }
+  if (!v.category) return `<article class="viz-card"><h3>${title}</h3><p>Selecciona la categor?a principal para agrupar los valores.</p></article>`;
+  const entries = groupedMetrics(rows, v),
+    cats = [...new Set(entries.map(e => e.category))],
+    total = entries.reduce((t, e) => t + e.value, 0) || 1;
+  if (v.kind === 'donut') {
+    const rolled = entries.length > 10 ? entries.slice(0, 9).concat([{
+      category: 'Otros',
+      series: 'Todos',
+      value: entries.slice(9).reduce((t, e) => t + e.value, 0)
+    }]) : entries;
+    let pos = 0;
+    const stops = rolled.map(e => {
+      const start = pos;
+      pos += e.value / total * 100;
+      return `${safeVizColor(state.categoryColors[e.category],color)} ${start}% ${pos}%`
+    }).join(',');
+    return `<article class="viz-card" style="border-top:3px solid ${color}"><h3>${title}</h3><div class="viz-donut" style="background:conic-gradient(${stops})"></div><div class="viz-legend">${rolled.map(e=>`<div><i style="background:${safeVizColor(state.categoryColors[e.category],color)}"></i><span>${escapeAdminHtml(e.category)}</span><b>${Number(e.value).toLocaleString('es-CL',{maximumFractionDigits:1})}</b></div>`).join('')}</div><small>${v.aggregate==='count'?'Personas':v.aggregate==='sum'?'Suma de':'Promedio de'} ${v.aggregate==='count'?'':escapeAdminHtml(v.field)+' '}por ${escapeAdminHtml(v.category)}.${cats.length>10?' Se agrupan las categor&iacute;as menores en &laquo;Otros&raquo;.':''}</small></article>`;
+  }
+  const perCategory = new Map();
+  entries.forEach(e => {
+    const a = perCategory.get(e.category) || [];
+    a.push(e);
+    perCategory.set(e.category, a)
+  });
+  const totals = [...perCategory].map(([k, a]) => [k, a.reduce((t, e) => t + e.value, 0)]).sort((a, b) => b[1] - a[1]);
+  const shown = totals.slice(0, 12),
+    max = Math.max(1, ...shown.map(x => x[1]));
+  return `<article class="viz-card" style="border-top:3px solid ${color}"><h3>${title}</h3><div class="viz-bars">${shown.map(([k,n])=>{const parts=perCategory.get(k),denom=max;return `<div class="viz-bar-group"><div class="viz-bar-row"><span>${escapeAdminHtml(k)}</span><i style="width:${Math.max(3,n/denom*100)}%;background:${v.breakdown?'#E2E8F0':safeVizColor(state.categoryColors[k],color)}"></i><b>${Number(n).toLocaleString('es-CL',{maximumFractionDigits:1})}</b></div>${v.breakdown?`<div class="viz-bar-series">${parts.map(e=>`<span><i style="background:${safeVizColor(state.categoryColors[e.series],color)}"></i>${escapeAdminHtml(e.series)}: ${Number(e.value).toLocaleString('es-CL',{maximumFractionDigits:1})}</span>`).join('')}</div>`:''}</div>`}).join('')}</div><small>${v.aggregate==='count'?'Cuenta registros':v.aggregate==='sum'?'Suma':'Promedio'}${v.aggregate==='count'?'':' de '+escapeAdminHtml(v.field)} por ${escapeAdminHtml(v.category)}${v.breakdown?' y '+escapeAdminHtml(v.breakdown):''}.${totals.length>12?' Se muestran las 12 categor&iacute;as con mayor valor.':''}</small></article>`;
+}
+
+function sortablePreviewVisualization(v) {
+  const id = escapeAdminHtml(v.id || ''), label = escapeAdminHtml(v.title || v.field || v.category || 'Visualizaci&oacute;n');
+  return previewVisualization(v).replace(/^<article class="([^"]*)"/, '<article class="$1 preview-sortable" draggable="true" tabindex="0" data-preview-viz="' + id + '" aria-label="' + label + '. Arrastra para cambiar su posici&oacute;n, o usa las flechas del teclado"');
+}
+
+function moveVisualization(id, offset) {
+  const from = state.visualizations.findIndex(v => v.id === id), to = from + offset;
+  if (from < 0 || to < 0 || to >= state.visualizations.length) return;
+  const [item] = state.visualizations.splice(from, 1);
+  state.visualizations.splice(to, 0, item);
+  renderVisualizationList();
+  renderPreview();
+  [...$('preview').querySelectorAll('[data-preview-viz]')].find(card => card.dataset.previewViz === id)?.focus()
+}
+
+function bindPreviewReordering() {
+  const cards = $('preview').querySelectorAll('[data-preview-viz]');
+  cards.forEach(card => {
+    card.addEventListener('dragstart', event => {
+      event.dataTransfer?.setData('text/plain', card.dataset.previewViz);
+      if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
+      card.classList.add('is-dragging');
+    });
+    card.addEventListener('dragover', event => {
+      event.preventDefault();
+      if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+      card.classList.add('is-drop-target');
+    });
+    card.addEventListener('dragleave', () => card.classList.remove('is-drop-target'));
+    card.addEventListener('drop', event => {
+      event.preventDefault();
+      const sourceId = event.dataTransfer?.getData('text/plain'), targetId = card.dataset.previewViz;
+      const from = state.visualizations.findIndex(v => v.id === sourceId), target = state.visualizations.findIndex(v => v.id === targetId);
+      if (from < 0 || target < 0 || from === target) return;
+      const rect = card.getBoundingClientRect(), after = event.clientY > rect.top + rect.height / 2;
+      const [item] = state.visualizations.splice(from, 1);
+      let insertAt = target + (after ? 1 : 0);
+      if (from < insertAt) insertAt--;
+      state.visualizations.splice(insertAt, 0, item);
+      renderVisualizationList();
+      renderPreview();
+    });
+    card.addEventListener('dragend', () => card.classList.remove('is-dragging'));
+    card.addEventListener('keydown', event => {
+      if (event.key === 'ArrowUp') { event.preventDefault(); moveVisualization(card.dataset.previewViz, -1); }
+      if (event.key === 'ArrowDown') { event.preventDefault(); moveVisualization(card.dataset.previewViz, 1); }
+    });
+  });
+}
+
+function refreshVisualizationDraft() {
+  const kind = $('vizKind').value,
+    field = $('vizField').value,
+    category = $('vizCategory').value,
+    breakdown = $('vizBreakdown').value,
+    title = $('vizTitle').value.trim() || (category || field || 'Vista previa'),
+    fields = [...document.querySelectorAll('.viz-table-field:checked')].map(x => x.value),
+    v = {
+      kind,
+      field,
+      fields,
+      category,
+      breakdown,
+      title,
+      color: $('vizColor').value,
+      aggregate: $('vizAggregate').value
+    };
+  if (!state.rows.length) {
+    $('vizDraftPreview').innerHTML = '<strong>Vista previa provisional</strong><p>Carga un archivo en el paso Datos para probar los c&aacute;lculos con datos reales.</p>';
+    return
+  }
+  if (kind === 'kpi' && !field || kind === 'cards' && !field || kind === 'table' && !fields.length) {
+    $('vizDraftPreview').innerHTML = '<strong>Vista previa provisional</strong><p>' + (kind === 'table' ? 'Selecciona una o m&aacute;s columnas para la tabla.' : 'Selecciona el campo que usar&aacute; esta visualizaci?n.') + '</p>';
+    return
+  }
+  if (['bar', 'donut'].includes(kind) && !category) {
+    $('vizDraftPreview').innerHTML = '<strong>Vista previa provisional</strong><p>Selecciona la categor?a principal que agrupar&aacute; el gr&aacute;fico.</p>';
+    return
+  }
+  $('vizDraftPreview').innerHTML = '<strong>Vista previa provisional &middot; a&uacute;n no se agrega al visor</strong>' + previewVisualization(v) + '<small class="draft-note">La muestra usa todos los registros cargados. En el visor publicado, los c&aacute;lculos y las filas se actualizar&aacute;n al aplicar los filtros.</small>';
+}
+
+function renderVisualizationStage() {
+  const geoRows = validGeoRows(state.rows, state.mapping),
+    map = state.design.showMap ? (geoRows.length ? `<article class="viz-card viz-map"><h3>Mapa de registros</h3><div class="viz-map-placeholder">${geoRows.length} registros con coordenadas v&aacute;lidas</div></article>` : `<article class="viz-card"><h3>Mapa de registros</h3><small>Confirma las columnas de latitud y longitud para mostrar el mapa.</small></article>`) : '';
+  $('visualizationStage').innerHTML = (state.visualizations.map(previewVisualization).join('') || '<p class="status">A&uacute;n no hay visualizaciones agregadas.</p>') + map
+}
+
+function addVisualization() {
+  const kind = $('vizKind').value,
+    field = $('vizField').value,
+    category = $('vizCategory').value,
+    breakdown = $('vizBreakdown').value,
+    fields = [...document.querySelectorAll('.viz-table-field:checked')].map(x => x.value);
+  if ((kind === 'kpi' || kind === 'cards') && !field) {
+    alert('Selecciona el campo que usar&aacute; esta visualizaci?n.');
+    return
+  }
+  if (['bar', 'donut'].includes(kind) && !category) {
+    alert('Selecciona la categor?a principal del gr&aacute;fico.');
+    return
+  }
+  if (['bar', 'donut'].includes(kind) && $('vizAggregate').value !== 'count' && !field) {
+    alert('Selecciona el campo num&eacute;rico que se sumar&aacute; o promediar&aacute;.');
+    return
+  }
+  if (kind === 'table' && !fields.length) {
+    alert('Marca al menos una columna para la tabla.');
+    return
+  }
+  const title = $('vizTitle').value.trim() || (['bar','donut'].includes(kind) ? $('vizCategory').selectedOptions[0]?.text : $('vizField').selectedOptions[0]?.text) || 'Registros';
+  state.visualizations.push({
+    id: String(Date.now()) + '_' + Math.random().toString(36).slice(2, 7),
+    kind,
+    title,
+    field,
+    fields,
+    category,
+    breakdown: kind === 'bar' ? breakdown : '',
+    color: safeVizColor($('vizColor').value),
+    aggregate: ['kpi', 'bar', 'donut'].includes(kind) ? $('vizAggregate').value : 'count'
+  });
+  $('vizTitle').value = '';
+  renderVisualizationFields();
+  renderVisualizationList();
+  renderPreview();
+}
+$('addVisualization').onclick = addVisualization;
+$('vizKind').onchange = () => {
+  renderVisualizationFields();
+  refreshVisualizationDraft()
+};
+['vizTitle', 'vizField', 'vizCategory', 'vizBreakdown', 'vizAggregate', 'vizColor'].forEach(id => $(id).addEventListener(id === 'vizTitle' || id === 'vizColor' ? 'input' : 'change', () => {
+  if (id === 'vizCategory' || id === 'vizBreakdown') renderCategoryColors();
+  if (id === 'vizAggregate') renderVisualizationFields();
+  refreshVisualizationDraft()
+}));
+document.addEventListener('change', e => {
+  if (e.target.matches('.viz-table-field')) refreshVisualizationDraft()
+});
+
+function renderMapColumnFields() {
+  const choices = state.headers.map(h => `<option value="${escapeAdminHtml(h)}">${escapeAdminHtml(h)}</option>`).join('');
+  $('mapLat').innerHTML = '<option value="">Selecciona latitud</option>' + choices;
+  $('mapLon').innerHTML = '<option value="">Selecciona longitud</option>' + choices;
+  if (state.headers.includes(state.mapping.lat)) $('mapLat').value = state.mapping.lat;
+  if (state.headers.includes(state.mapping.lon)) $('mapLon').value = state.mapping.lon;
+  $('showMap').disabled = !state.mapCoordinatesConfirmed;
+  const valid = validGeoRows(state.rows, state.mapping);
+  const status = $('mapCoordinateStatus');
+  if (!state.mapping.lat || !state.mapping.lon) status.textContent = 'Asigna columnas de latitud y longitud antes de habilitar el mapa.';
+  else if (!valid.length) status.textContent = 'Las columnas seleccionadas no contienen coordenadas v\u00e1lidas en grados decimales. Revisa la asignacion.';
+  else {
+    const lats = valid.map(r => parseCoordinate(r[state.mapping.lat])),
+      lons = valid.map(r => parseCoordinate(r[state.mapping.lon])),
+      minLat = lats.reduce((a, b) => Math.min(a, b), Infinity),
+      maxLat = lats.reduce((a, b) => Math.max(a, b), -Infinity),
+      minLon = lons.reduce((a, b) => Math.min(a, b), Infinity),
+      maxLon = lons.reduce((a, b) => Math.max(a, b), -Infinity),
+      regionText = state.mapping.region ? state.rows.map(r => String(r[state.mapping.region] || '')).join(' ').toLowerCase() : '';
+    const looksLosLagos = regionText.includes('los lagos'),
+      inside = valid.filter(r => {
+        const a = parseCoordinate(r[state.mapping.lat]),
+          o = parseCoordinate(r[state.mapping.lon]);
+        return a >= -45 && a <= -39 && o >= -78 && o <= -70
+      }).length;
+    status.textContent = `${valid.length} coordenadas v\u00e1lidas; latitud ${minLat.toFixed(4)} a ${maxLat.toFixed(4)}, longitud ${minLon.toFixed(4)} a ${maxLon.toFixed(4)}.${looksLosLagos&&inside<valid.length?' ALERTA: hay puntos fuera de la Regi\u00f3n de Los Lagos.':' '+(state.mapCoordinatesConfirmed?'Coordenadas confirmadas.':'Confirma que el rango corresponda a la ubicaci\u00f3n esperada.')}`
+  }
+}
+
+function confirmMapCoordinates() {
+  const lat = $('mapLat').value,
+    lon = $('mapLon').value;
+  if (!lat || !lon || lat === lon) {
+    alert('Selecciona dos columnas distintas: una para latitud y otra para longitud.');
+    return
+  }
+  state.mapping.lat = lat;
+  state.mapping.lon = lon;
+  if ($('map-lat')) $('map-lat').value = lat;
+  if ($('map-lon')) $('map-lon').value = lon;
+  const valid = validGeoRows(state.rows, state.mapping);
+  if (!valid.length) {
+    state.mapCoordinatesConfirmed = false;
+    $('showMap').checked = false;
+    $('showMap').disabled = true;
+    renderMapColumnFields();
+    alert('No hay pares de coordenadas v\u00e1lidas en esas columnas. Revisa los datos y el orden latitud/longitud.');
+    return
+  }
+  const regionText = state.mapping.region ? state.rows.map(r => String(r[state.mapping.region] || '')).join(' ').toLowerCase() : '';
+  if (regionText.includes('los lagos') && valid.some(r => {
+      const a = parseCoordinate(r[state.mapping.lat]),
+        o = parseCoordinate(r[state.mapping.lon]);
+      return !(a >= -45 && a <= -39 && o >= -78 && o <= -70)
+    })) {
+    state.mapCoordinatesConfirmed = false;
+    $('showMap').checked = false;
+    $('showMap').disabled = true;
+    renderMapColumnFields();
+    alert('Hay coordenadas fuera del \u00e1rea aproximada de la Regi\u00f3n de Los Lagos. Revisa las columnas o los registros.');
+    return
+  }
+  state.mapCoordinatesConfirmed = true;
+  $('showMap').disabled = false;
+  renderMapColumnFields();
+  syncDesign();
+  renderPreview()
+}
+$('confirmMapColumns').onclick = confirmMapCoordinates;
+$('mapLat').onchange = () => {
+  state.mapping.lat = $('mapLat').value;
+  state.mapCoordinatesConfirmed = false;
+  state.design.showMap = false;
+  $('showMap').checked = false;
+  $('showMap').disabled = true;
+  renderMapColumnFields();
+  renderPreview()
+};
+$('mapLon').onchange = () => {
+  state.mapping.lon = $('mapLon').value;
+  state.mapCoordinatesConfirmed = false;
+  state.design.showMap = false;
+  $('showMap').checked = false;
+  $('showMap').disabled = true;
+  renderMapColumnFields();
+  renderPreview()
+};
+$('showMap').onchange = () => {
+  if ($('showMap').checked && !state.mapCoordinatesConfirmed) {
+    $('showMap').checked = false;
+    alert('Confirma las columnas de latitud y longitud antes de activar el mapa.');
+    return
+  }
+  syncDesign()
+};
+
+function renderAdminFilterPreview(filter) {
+  const field = filter.field;
+  const title = escapeAdminHtml(filter.label || field || 'Filtro');
+  const help = escapeAdminHtml(filter.description || filterControlDescriptions[filter.control] || 'Filtro por ' + (field || 'campo'));
+  const values = [...new Set(state.rows.map(row => row[field]).filter(value => value !== null && value !== undefined && String(value).trim() !== '').map(String))].sort((a, b) => a.localeCompare(b, 'es')).slice(0, 8);
+  let control = '';
+  if (filter.control === 'search') {
+    control = '<input class="preview-filter-input" type="search" placeholder="Buscar ' + escapeAdminHtml(field || '') + '..." disabled>';
+  } else if (filter.control === 'range') {
+    const nums = state.rows.map(row => parseFlexibleNumber(row[field])).filter(Number.isFinite);
+    const min = nums.length ? Math.min(...nums) : 0;
+    const max = nums.length ? Math.max(...nums) : 100;
+    control = '<div class="preview-range"><div class="preview-range-row"><div class="preview-range-values"><span>M&iacute;nimo</span><strong>' + min + '</strong></div><input type="range" min="' + min + '" max="' + max + '" value="' + min + '" disabled></div><div class="preview-range-row"><div class="preview-range-values"><span>M&aacute;ximo</span><strong>' + max + '</strong></div><input type="range" min="' + min + '" max="' + max + '" value="' + max + '" disabled></div></div>';
+  } else if (filter.control === 'date') {
+    control = '<div class="preview-date"><select class="preview-filter-input" disabled><option>Todos los per&iacute;odos</option><option>&Uacute;ltimos 30 d&iacute;as</option><option>A&ntilde;o corrido</option></select><div class="preview-date-range"><label>Desde<input class="preview-filter-input" type="date" disabled></label><label>Hasta<input class="preview-filter-input" type="date" disabled></label></div></div>';
+  } else if (filter.control === 'multi') {
+    control = '<details class="preview-choice"><summary>Seleccionar opciones</summary><div class="preview-choice-list">' + values.map(value => '<label><input type="checkbox" disabled><span>' + escapeAdminHtml(value) + '</span></label>').join('') + '</div></details>';
+  } else {
+    control = '<select class="preview-filter-input" disabled><option>Todas las opciones</option>' + values.map(value => '<option>' + escapeAdminHtml(value) + '</option>').join('') + '</select>';
+  }
+  return '<article class="preview-filter-card"><strong class="preview-filter-title">' + title + '</strong><p class="preview-filter-help">' + help + '</p>' + control + '</article>';
+}
+
+function renderPreview() {
+  if (adminMap) { adminMap.remove(); adminMap = null; }
+  const n = state.rows.length || 0, geoRows = validGeoRows(state.rows, state.mapping);
+  $('preview').style.background = state.design.bg;
+  $('preview').style.color = state.design.bg.toUpperCase() === '#1F3A73' ? '#FFFFFF' : '#1C244B';
+  $('preview').style.borderTop = '5px solid ' + state.design.primary;
+  const filters = state.filters.length ? '<section class="preview-filter-section"><h3>Filtros</h3><div class="preview-filter-grid">' + state.filters.map(renderAdminFilterPreview).join('') + '</div></section>' : '<p class="status">Sin filtros configurados</p>';
+  const exportLabel = state.design.exportFormat === 'xlsx' ? 'Descargar Excel (.xlsx)' : state.design.exportFormat === 'csv' ? 'Descargar CSV' : state.design.exportFormat === 'both' ? 'Descargar Excel y CSV' : '';
+  const banner = '<img class="institutional-banner" src="' + institutionalBannerData + '" alt="Gobierno de Chile - Trabajando para usted">';
+  const direction = state.design.logoPosition === 'right' ? 'row-reverse' : state.design.logoPosition === 'top' ? 'column' : 'row';
+  const head = '<div class="preview-identity" style="background:' + state.design.header + ';border-color:' + state.design.accent + ';flex-direction:' + direction + '"><img src="' + state.logoData + '" alt="Logo institucional"><div><h2>' + escapeAdminHtml(state.design.title) + '</h2><p>' + escapeAdminHtml(state.design.subtitle) + '</p></div></div>';
+  const mapPreview = state.design.showMap ? '<article class="viz-card viz-map"><h3>Mapa de registros</h3><p>' + geoRows.length + ' de ' + n + ' registros con coordenadas v&aacute;lidas</p></article>' : '';
+  const visuals = state.visualizations.map(sortablePreviewVisualization).join('') || '<p class="status">A&uacute;n no hay KPI, tarjetas ni gr&aacute;ficos agregados.</p>';
+  $('preview').innerHTML = (state.design.bannerPosition === 'above' ? banner : '') + head + (state.design.bannerPosition === 'below' ? banner : '') + '<main class="preview-main">' + filters + '<div class="preview-summary"><span><b>' + n + '</b> registros cargados</span>' + (exportLabel ? '<button type="button">' + exportLabel + '</button>' : '') + '</div><p class="preview-sort-help">Puedes arrastrar los KPI, tarjetas y gr&aacute;ficos para cambiar su orden. En un bloque seleccionado, usa las flechas ↑ y ↓ del teclado para reordenarlo.</p><div class="viz-stage">' + visuals + mapPreview + '</div></main>';
+  bindPreviewReordering();
+}
+function viewerRuntime() {
+  const $ = id => document.getElementById(id);
+  const esc = value => String(value == null ? '' : value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const number = value => { if (typeof value === 'number') return Number.isFinite(value) ? value : NaN; if (value == null) return NaN; let s=String(value).trim().replace(/[^0-9,.-]/g,''); if(!s)return NaN; if(s.includes(',')&&s.includes('.'))s=s.lastIndexOf(',')>s.lastIndexOf('.')?s.replace(/\./g,'').replace(',','.'):s.replace(/,/g,''); else if(s.includes(','))s=/,\d{3}$/.test(s)?s.replace(/,/g,''):s.replace(',','.'); const n=Number(s); return Number.isFinite(n)?n:NaN; };
+  const color = (key,fallback) => /^#[0-9a-f]{6}$/i.test(String(C.categoryColors[key]||''))?C.categoryColors[key]:fallback;
+  const filters=document.getElementById('filters'),output=document.getElementById('visuals'); let map=null,markerLayer=null;
+  let F={};
+  const dateValue=value=>{if(!value)return null;const text=String(value).trim();let m=text.match(/^(\d{1,2})[/.\-](\d{1,2})[/.\-](\d{4})$/);if(m)return new Date(+m[3],+m[2]-1,+m[1]);m=text.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m)return new Date(+m[1],+m[2]-1,+m[3]);const d=new Date(text);return Number.isNaN(d.getTime())?null:d;};
+  function selectedRows(){return C.rows.filter(row=>C.filters.every((f,i)=>{const val=F[i],raw=row[f.field];if(f.control==='search')return!val||String(raw==null?'':raw).toLowerCase().includes(String(val).toLowerCase());if(f.control==='multi')return!Array.isArray(val)||!val.length||val.includes(String(raw));if(f.control==='range'){if(!val)return true;const n=number(raw);return Number.isFinite(n)&&n>=val.low&&n<=val.high}if(f.control==='date'){if(!val||val.preset==='all'||val.preset==='custom'&&!val.from&&!val.to)return true;const d=dateValue(raw);if(!d)return false;const today=new Date(),to=new Date(today.getFullYear(),today.getMonth(),today.getDate());let from=null;if(val.preset==='last7')from=new Date(to.getFullYear(),to.getMonth(),to.getDate()-6);else if(val.preset==='last30')from=new Date(to.getFullYear(),to.getMonth(),to.getDate()-29);else if(val.preset==='month')from=new Date(to.getFullYear(),to.getMonth(),1);else if(val.preset==='ytd')from=new Date(to.getFullYear(),0,1);else{from=val.from?dateValue(val.from):null;const end=val.to?dateValue(val.to):null;return(!from||d>=from)&&(!end||d<=end)}return d>=from&&d<=to}return!val||String(raw==null?'':raw)===String(val)}))}
+  function metric(values,kind){if(kind==='count')return values.length;const nums=values.map(number).filter(Number.isFinite);if(!nums.length)return 0;return kind==='sum'?nums.reduce((a,b)=>a+b,0):nums.reduce((a,b)=>a+b,0)/nums.length}
+  function render(rows){
+    const kpis=document.getElementById('kpis');
+    kpis.innerHTML=C.visualizations.filter(v=>v.kind==='kpi').map(v=>{const vals=rows.map(r=>r[v.field]).filter(x=>x!=null&&x!=='');const n=metric(vals,v.aggregate);return'<article class="kpi" style="border-top-color:'+esc(v.color)+'"><small>'+esc(v.title)+'</small><strong>'+n.toLocaleString('es-CL',{maximumFractionDigits:1})+'</strong><span>'+(v.aggregate==='sum'?'Suma':v.aggregate==='average'?'Promedio':'Registros con dato')+'</span></article>'}).join('');
+    output.innerHTML=C.visualizations.filter(v=>v.kind!=='kpi').map(v=>{
+      const accent=/^#[0-9a-f]{6}$/i.test(v.color)?v.color:'#0F69B4';
+      if(v.kind==='cards')return'<article class="visual-card" style="border-top:3px solid '+accent+'"><h2>'+esc(v.title)+'</h2><div class="cards">'+rows.slice(0,100).map(r=>'<div class="visual-record"><b>'+esc((C.mapping.nombre&&r[C.mapping.nombre])||(C.mapping.id&&r[C.mapping.id])||'Registro')+'</b><div>'+esc(r[v.field])+'</div></div>').join('')+'</div></article>';
+      if(v.kind==='table'){const fields=v.fields&&v.fields.length?v.fields:[v.field].filter(Boolean);return'<article class="visual-card" style="border-top:3px solid '+accent+'"><h2>'+esc(v.title)+'</h2><div class="visual-table"><table><thead><tr>'+fields.map(f=>'<th>'+esc(f)+'</th>').join('')+'</tr></thead><tbody>'+rows.slice(0,100).map(r=>'<tr>'+fields.map(f=>'<td>'+esc(r[f])+'</td>').join('')+'</tr>').join('')+'</tbody></table></div></article>'}
+      const grouped=new Map(),seriesField=v.kind==='bar'?v.breakdown:'';
+      rows.forEach(r=>{const cat=r[v.category]==null||r[v.category]===''?'Sin informaci?n':String(r[v.category]),series=seriesField?(r[seriesField]==null||r[seriesField]===''?'Sin informaci?n':String(r[seriesField])):'Todos',key=JSON.stringify([cat,series]),entry=grouped.get(key)||{cat,series,values:[],count:0};entry.count++;if(v.aggregate!=='count')entry.values.push(r[v.field]);grouped.set(key,entry)});
+      let data=[...grouped.values()].map(e=>({cat:e.cat,series:e.series,value:v.aggregate==='count'?e.count:metric(e.values,v.aggregate)}));
+      if(v.kind==='donut'){data.sort((a,b)=>b.value-a.value);if(data.length>10)data=data.slice(0,9).concat([{cat:'Otros',series:'Todos',value:data.slice(9).reduce((a,b)=>a+b.value,0)}]);const total=data.reduce((a,b)=>a+b.value,0)||1;let pos=0;const stops=data.map(e=>{const from=pos;pos+=e.value/total*100;return color(e.cat,accent)+' '+from+'% '+pos+'%'}).join(',');return'<article class="visual-card" style="border-top:3px solid '+accent+'"><h2>'+esc(v.title)+'</h2><div class="visual-donut" style="background:conic-gradient('+stops+')"></div><div class="visual-rows">'+data.map(e=>'<div class="visual-legend"><i style="background:'+color(e.cat,accent)+'"></i><span>'+esc(e.cat)+'</span><b>'+e.value.toLocaleString('es-CL',{maximumFractionDigits:1})+'</b></div>').join('')+'</div><small>'+(v.aggregate==='count'?'Personas por ':'Valor por ')+esc(v.category)+'</small></article>'}
+      const buckets=new Map();data.forEach(e=>{const a=buckets.get(e.cat)||[];a.push(e);buckets.set(e.cat,a)});const totals=[...buckets].map(([k,a])=>[k,a.reduce((n,e)=>n+e.value,0)]).sort((a,b)=>b[1]-a[1]).slice(0,12),max=Math.max(1,...totals.map(x=>x[1]));
+      return'<article class="visual-card" style="border-top:3px solid '+accent+'"><h2>'+esc(v.title)+'</h2><div class="visual-rows">'+totals.map(([k,n])=>'<div class="visual-bar-group"><div class="visual-row"><span>'+esc(k)+'</span><i style="width:'+Math.max(3,n/max*100)+'%;background:'+(v.breakdown?'#E2E8F0':color(k,accent))+'"></i><b>'+n.toLocaleString('es-CL',{maximumFractionDigits:1})+'</b></div>'+(v.breakdown?'<div class="visual-bar-series">'+buckets.get(k).map(e=>'<span><i style="background:'+color(e.series,accent)+'"></i>'+esc(e.series)+': '+e.value.toLocaleString('es-CL',{maximumFractionDigits:1})+'</span>').join('')+'</div>':'')+'</div>').join('')+'</div><small>'+(v.aggregate==='count'?'Cuenta registros':'Calcula '+v.aggregate)+' por '+esc(v.category)+(v.breakdown?' y '+esc(v.breakdown):'')+'</small></article>';
+    }).join('');
+    document.getElementById('count').textContent=rows.length+' registros';
+    if(markerLayer){markerLayer.clearLayers();const bounds=[];rows.forEach(r=>{const lat=number(r[C.mapping.lat]),lon=number(r[C.mapping.lon]);if(Number.isFinite(lat)&&Number.isFinite(lon)&&Math.abs(lat)<=90&&Math.abs(lon)<=180){L.circleMarker([lat,lon],{radius:6,color:'#fff',weight:1.5,fillColor:C.design.primary,fillOpacity:.9}).addTo(markerLayer);bounds.push([lat,lon])}});if(bounds.length)map.fitBounds(bounds,{padding:[20,20],maxZoom:16});document.getElementById('mapCount').textContent=bounds.length+' de '+rows.length+' registros visibles con coordenadas v?lidas'}
+  }
+  function renderFilterControls(){
+    filters.innerHTML=C.filters.map((f,i)=>{
+      const values=[...new Set(C.rows.map(r=>r[f.field]).filter(x=>x!=null&&String(x).trim()!=='').map(String))].sort((a,b)=>a.localeCompare(b,'es'));
+      if(f.control==='search')return'<label>'+esc(f.label)+'<input data-filter="'+i+'" type="search" placeholder="Buscar"></label>';
+      if(f.control==='multi')return'<fieldset class="filter-set"><legend>'+esc(f.label)+'</legend>'+values.map(x=>'<label class="check-option"><input type="checkbox" data-multi="'+i+'" value="'+esc(x)+'">'+esc(x)+'</label>').join('')+'</fieldset>';
+      if(f.control==='range'){
+        const nums=C.rows.map(r=>number(r[f.field])).filter(Number.isFinite),lo=nums.length?Math.min(...nums):0,hi=nums.length?Math.max(...nums):100;
+        F[i]={low:lo,high:hi};
+        return'<fieldset class="filter-set"><legend>'+esc(f.label)+'</legend><label>M&iacute;nimo <output data-range-out="'+i+'-low">'+lo+'</output><input type="range" data-range="low" data-index="'+i+'" min="'+lo+'" max="'+hi+'" value="'+lo+'"></label><label>M&aacute;ximo <output data-range-out="'+i+'-high">'+hi+'</output><input type="range" data-range="high" data-index="'+i+'" min="'+lo+'" max="'+hi+'" value="'+hi+'"></label></fieldset>';
+      }
+      if(f.control==='date')return'<fieldset class="filter-set"><legend>'+esc(f.label)+'</legend><select data-date="'+i+'"><option value="all">Todo el per&iacute;odo</option><option value="last7">&Uacute;ltimos 7 d&iacute;as</option><option value="last30">&Uacute;ltimos 30 d&iacute;as</option><option value="month">Mes actual</option><option value="ytd">A&ntilde;o corrido</option><option value="custom">Rango personalizado</option></select><label>Desde<input type="date" data-date-side="from" data-index="'+i+'"></label><label>Hasta<input type="date" data-date-side="to" data-index="'+i+'"></label></fieldset>';
+      return'<label>'+esc(f.label)+'<select data-filter="'+i+'"><option value="">Todas las opciones</option>'+values.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join('')+'</select></label>';
+    }).join('');
+    filters.querySelectorAll('[data-filter]').forEach(x=>x.addEventListener('input',()=>{F[x.dataset.filter]=x.value;render(selectedRows())}));
+    filters.querySelectorAll('[data-multi]').forEach(x=>x.addEventListener('change',()=>{const i=x.dataset.multi,a=Array.isArray(F[i])?F[i]:[];F[i]=x.checked?[...new Set(a.concat([x.value]))]:a.filter(v=>v!==x.value);render(selectedRows())}));
+    filters.querySelectorAll('[data-range]').forEach(x=>x.addEventListener('input',()=>{const i=x.dataset.index,side=x.dataset.range,lo=filters.querySelector('[data-index="'+i+'"][data-range="low"]'),hi=filters.querySelector('[data-index="'+i+'"][data-range="high"]');F[i]=F[i]||{low:Number(lo.value),high:Number(hi.value)};F[i][side]=Number(x.value);if(F[i].low>F[i].high){F[i][side==='low'?'high':'low']=Number(x.value);(side==='low'?hi:lo).value=x.value}filters.querySelector('[data-range-out="'+i+'-low"]').textContent=F[i].low.toLocaleString('es-CL');filters.querySelector('[data-range-out="'+i+'-high"]').textContent=F[i].high.toLocaleString('es-CL');render(selectedRows())}));
+    filters.querySelectorAll('[data-date]').forEach(x=>x.addEventListener('change',()=>{F[x.dataset.date]=F[x.dataset.date]||{};F[x.dataset.date].preset=x.value;render(selectedRows())}));
+    filters.querySelectorAll('[data-date-side]').forEach(x=>x.addEventListener('change',()=>{const i=x.dataset.index;F[i]=F[i]||{preset:'custom'};F[i].preset='custom';F[i][x.dataset.dateSide]=x.value;const preset=filters.querySelector('[data-date="'+i+'"]');if(preset)preset.value='custom';render(selectedRows())}));
+  }
+  renderFilterControls();
+  document.getElementById('reset').onclick=()=>{F={};renderFilterControls();render(C.rows)};
+  const csv=document.getElementById('exportCsv');if(csv)csv.onclick=()=>{const lines=[C.headers.map(x=>'"'+String(x).replace(/"/g,'""')+'"').join(',')].concat(selectedRows().map(r=>C.headers.map(h=>'"'+String(r[h]==null?'':r[h]).replace(/"/g,'""')+'"').join(','))),blob=new Blob(['\ufeff'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='datos_filtrados.csv';a.click();URL.revokeObjectURL(a.href)};
+  const xlsx=document.getElementById('exportXlsx');if(xlsx)xlsx.onclick=()=>{if(!window.XLSX){alert('No fue posible cargar el m?dulo de Excel.');return}const ws=XLSX.utils.json_to_sheet(selectedRows()),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Datos');XLSX.writeFile(wb,'datos_filtrados.xlsx')};
+  if(C.design.showMap&&window.L){map=L.map('map').setView([-41.5,-72.8],7);L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{x}/{y}',{maxZoom:18,attribution:'&copy; Esri, OpenStreetMap contributors'}).addTo(map);markerLayer=L.layerGroup().addTo(map)}render(C.rows)
+}
+function buildViewer(){
+  if(!state.rows.length){alert('Primero carga un archivo de datos.');return}
+  if(!state.logoData){alert('El logo institucional es obligatorio.');return}
+  const geoRows=validGeoRows(state.rows,state.mapping),mapReady=!!(state.design.showMap&&state.mapCoordinatesConfirmed&&geoRows.length);
+  if(state.design.showMap&&!mapReady){alert('Confirma coordenadas v?lidas antes de incluir el mapa.');return}
+  const config={title:state.design.title,rows:state.rows,headers:state.headers,mapping:state.mapping,filters:state.filters,visualizations:state.visualizations,design:state.design,cardFields:state.cardFields,categoryColors:state.categoryColors,customFieldLabels:state.customFieldLabels,logoData:state.logoData,geoCount:geoRows.length};
+  const safe=JSON.stringify(config).replace(/</g,'\\u003c'),banner='<img class="institutional-banner" src="'+institutionalBannerData+'" alt="Gobierno de Chile - Trabajando para usted">';
+  const bannerAbove=state.design.bannerPosition==='above'?banner:'',bannerBelow=state.design.bannerPosition==='below'?banner:'';
+  const downloadCsv=['csv','both'].includes(state.design.exportFormat)?'<button id="exportCsv" type="button">Descargar CSV</button>':'';
+  const downloadXlsx=['xlsx','both'].includes(state.design.exportFormat)?'<button id="exportXlsx" type="button">Descargar Excel (.xlsx)</button>':'';
+  const mapBlock=mapReady?'<section class="visual-card map-wrap"><h2>Mapa de registros</h2><div id="map"></div><small id="mapCount"></small></section>':'';
+  const runtime='<script>const C='+safe+';('+viewerRuntime.toString()+')();<\/script>';
+  const xlsxScript=['xlsx','both'].includes(state.design.exportFormat)?'<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"><\/script>':'';
+  const leaflet=mapReady?'<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>':'';
+  const direction=state.design.logoPosition==='right'?'row-reverse':state.design.logoPosition==='top'?'column':'row';
+  const css = `
+    *{box-sizing:border-box}
+    body{margin:0;background:${state.design.bg};color:${state.design.bg.toUpperCase()==='#1F3A73'?'#fff':'#1C244B'};font:15px Aptos,"Segoe UI",Arial,sans-serif}
+    header{background:${state.design.header};border-bottom:4px solid ${state.design.accent};color:#fff;padding:18px max(20px,calc((100vw - 1180px)/2));display:flex;flex-direction:${direction};align-items:center;gap:14px}
+    header>img{max-width:84px;max-height:68px;object-fit:contain}
+    header h1{margin:0;font-size:24px}header p{margin:5px 0 0}
+    .institutional-banner{display:block;width:100%;height:30px;object-fit:cover}
+    main{max-width:1180px;margin:auto;padding:20px}
+    .toolbar{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin:12px 0 18px}
+    .toolbar button{padding:9px 13px;border:0;border-radius:5px;background:${state.design.primary};color:#fff;font:inherit;cursor:pointer}
+    .toolbar button.secondary{background:#fff;color:${state.design.primary};border:1px solid ${state.design.primary}}
+    .filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin:14px 0}
+    .filters label{display:grid;gap:5px;font-size:12px;color:${state.design.bg.toUpperCase()==='#1F3A73'?'#fff':'#56636F'}}
+    .filters input,.filters select{width:100%;min-width:0;padding:9px;border:1px solid #D7DEE5;border-radius:5px;background:#fff;font:inherit}
+    .kpis{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}
+    .kpi{min-width:160px;flex:1;background:#fff;color:#1C244B;border:1px solid #D7DEE5;border-top:4px solid ${state.design.primary};border-radius:6px;padding:14px}
+    .kpi strong{display:block;font-size:28px;margin:7px 0}
+    .visuals{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin:14px 0}
+    .visual-card{min-width:0;background:#fff;color:#1C244B;border:1px solid #D7DEE5;border-radius:7px;padding:14px;box-shadow:0 1px 3px #0000000d}
+    .visual-card h2{font-size:16px;margin:0 0 10px}.visual-rows{display:grid;gap:8px}
+    .visual-row{display:grid;grid-template-columns:minmax(70px,1fr) 2fr 40px;gap:8px;align-items:center;font-size:12px}
+    .visual-row i{height:10px;border-radius:6px}.visual-donut{width:170px;height:170px;margin:12px auto;border-radius:50%}
+    .visual-legend{display:grid;grid-template-columns:13px 1fr auto;gap:7px;align-items:center;font-size:12px}
+    .visual-legend i,.visual-bar-series i{width:11px;height:11px;border-radius:50%;display:inline-block}
+    .visual-bar-group{margin:8px 0}.visual-bar-series{display:flex;flex-wrap:wrap;gap:4px 12px;padding-left:12px;font-size:11px;color:#475569}
+    .visual-bar-series span{display:inline-flex;align-items:center;gap:4px}.visual-record{padding:8px;border-bottom:1px solid #E2E8F0}
+    .visual-table{overflow:auto}.visual-table table{width:100%;border-collapse:collapse}
+    .visual-table td,.visual-table th{padding:7px;border-bottom:1px solid #D7DEE5;text-align:left}
+    .filter-set{display:grid;gap:6px;min-width:0;margin:0;padding:9px;border:1px solid #D7DEE5;border-radius:6px;background:#fff;color:#1C244B}
+    .filter-set legend{padding:0 4px;font-size:12px;font-weight:700}.filter-set label{display:grid;gap:3px;font-size:12px}
+    .filter-set input[type=range]{width:100%}.check-option{display:flex!important;grid-template-columns:auto 1fr;align-items:center}
+    .check-option input{width:auto!important}.map-wrap{grid-column:1/-1}
+    #map{height:${Number(state.design.mapHeight||440)}px;border:1px solid #D7DEE5;border-radius:6px}
+    .map-wrap small{display:block;margin-top:7px;color:#64748B}
+    @media(max-width:600px){main{padding:12px}header h1{font-size:19px}}
+  `;
+  const html = '<!doctype html><html lang="es"><head>' +
+    '<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
+    '<title>' + escapeAdminHtml(state.design.title) + '</title>' + leaflet + xlsxScript +
+    '<style>' + css + '</style></head><body>' +
+    bannerAbove + '<header><img src="' + state.logoData + '" alt="Logo institucional"><div>' +
+    '<h1>' + escapeAdminHtml(state.design.title) + '</h1><p>' + escapeAdminHtml(state.design.subtitle) + '</p></div></header>' +
+    bannerBelow + '<main><div class="toolbar"><button id="reset" class="secondary" type="button">Restablecer filtros</button>' +
+    downloadCsv + downloadXlsx + '<span id="count"></span></div><div id="filters" class="filters"></div>' +
+    '<div id="kpis" class="kpis"></div>' + mapBlock + '<div id="visuals" class="visuals"></div></main>' + runtime + '</body></html>';
+  const blob=new Blob([html],{type:'text/html;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='visor_datos.html';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)
+}
+$('generateBtn').onclick = buildViewer;
+$('saveBtn').onclick = () => {
+  syncDesign();
+  const saved = {
+    rows: state.rows,
+    headers: state.headers,
+    mapping: state.mapping,
+    mapCoordinatesConfirmed: state.mapCoordinatesConfirmed,
+    filters: state.filters,
+    visualizations: state.visualizations,
+    design: state.design,
+    sheet: state.sheet,
+    cardFields: state.cardFields,
+    categoryColors: state.categoryColors,
+    customFieldLabels: state.customFieldLabels,
+    logoData: state.logoData,
+    logoObligatorio: true
+  };
+  const blob = new Blob([JSON.stringify(saved, null, 2)], {
+    type: 'application/json'
+  });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'configuracion_visor.json';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000)
+};
+$('loadBtn').onclick = () => $('configFile').click();
+$('configFile').onchange = async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  try {
+    const saved = JSON.parse(await file.text());
+    if (!saved || !Array.isArray(saved.headers) || !Array.isArray(saved.rows) || !saved.mapping || typeof saved.mapping !== 'object') throw Error('El archivo no contiene una configuraci\u00f3n compatible.');
+    if (saved.logoObligatorio && typeof saved.logoData !== 'string') throw Error('Falta el logo institucional obligatorio.');
+    state.rows = saved.rows;
+    state.headers = saved.headers;
+    const genericKeys = ['id', 'nombre', 'tipo', 'estado', 'fecha', 'region', 'provincia', 'comuna', 'lat', 'lon'];
+    state.visualizations = [];
+    const savedCustom = saved.customFieldLabels && typeof saved.customFieldLabels === 'object' ? saved.customFieldLabels : {};
+    state.mapping = Object.fromEntries(Object.entries(saved.mapping).filter(([k]) => genericKeys.includes(k) || Object.prototype.hasOwnProperty.call(savedCustom, k)).map(([k, v]) => [k, state.headers.includes(v) ? v : '']));
+    state.visualizations = Array.isArray(saved.visualizations) ? saved.visualizations.filter(v => v && ['kpi', 'cards', 'bar', 'donut', 'table'].includes(v.kind) && saved.headers.includes(v.field)).map(v => ({
+      id: String(v.id || Date.now() + Math.random()),
+      kind: v.kind,
+      title: String(v.title || v.field),
+      field: v.field,
+      category: saved.headers.includes(v.category) ? v.category : '',
+      color: /^#[0-9a-f]{6}$/i.test(v.color) ? v.color : '#0F69B4',
+      aggregate: ['count', 'sum', 'average'].includes(v.aggregate) ? v.aggregate : 'count'
+    })) : [];
+    state.filters = (Array.isArray(saved.filters) ? saved.filters : []).filter(f => f && state.headers.includes(f.field)).map(f => ({
+      field: f.field,
+      label: String(f.label || f.field),
+      control: ['single', 'multi', 'search', 'range', 'date'].includes(f.control) ? f.control : (f.control === 'search' ? 'search' : 'single'),
+      description: String(f.description || '')
+    }));
+    state.design = {
+      ...(saved.design || {})
+    };
+    state.cardFields = (Array.isArray(saved.cardFields) ? saved.cardFields : []).filter(k => state.mapping[k]);
+    state.categoryColors = Object.fromEntries(Object.entries(saved.categoryColors && typeof saved.categoryColors === 'object' ? saved.categoryColors : {}).filter(([k, v]) => typeof k === 'string' && /^#[0-9a-f]{6}$/i.test(String(v))));
+    state.customFieldLabels = saved.customFieldLabels && typeof saved.customFieldLabels === 'object' ? saved.customFieldLabels : {};
+    if (typeof saved.logoData === 'string' && saved.logoData.startsWith('data:image/')) state.logoData = saved.logoData;
+    state.sheet = String(saved.sheet || 'Configuraci\u00f3n guardada');
+    state.workbook = null;
+    $('file').value = '';
+    $('sheetSelect').innerHTML = '<option>Datos incluidos en la configuraci\u00f3n</option>';
+    $('sheetSelect').disabled = true;
+    $('viewTitle').value = state.design.title || 'Visor de datos';
+    $('viewSubtitle').value = state.design.subtitle || '';
+    $('presentationPalette').value = ['gobierno', 'mono', 'negativa', 'marino'].includes(state.design.palette) ? state.design.palette : 'gobierno';
+    $('filterLayout').value = ['auto', '1', '2', '3', '4'].includes(String(state.design.filterLayout)) ? String(state.design.filterLayout) : '3';
+    state.mapCoordinatesConfirmed = saved.mapCoordinatesConfirmed === true && validGeoRows(state.rows, state.mapping).length > 0;
+    $('showMap').checked = state.design.showMap === true && state.mapCoordinatesConfirmed;
+    $('showMap').disabled = !state.mapCoordinatesConfirmed;
+    if (!state.mapCoordinatesConfirmed) state.design.showMap = false;
+    $('exportFormat').value = ['xlsx', 'csv', 'both', 'none'].includes(state.design.exportFormat) ? state.design.exportFormat : (state.design.showExport ? 'csv' : 'none');
+    $('logoPosition').value = ['left', 'right', 'top'].includes(state.design.logoPosition) ? state.design.logoPosition : 'left';
+    $('bannerPosition').value = ['above', 'below'].includes(state.design.bannerPosition) ? state.design.bannerPosition : 'below';
+    $('mapWidth').value = ['half', 'full'].includes(state.design.mapWidth) ? state.design.mapWidth : 'full';
+    $('mapHeight').value = String([320, 440, 560].includes(Number(state.design.mapHeight)) ? state.design.mapHeight : 440);
+    renderVisualizationFields();
+    renderVisualizationList();
+    $('status').textContent = 'Configuraci\u00f3n restaurada. Los datos est\u00e1n incluidos; para elegir otra hoja, carga nuevamente el archivo Excel original.';
+    renderMapping();
+    renderTable();
+    renderFilterFields();
+    renderFilterList();
+    renderDesignFields();
+    renderQuality();
+    syncDesign();
+    goStep(0)
+  } catch (err) {
+    $('status').textContent = 'No se pudo cargar la configuraci\u00f3n: ' + err.message
+  } finally {
+    e.target.value = ''
+  }
+};
+</script></body></html>
