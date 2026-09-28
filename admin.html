@@ -528,6 +528,15 @@ color:#1C244B;
 border:1px solid #D7DEE5;
 border-radius:7px;
 box-shadow:0 1px 3px rgba(15,35,55,.06)}
+.viz-span-full{grid-column:1/-1}
+.viz-span-half{grid-column:span 1}
+.viz-size-compact{padding:10px;font-size:12px}
+.viz-size-compact .viz-donut{width:135px;height:135px}
+.viz-size-large{padding:20px;font-size:15px}
+.viz-size-large .viz-donut{width:210px;height:210px}
+.viz-size-large .viz-record{padding:12px}
+.viz-size-large .table-wrap{max-height:480px}
+.viz-size-compact .table-wrap{max-height:240px}
 .viz-card.preview-sortable{
 position:relative;
 cursor:grab;
@@ -580,8 +589,8 @@ justify-content:space-between;
 gap:8px;
 padding:8px;
 border-bottom:1px solid #E2E8F0}
-.viz-map{
-grid-column:1/-1}
+.viz-map.viz-span-half{grid-column:span 1}
+.viz-map.viz-span-full{grid-column:1/-1}
 .viz-map-placeholder{
 display:grid;
 place-items:center;
@@ -632,8 +641,8 @@ background:#F1F5F9}
 @media(max-width:700px){
 .viz-stage{
 grid-template-columns:1fr}
-.viz-map{
-grid-column:auto}
+.viz-map.viz-span-half,.viz-map.viz-span-full{
+grid-column:1/-1}
 .preview-summary{
 align-items:flex-start;
 flex-direction:column}
@@ -1090,6 +1099,29 @@ font-weight:700}
 <span id="vizColorHelp">Acento principal del componente.</span>
 </div>
 </div>
+<div class="field">
+<label for="vizSurface">Fondo de la visualizaci&oacute;n</label>
+<input type="color" id="vizSurface" value="#FFFFFF">
+</div>
+<div class="field">
+<label for="vizText">Color del texto</label>
+<input type="color" id="vizText" value="#1C244B">
+</div>
+<div class="field-row">
+<div class="field">
+<label for="vizSize">Tama&ntilde;o</label>
+<select id="vizSize"><option value="compact">Compacto</option><option value="standard" selected>Est&aacute;ndar</option><option value="large">Amplio</option></select>
+</div>
+<div class="field">
+<label for="vizWidth">Ancho</label>
+<select id="vizWidth"><option value="half">Media fila</option><option value="full">Fila completa</option></select>
+</div>
+</div>
+<div class="field" id="vizPageSizeWrap">
+<label for="vizPageSize">Registros por p&aacute;gina</label>
+<select id="vizPageSize"><option value="5">5</option><option value="10" selected>10</option><option value="20">20</option></select>
+<small>En tablas y tarjetas, el visor mostrar&aacute; esta cantidad y permitir&aacute; avanzar por p&aacute;ginas.</small>
+</div>
 <div id="vizDraftPreview" class="viz-draft">
 <strong>Vista previa provisional</strong>
 <p>Elige el tipo y los campos para ver el resultado antes de agregarlo.</p>
@@ -1333,6 +1365,15 @@ const validGeoRows = (rows, mapping) => mapping.lat && mapping.lon ? rows.filter
     lon = parseCoordinate(row[mapping.lon]);
   return Number.isFinite(lat) && Number.isFinite(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180
 }) : [];
+const chileGeoCoverage = (rows, latField, lonField) => {
+  if (!latField || !lonField || !rows.length) return 0;
+  const valid = rows.filter(r => Number.isFinite(parseCoordinate(r[latField])) && Number.isFinite(parseCoordinate(r[lonField])));
+  if (!valid.length) return 0;
+  return valid.filter(r => {
+    const lat = parseCoordinate(r[latField]), lon = parseCoordinate(r[lonField]);
+    return lat >= -56 && lat <= -17 && lon >= -110 && lon <= -65
+  }).length / valid.length;
+};
 let adminMap = null;
 const steps = ['datos', 'filtros', 'diseno', 'visualizaciones', 'vista'];
 const stepNames = ['Datos', 'Filtros', 'Diseño', 'Visualizaciones', 'Vista previa'];
@@ -1876,7 +1917,8 @@ function renderVisualizationList() {
   };
   $('visualizationList').innerHTML = state.visualizations.length ? state.visualizations.map((v, i) => {
     const fields = v.kind === 'table' ? (v.fields || [v.field]).join(', ') : v.kind === 'bar' && v.breakdown ? `${v.category} por ${v.breakdown}` : v.category || v.field || 'Registros';
-    return `<div class="filter-item"><span class="drag-handle">${i+1}</span><strong>${names[v.kind]}</strong><span>${escapeAdminHtml(v.title)} &middot; ${escapeAdminHtml(fields)} &middot; ${v.aggregate==='count'?'Cuenta registros':v.aggregate==='sum'?'Suma':'Promedio'}</span><button type="button" data-remove-viz="${v.id}">Quitar</button></div>`
+    const sizeName = v.size === 'compact' ? 'Compacto' : v.size === 'large' ? 'Amplio' : 'Est&aacute;ndar', widthName = v.width === 'full' ? 'Fila completa' : 'Media fila';
+    return `<div class="filter-item"><span class="drag-handle">${i+1}</span><strong>${names[v.kind]}</strong><span>${escapeAdminHtml(v.title)} &middot; ${escapeAdminHtml(fields)} &middot; ${v.aggregate==='count'?'Cuenta registros':v.aggregate==='sum'?'Suma':'Promedio'}<small style="display:block;margin-top:4px">${sizeName} · ${widthName}${['table','cards'].includes(v.kind)?' · '+(v.pageSize||10)+' por p&aacute;gina':''}</small></span><span title="Acento, fondo y texto" style="display:flex;gap:4px"><i style="width:20px;height:20px;border-radius:4px;background:${safeVizColor(v.color)};border:1px solid #CBD5E1"></i><i style="width:20px;height:20px;border-radius:4px;background:${safeVizColor(v.surface,'#FFFFFF')};border:1px solid #CBD5E1"></i><i style="width:20px;height:20px;border-radius:4px;background:${safeVizColor(v.text,'#1C244B')};border:1px solid #CBD5E1"></i></span><button type="button" data-remove-viz="${v.id}">Quitar</button></div>`
   }).join('') : '<p class="status">A&uacute;n no hay visualizaciones.</p>';
   document.querySelectorAll('[data-remove-viz]').forEach(x => x.onclick = () => {
     state.visualizations = state.visualizations.filter(v => v.id !== x.dataset.removeViz);
@@ -1949,34 +1991,42 @@ function previewVisualization(v) {
   const rows = state.rows,
     values = v.field ? rows.map(r => r[v.field]).filter(x => x !== null && x !== '') : [],
     title = escapeAdminHtml(v.title || v.field || v.category || 'Vista previa'),
-    color = safeVizColor(v.color);
+    color = safeVizColor(v.color),
+    surface = /^#[0-9a-f]{6}$/i.test(v.surface) ? v.surface : '#FFFFFF',
+    sizeClass = ['compact','standard','large'].includes(v.size) ? 'viz-size-' + v.size : 'viz-size-standard',
+    widthClass = v.width === 'full' ? 'viz-span-full' : '',
+    pageSize = [5,10,20].includes(Number(v.pageSize)) ? Number(v.pageSize) : 10,
+    textColor = safeVizColor(v.text, '#1C244B'),
+    cardStyle = `border-top:3px solid ${color};background:${surface};color:${textColor}`,
+    wrapperClass = `${sizeClass} ${widthClass}`.trim();
   if (v.kind === 'kpi') {
     if (v.aggregate !== 'count' && !v.field) return `<article class="viz-card"><h3>${title}</h3><p>Selecciona el campo del indicador.</p></article>`;
     const n = v.aggregate === 'count' ? rows.length : metricForValues(values, v.aggregate);
-    return `<article class="viz-card viz-kpi" style="border-top-color:${color}"><small>${title}</small><strong>${Number(n).toLocaleString('es-CL',{maximumFractionDigits:1})}</strong><span>${v.aggregate==='sum'?'Suma':v.aggregate==='average'?'Promedio':'Registros'}</span></article>`;
+    return `<article class="viz-card viz-kpi ${wrapperClass}" style="${cardStyle}"><small>${title}</small><strong>${Number(n).toLocaleString('es-CL',{maximumFractionDigits:1})}</strong><span>${v.aggregate==='sum'?'Suma':v.aggregate==='average'?'Promedio':'Registros'}</span></article>`;
   }
-  if (v.kind === 'cards') return `<article class="viz-card" style="border-top:3px solid ${color}"><h3>${title}</h3><div class="viz-cards">${rows.slice(0,3).map(r=>`<div class="viz-record"><b>${escapeAdminHtml(r[state.mapping.nombre]||r[state.mapping.id]||'Registro')}</b><span>${escapeAdminHtml(r[v.field]??'Sin dato')}</span></div>`).join('')}</div><small>Vista resumida de 3 registros; el visor completo muestra hasta 100 por bloque.</small></article>`;
+  if (v.kind === 'cards') return `<article class="viz-card ${wrapperClass}" style="${cardStyle}"><h3>${title}</h3><div class="viz-cards">${rows.slice(0,pageSize).map(r=>`<div class="viz-record"><b>${escapeAdminHtml(r[state.mapping.nombre]||r[state.mapping.id]||'Registro')}</b><span>${escapeAdminHtml(r[v.field]??'Sin dato')}</span></div>`).join('')}</div><small>Vista previa: ${Math.min(pageSize,rows.length)} de ${rows.length} registros por p&aacute;gina.</small></article>`;
   if (v.kind === 'table') {
     const fields = tableColumns(v);
-    return `<article class="viz-card" style="border-top:3px solid ${color}"><h3>${title}</h3><div class="table-wrap"><table><thead><tr>${fields.map(f=>`<th>${escapeAdminHtml(f)}</th>`).join('')}</tr></thead><tbody>${rows.slice(0,5).map(r=>`<tr>${fields.map(f=>`<td>${escapeAdminHtml(r[f]??'')}</td>`).join('')}</tr>`).join('')}</tbody></table></div><small>Muestra de 5 filas; los filtros del visor reducir&aacute;n el conjunto.</small></article>`;
+    return `<article class="viz-card ${wrapperClass}" style="${cardStyle}"><h3>${title}</h3><div class="table-wrap"><table><thead><tr>${fields.map(f=>`<th>${escapeAdminHtml(f)}</th>`).join('')}</tr></thead><tbody>${rows.slice(0,pageSize).map(r=>`<tr>${fields.map(f=>`<td>${escapeAdminHtml(r[f]??'')}</td>`).join('')}</tr>`).join('')}</tbody></table></div><small>Vista previa: ${Math.min(pageSize,rows.length)} de ${rows.length} registros por p&aacute;gina.</small></article>`;
   }
   if (!v.category) return `<article class="viz-card"><h3>${title}</h3><p>Selecciona la categoría principal para agrupar los valores.</p></article>`;
   const entries = groupedMetrics(rows, v),
     cats = [...new Set(entries.map(e => e.category))],
     total = entries.reduce((t, e) => t + e.value, 0) || 1;
   if (v.kind === 'donut') {
-    const rolled = entries.length > 10 ? entries.slice(0, 9).concat([{
+    const rankedEntries = [...entries].sort((a, b) => b.value - a.value),
+      rolled = rankedEntries.length > 10 ? rankedEntries.slice(0, 9).concat([{
       category: 'Otros',
       series: 'Todos',
-      value: entries.slice(9).reduce((t, e) => t + e.value, 0)
-    }]) : entries;
+      value: rankedEntries.slice(9).reduce((t, e) => t + e.value, 0)
+    }]) : rankedEntries;
     let pos = 0;
     const stops = rolled.map(e => {
       const start = pos;
       pos += e.value / total * 100;
       return `${safeVizColor(state.categoryColors[e.category],color)} ${start}% ${pos}%`
     }).join(',');
-    return `<article class="viz-card" style="border-top:3px solid ${color}"><h3>${title}</h3><div class="viz-donut" style="background:conic-gradient(${stops})"></div><div class="viz-legend">${rolled.map(e=>`<div><i style="background:${safeVizColor(state.categoryColors[e.category],color)}"></i><span>${escapeAdminHtml(e.category)}</span><b>${Number(e.value).toLocaleString('es-CL',{maximumFractionDigits:1})}</b></div>`).join('')}</div><small>${v.aggregate==='count'?'Personas':v.aggregate==='sum'?'Suma de':'Promedio de'} ${v.aggregate==='count'?'':escapeAdminHtml(v.field)+' '}por ${escapeAdminHtml(v.category)}.${cats.length>10?' Se agrupan las categor&iacute;as menores en &laquo;Otros&raquo;.':''}</small></article>`;
+    return `<article class="viz-card ${wrapperClass}" style="${cardStyle}"><h3>${title}</h3><div class="viz-donut" style="background:conic-gradient(${stops})"></div><div class="viz-legend">${rolled.map(e=>`<div><i style="background:${safeVizColor(state.categoryColors[e.category],color)}"></i><span>${escapeAdminHtml(e.category)}</span><b>${Number(e.value).toLocaleString('es-CL',{maximumFractionDigits:1})}</b></div>`).join('')}</div><small>${v.aggregate==='count'?'Personas':v.aggregate==='sum'?'Suma de':'Promedio de'} ${v.aggregate==='count'?'':escapeAdminHtml(v.field)+' '}por ${escapeAdminHtml(v.category)}.${cats.length>10?' Se agrupan las categor&iacute;as menores en &laquo;Otros&raquo;.':''}</small></article>`;
   }
   const perCategory = new Map();
   entries.forEach(e => {
@@ -1987,7 +2037,7 @@ function previewVisualization(v) {
   const totals = [...perCategory].map(([k, a]) => [k, a.reduce((t, e) => t + e.value, 0)]).sort((a, b) => b[1] - a[1]);
   const shown = totals.slice(0, 12),
     max = Math.max(1, ...shown.map(x => x[1]));
-  return `<article class="viz-card" style="border-top:3px solid ${color}"><h3>${title}</h3><div class="viz-bars">${shown.map(([k,n])=>{const parts=perCategory.get(k),denom=max;return `<div class="viz-bar-group"><div class="viz-bar-row"><span>${escapeAdminHtml(k)}</span><i style="width:${Math.max(3,n/denom*100)}%;background:${v.breakdown?'#E2E8F0':safeVizColor(state.categoryColors[k],color)}"></i><b>${Number(n).toLocaleString('es-CL',{maximumFractionDigits:1})}</b></div>${v.breakdown?`<div class="viz-bar-series">${parts.map(e=>`<span><i style="background:${safeVizColor(state.categoryColors[e.series],color)}"></i>${escapeAdminHtml(e.series)}: ${Number(e.value).toLocaleString('es-CL',{maximumFractionDigits:1})}</span>`).join('')}</div>`:''}</div>`}).join('')}</div><small>${v.aggregate==='count'?'Cuenta registros':v.aggregate==='sum'?'Suma':'Promedio'}${v.aggregate==='count'?'':' de '+escapeAdminHtml(v.field)} por ${escapeAdminHtml(v.category)}${v.breakdown?' y '+escapeAdminHtml(v.breakdown):''}.${totals.length>12?' Se muestran las 12 categor&iacute;as con mayor valor.':''}</small></article>`;
+  return `<article class="viz-card ${wrapperClass}" style="${cardStyle}"><h3>${title}</h3><div class="viz-bars">${shown.map(([k,n])=>{const parts=perCategory.get(k),denom=max;return `<div class="viz-bar-group"><div class="viz-bar-row"><span>${escapeAdminHtml(k)}</span><i style="width:${Math.max(3,n/denom*100)}%;background:${v.breakdown?'#E2E8F0':safeVizColor(state.categoryColors[k],color)}"></i><b>${Number(n).toLocaleString('es-CL',{maximumFractionDigits:1})}</b></div>${v.breakdown?`<div class="viz-bar-series">${parts.map(e=>`<span><i style="background:${safeVizColor(state.categoryColors[e.series],color)}"></i>${escapeAdminHtml(e.series)}: ${Number(e.value).toLocaleString('es-CL',{maximumFractionDigits:1})}</span>`).join('')}</div>`:''}</div>`}).join('')}</div><small>${v.aggregate==='count'?'Cuenta registros':v.aggregate==='sum'?'Suma':'Promedio'}${v.aggregate==='count'?'':' de '+escapeAdminHtml(v.field)} por ${escapeAdminHtml(v.category)}${v.breakdown?' y '+escapeAdminHtml(v.breakdown):''}.${totals.length>12?' Se muestran las 12 categor&iacute;as con mayor valor.':''}</small></article>`;
 }
 
 function sortablePreviewVisualization(v) {
@@ -2055,6 +2105,11 @@ function refreshVisualizationDraft() {
       breakdown,
       title,
       color: $('vizColor').value,
+      surface: $('vizSurface').value,
+      text: $('vizText').value,
+      size: $('vizSize').value,
+      width: $('vizWidth').value,
+      pageSize: Number($('vizPageSize').value),
       aggregate: $('vizAggregate').value
     };
   if (!state.rows.length) {
@@ -2111,6 +2166,11 @@ function addVisualization() {
     category,
     breakdown: kind === 'bar' ? breakdown : '',
     color: safeVizColor($('vizColor').value),
+    surface: /^#[0-9a-f]{6}$/i.test($('vizSurface').value) ? $('vizSurface').value : '#FFFFFF',
+    text: safeVizColor($('vizText').value, '#1C244B'),
+    size: $('vizSize').value,
+    width: $('vizWidth').value,
+    pageSize: Number($('vizPageSize').value),
     aggregate: ['kpi', 'bar', 'donut'].includes(kind) ? $('vizAggregate').value : 'count'
   });
   $('vizTitle').value = '';
@@ -2123,7 +2183,7 @@ $('vizKind').onchange = () => {
   renderVisualizationFields();
   refreshVisualizationDraft()
 };
-['vizTitle', 'vizField', 'vizCategory', 'vizBreakdown', 'vizAggregate', 'vizColor'].forEach(id => $(id).addEventListener(id === 'vizTitle' || id === 'vizColor' ? 'input' : 'change', () => {
+['vizTitle', 'vizField', 'vizCategory', 'vizBreakdown', 'vizAggregate', 'vizColor', 'vizSurface', 'vizText', 'vizSize', 'vizWidth', 'vizPageSize'].forEach(id => $(id).addEventListener(id === 'vizTitle' || id === 'vizColor' || id === 'vizSurface' || id === 'vizText' ? 'input' : 'change', () => {
   if (id === 'vizCategory' || id === 'vizBreakdown') renderCategoryColors();
   if (id === 'vizAggregate') renderVisualizationFields();
   refreshVisualizationDraft()
@@ -2152,12 +2212,15 @@ function renderMapColumnFields() {
       maxLon = lons.reduce((a, b) => Math.max(a, b), -Infinity),
       regionText = state.mapping.region ? state.rows.map(r => String(r[state.mapping.region] || '')).join(' ').toLowerCase() : '';
     const looksLosLagos = regionText.includes('los lagos'),
+      swappedChileFit = chileGeoCoverage(state.rows, state.mapping.lon, state.mapping.lat),
+      directChileFit = chileGeoCoverage(state.rows, state.mapping.lat, state.mapping.lon),
       inside = valid.filter(r => {
         const a = parseCoordinate(r[state.mapping.lat]),
           o = parseCoordinate(r[state.mapping.lon]);
         return a >= -45 && a <= -39 && o >= -78 && o <= -70
       }).length;
-    status.textContent = `${valid.length} coordenadas v\u00e1lidas; latitud ${minLat.toFixed(4)} a ${maxLat.toFixed(4)}, longitud ${minLon.toFixed(4)} a ${maxLon.toFixed(4)}.${looksLosLagos&&inside<valid.length?' ALERTA: hay puntos fuera de la Regi\u00f3n de Los Lagos.':' '+(state.mapCoordinatesConfirmed?'Coordenadas confirmadas.':'Confirma que el rango corresponda a la ubicaci\u00f3n esperada.')}`
+    const swapped = swappedChileFit > .8 && directChileFit < .2;
+    status.textContent = `${valid.length} coordenadas v\u00e1lidas; latitud ${minLat.toFixed(4)} a ${maxLat.toFixed(4)}, longitud ${minLon.toFixed(4)} a ${maxLon.toFixed(4)}.${swapped?' ALERTA: parece que latitud y longitud est\u00e1n intercambiadas. Revisa las columnas seleccionadas.':looksLosLagos&&inside<valid.length?' ALERTA: hay puntos fuera del \u00e1rea aproximada de la Regi\u00f3n de Los Lagos.':' '+(state.mapCoordinatesConfirmed?'Coordenadas confirmadas.':'Confirma que el rango corresponda a la ubicaci\u00f3n esperada.')}`
   }
 }
 
@@ -2179,6 +2242,15 @@ function confirmMapCoordinates() {
     $('showMap').disabled = true;
     renderMapColumnFields();
     alert('No hay pares de coordenadas v\u00e1lidas en esas columnas. Revisa los datos y el orden latitud/longitud.');
+    return
+  }
+  const directChileFit = chileGeoCoverage(state.rows, lat, lon), swappedChileFit = chileGeoCoverage(state.rows, lon, lat);
+  if (swappedChileFit > .8 && directChileFit < .2) {
+    state.mapCoordinatesConfirmed = false;
+    $('showMap').checked = false;
+    $('showMap').disabled = true;
+    renderMapColumnFields();
+    alert('Las coordenadas parecen estar invertidas: con las columnas seleccionadas los puntos quedan fuera de Chile, pero al intercambiarlas aparecen dentro de Chile. Asigna latitud y longitud al revés y vuelve a confirmar.');
     return
   }
   const regionText = state.mapping.region ? state.rows.map(r => String(r[state.mapping.region] || '')).join(' ').toLowerCase() : '';
@@ -2257,14 +2329,28 @@ function renderPreview() {
   $('preview').style.background = state.design.bg;
   $('preview').style.color = state.design.bg.toUpperCase() === '#1F3A73' ? '#FFFFFF' : '#1C244B';
   $('preview').style.borderTop = '5px solid ' + state.design.primary;
-  const filters = state.filters.length ? '<section class="preview-filter-section"><h3>Filtros</h3><div class="preview-filter-grid">' + state.filters.map(renderAdminFilterPreview).join('') + '</div></section>' : '<p class="status">Sin filtros configurados</p>';
+  const columns = ['1','2','3','4'].includes(String(state.design.filterLayout)) ? Number(state.design.filterLayout) : 'auto';
+  const filterStyle = columns === 'auto' ? '' : ` style="grid-template-columns:repeat(${columns},minmax(0,1fr))"`;
+  const filters = state.filters.length ? '<section class="preview-filter-section"><h3>Filtros · ' + (columns === 'auto' ? 'adaptables' : columns + ' por fila') + '</h3><div class="preview-filter-grid"' + filterStyle + '>' + state.filters.map(renderAdminFilterPreview).join('') + '</div></section>' : '<p class="status">Sin filtros configurados</p>';
   const exportLabel = state.design.exportFormat === 'xlsx' ? 'Descargar Excel (.xlsx)' : state.design.exportFormat === 'csv' ? 'Descargar CSV' : state.design.exportFormat === 'both' ? 'Descargar Excel y CSV' : '';
   const banner = '<img class="institutional-banner" src="' + institutionalBannerData + '" alt="Gobierno de Chile - Trabajando para usted">';
   const direction = state.design.logoPosition === 'right' ? 'row-reverse' : state.design.logoPosition === 'top' ? 'column' : 'row';
   const head = '<div class="preview-identity" style="background:' + state.design.header + ';border-color:' + state.design.accent + ';flex-direction:' + direction + '"><img src="' + state.logoData + '" alt="Logo institucional"><div><h2>' + escapeAdminHtml(state.design.title) + '</h2><p>' + escapeAdminHtml(state.design.subtitle) + '</p></div></div>';
-  const mapPreview = state.design.showMap ? '<article class="viz-card viz-map"><h3>Mapa de registros</h3><p>' + geoRows.length + ' de ' + n + ' registros con coordenadas v&aacute;lidas</p></article>' : '';
+  const mapPreview = state.design.showMap ? '<article class="viz-card viz-map ' + (state.design.mapWidth === 'half' ? 'viz-span-half' : 'viz-span-full') + '"><h3>Mapa de registros</h3><div id="adminMap"></div><p>' + geoRows.length + ' de ' + n + ' registros con coordenadas v&aacute;lidas</p></article>' : '';
   const visuals = state.visualizations.map(sortablePreviewVisualization).join('') || '<p class="status">A&uacute;n no hay KPI, tarjetas ni gr&aacute;ficos agregados.</p>';
   $('preview').innerHTML = (state.design.bannerPosition === 'above' ? banner : '') + head + (state.design.bannerPosition === 'below' ? banner : '') + '<main class="preview-main">' + filters + '<div class="preview-summary"><span><b>' + n + '</b> registros cargados</span>' + (exportLabel ? '<button type="button">' + exportLabel + '</button>' : '') + '</div><p class="preview-sort-help">Puedes arrastrar los KPI, tarjetas y gr&aacute;ficos para cambiar su orden. En un bloque seleccionado, usa las flechas ↑ y ↓ del teclado para reordenarlo.</p><div class="viz-stage">' + visuals + mapPreview + '</div></main>';
+  if (state.design.showMap && geoRows.length && typeof L !== 'undefined') {
+    adminMap = L.map('adminMap', { scrollWheelZoom: false }).setView([-41.5, -72.8], 7);
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', { attribution: '&copy; Esri, OpenStreetMap contributors', maxZoom: 18 }).addTo(adminMap);
+    const bounds = [];
+    geoRows.forEach(row => {
+      const lat = parseCoordinate(row[state.mapping.lat]), lon = parseCoordinate(row[state.mapping.lon]);
+      L.circleMarker([lat, lon], { radius: 5, color: '#fff', weight: 1.5, fillColor: state.design.primary, fillOpacity: .9 }).addTo(adminMap);
+      bounds.push([lat, lon]);
+    });
+    if (bounds.length) adminMap.fitBounds(bounds, { padding: [16, 16], maxZoom: 13 });
+    setTimeout(() => adminMap && adminMap.invalidateSize(), 100);
+  }
   bindPreviewReordering();
 }
 function viewerRuntime() {
@@ -2272,24 +2358,27 @@ function viewerRuntime() {
   const esc = value => String(value == null ? '' : value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const number = value => { if (typeof value === 'number') return Number.isFinite(value) ? value : NaN; if (value == null) return NaN; let s=String(value).trim().replace(/[^0-9,.-]/g,''); if(!s)return NaN; if(s.includes(',')&&s.includes('.'))s=s.lastIndexOf(',')>s.lastIndexOf('.')?s.replace(/\./g,'').replace(',','.'):s.replace(/,/g,''); else if(s.includes(','))s=/,\d{3}$/.test(s)?s.replace(/,/g,''):s.replace(',','.'); const n=Number(s); return Number.isFinite(n)?n:NaN; };
   const color = (key,fallback) => /^#[0-9a-f]{6}$/i.test(String(C.categoryColors[key]||''))?C.categoryColors[key]:fallback;
-  const filters=document.getElementById('filters'),output=document.getElementById('visuals'); let map=null,markerLayer=null;
+  const filters=document.getElementById('filters'),output=document.getElementById('visuals'); let map=null,markerLayer=null,pages={};
   let F={};
+  output.addEventListener('click',event=>{const button=event.target.closest('[data-page]');if(!button||button.disabled)return;const id=button.dataset.viz;pages[id]=Math.max(0,(pages[id]||0)+Number(button.dataset.page));render(selectedRows())});
   const dateValue=value=>{if(!value)return null;const text=String(value).trim();let m=text.match(/^(\d{1,2})[/.\-](\d{1,2})[/.\-](\d{4})$/);if(m)return new Date(+m[3],+m[2]-1,+m[1]);m=text.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m)return new Date(+m[1],+m[2]-1,+m[3]);const d=new Date(text);return Number.isNaN(d.getTime())?null:d;};
   function selectedRows(){return C.rows.filter(row=>C.filters.every((f,i)=>{const val=F[i],raw=row[f.field];if(f.control==='search')return!val||String(raw==null?'':raw).toLowerCase().includes(String(val).toLowerCase());if(f.control==='multi')return!Array.isArray(val)||!val.length||val.includes(String(raw));if(f.control==='range'){if(!val)return true;const n=number(raw);return Number.isFinite(n)&&n>=val.low&&n<=val.high}if(f.control==='date'){if(!val||val.preset==='all'||val.preset==='custom'&&!val.from&&!val.to)return true;const d=dateValue(raw);if(!d)return false;const today=new Date(),to=new Date(today.getFullYear(),today.getMonth(),today.getDate());let from=null;if(val.preset==='last7')from=new Date(to.getFullYear(),to.getMonth(),to.getDate()-6);else if(val.preset==='last30')from=new Date(to.getFullYear(),to.getMonth(),to.getDate()-29);else if(val.preset==='month')from=new Date(to.getFullYear(),to.getMonth(),1);else if(val.preset==='ytd')from=new Date(to.getFullYear(),0,1);else{from=val.from?dateValue(val.from):null;const end=val.to?dateValue(val.to):null;return(!from||d>=from)&&(!end||d<=end)}return d>=from&&d<=to}return!val||String(raw==null?'':raw)===String(val)}))}
   function metric(values,kind){if(kind==='count')return values.length;const nums=values.map(number).filter(Number.isFinite);if(!nums.length)return 0;return kind==='sum'?nums.reduce((a,b)=>a+b,0):nums.reduce((a,b)=>a+b,0)/nums.length}
+  function pageSlice(rows,v,size){const pagesCount=Math.max(1,Math.ceil(rows.length/size)),page=Math.min(pages[v.id]||0,pagesCount-1),start=page*size;pages[v.id]=page;return{page,start,shown:rows.slice(start,start+size),pagesCount}}
   function render(rows){
     const kpis=document.getElementById('kpis');
-    kpis.innerHTML=C.visualizations.filter(v=>v.kind==='kpi').map(v=>{const vals=rows.map(r=>r[v.field]).filter(x=>x!=null&&x!=='');const n=v.aggregate==='count'?rows.length:metric(vals,v.aggregate);return'<article class="kpi" style="border-top-color:'+esc(v.color)+'"><small>'+esc(v.title)+'</small><strong>'+n.toLocaleString('es-CL',{maximumFractionDigits:1})+'</strong><span>'+(v.aggregate==='sum'?'Suma':v.aggregate==='average'?'Promedio':'Registros')+'</span></article>'}).join('');
+    kpis.innerHTML=C.visualizations.filter(v=>v.kind==='kpi').map(v=>{const vals=rows.map(r=>r[v.field]).filter(x=>x!=null&&x!=='');const n=v.aggregate==='count'?rows.length:metric(vals,v.aggregate),size=['compact','standard','large'].includes(v.size)?v.size:'standard',width=v.width==='full'?'span-full':'span-half',surface=/^#[0-9a-f]{6}$/i.test(v.surface)?v.surface:'#FFFFFF',text=/^#[0-9a-f]{6}$/i.test(v.text)?v.text:'#1C244B';return'<article class="kpi viz-size-'+size+' '+width+'" style="border-top-color:'+esc(v.color)+';background:'+surface+';color:'+text+'"><small>'+esc(v.title)+'</small><strong>'+n.toLocaleString('es-CL',{maximumFractionDigits:1})+'</strong><span>'+(v.aggregate==='sum'?'Suma':v.aggregate==='average'?'Promedio':'Registros')+'</span></article>'}).join('');
     output.innerHTML=C.visualizations.filter(v=>v.kind!=='kpi').map(v=>{
       const accent=/^#[0-9a-f]{6}$/i.test(v.color)?v.color:'#0F69B4';
-      if(v.kind==='cards')return'<article class="visual-card" style="border-top:3px solid '+accent+'"><h2>'+esc(v.title)+'</h2><div class="cards">'+rows.slice(0,100).map(r=>'<div class="visual-record"><b>'+esc((C.mapping.nombre&&r[C.mapping.nombre])||(C.mapping.id&&r[C.mapping.id])||'Registro')+'</b><div>'+esc(r[v.field])+'</div></div>').join('')+'</div></article>';
-      if(v.kind==='table'){const fields=v.fields&&v.fields.length?v.fields:[v.field].filter(Boolean);return'<article class="visual-card" style="border-top:3px solid '+accent+'"><h2>'+esc(v.title)+'</h2><div class="visual-table"><table><thead><tr>'+fields.map(f=>'<th>'+esc(f)+'</th>').join('')+'</tr></thead><tbody>'+rows.slice(0,100).map(r=>'<tr>'+fields.map(f=>'<td>'+esc(r[f])+'</td>').join('')+'</tr>').join('')+'</tbody></table></div></article>'}
+      const size=['compact','standard','large'].includes(v.size)?v.size:'standard',width=v.width==='full'?'span-full':'span-half',pageSize=[5,10,20].includes(Number(v.pageSize))?Number(v.pageSize):10,surface=/^#[0-9a-f]{6}$/i.test(v.surface)?v.surface:'#FFFFFF',text=/^#[0-9a-f]{6}$/i.test(v.text)?v.text:'#1C244B',cardClass='visual-card viz-size-'+size+' '+width,cardStyle='border-top:3px solid '+accent+';background:'+surface+';color:'+text;
+      if(v.kind==='cards'){const{page,start,shown,pagesCount}=pageSlice(rows,v,pageSize);return'<article class="'+cardClass+'" style="'+cardStyle+'"><h2>'+esc(v.title)+'</h2><div class="cards">'+shown.map(r=>'<div class="visual-record"><b>'+esc((C.mapping.nombre&&r[C.mapping.nombre])||(C.mapping.id&&r[C.mapping.id])||'Registro')+'</b><div>'+esc(r[v.field])+'</div></div>').join('')+'</div><div class="visual-pagination"><span>'+(rows.length?start+1:0)+'–'+Math.min(start+pageSize,rows.length)+' de '+rows.length+'</span><button type="button" data-page="-1" data-viz="'+esc(v.id)+'" '+(page<=0?'disabled':'')+'>Anterior</button><button type="button" data-page="1" data-viz="'+esc(v.id)+'" '+(page>=pagesCount-1?'disabled':'')+'>Siguiente</button></div></article>'}
+      if(v.kind==='table'){const fields=v.fields&&v.fields.length?v.fields:[v.field].filter(Boolean),{page,start,shown,pagesCount}=pageSlice(rows,v,pageSize);return'<article class="'+cardClass+'" style="'+cardStyle+'"><h2>'+esc(v.title)+'</h2><div class="visual-table"><table><thead><tr>'+fields.map(f=>'<th>'+esc(f)+'</th>').join('')+'</tr></thead><tbody>'+shown.map(r=>'<tr>'+fields.map(f=>'<td>'+esc(r[f])+'</td>').join('')+'</tr>').join('')+'</tbody></table></div><div class="visual-pagination"><span>'+(rows.length?start+1:0)+'–'+Math.min(start+pageSize,rows.length)+' de '+rows.length+'</span><button type="button" data-page="-1" data-viz="'+esc(v.id)+'" '+(page<=0?'disabled':'')+'>Anterior</button><button type="button" data-page="1" data-viz="'+esc(v.id)+'" '+(page>=pagesCount-1?'disabled':'')+'>Siguiente</button></div></article>'}
       const grouped=new Map(),seriesField=v.kind==='bar'?v.breakdown:'';
       rows.forEach(r=>{const cat=r[v.category]==null||r[v.category]===''?'Sin información':String(r[v.category]),series=seriesField?(r[seriesField]==null||r[seriesField]===''?'Sin información':String(r[seriesField])):'Todos',key=JSON.stringify([cat,series]),entry=grouped.get(key)||{cat,series,values:[],count:0};entry.count++;if(v.aggregate!=='count')entry.values.push(r[v.field]);grouped.set(key,entry)});
       let data=[...grouped.values()].map(e=>({cat:e.cat,series:e.series,value:v.aggregate==='count'?e.count:metric(e.values,v.aggregate)}));
-      if(v.kind==='donut'){data.sort((a,b)=>b.value-a.value);if(data.length>10)data=data.slice(0,9).concat([{cat:'Otros',series:'Todos',value:data.slice(9).reduce((a,b)=>a+b.value,0)}]);const total=data.reduce((a,b)=>a+b.value,0)||1;let pos=0;const stops=data.map(e=>{const from=pos;pos+=e.value/total*100;return color(e.cat,accent)+' '+from+'% '+pos+'%'}).join(',');return'<article class="visual-card" style="border-top:3px solid '+accent+'"><h2>'+esc(v.title)+'</h2><div class="visual-donut" style="background:conic-gradient('+stops+')"></div><div class="visual-rows">'+data.map(e=>'<div class="visual-legend"><i style="background:'+color(e.cat,accent)+'"></i><span>'+esc(e.cat)+'</span><b>'+e.value.toLocaleString('es-CL',{maximumFractionDigits:1})+'</b></div>').join('')+'</div><small>'+(v.aggregate==='count'?'Personas por ':'Valor por ')+esc(v.category)+'</small></article>'}
+      if(v.kind==='donut'){data.sort((a,b)=>b.value-a.value);if(data.length>10)data=data.slice(0,9).concat([{cat:'Otros',series:'Todos',value:data.slice(9).reduce((a,b)=>a+b.value,0)}]);const total=data.reduce((a,b)=>a+b.value,0)||1;let pos=0;const stops=data.map(e=>{const from=pos;pos+=e.value/total*100;return color(e.cat,accent)+' '+from+'% '+pos+'%'}).join(',');return'<article class="'+cardClass+'" style="'+cardStyle+'"><h2>'+esc(v.title)+'</h2><div class="visual-donut" style="background:conic-gradient('+stops+')"></div><div class="visual-rows">'+data.map(e=>'<div class="visual-legend"><i style="background:'+color(e.cat,accent)+'"></i><span>'+esc(e.cat)+'</span><b>'+e.value.toLocaleString('es-CL',{maximumFractionDigits:1})+'</b></div>').join('')+'</div><small>'+(v.aggregate==='count'?'Personas por ':'Valor por ')+esc(v.category)+'</small></article>'}
       const buckets=new Map();data.forEach(e=>{const a=buckets.get(e.cat)||[];a.push(e);buckets.set(e.cat,a)});const totals=[...buckets].map(([k,a])=>[k,a.reduce((n,e)=>n+e.value,0)]).sort((a,b)=>b[1]-a[1]).slice(0,12),max=Math.max(1,...totals.map(x=>x[1]));
-      return'<article class="visual-card" style="border-top:3px solid '+accent+'"><h2>'+esc(v.title)+'</h2><div class="visual-rows">'+totals.map(([k,n])=>'<div class="visual-bar-group"><div class="visual-row"><span>'+esc(k)+'</span><i style="width:'+Math.max(3,n/max*100)+'%;background:'+(v.breakdown?'#E2E8F0':color(k,accent))+'"></i><b>'+n.toLocaleString('es-CL',{maximumFractionDigits:1})+'</b></div>'+(v.breakdown?'<div class="visual-bar-series">'+buckets.get(k).map(e=>'<span><i style="background:'+color(e.series,accent)+'"></i>'+esc(e.series)+': '+e.value.toLocaleString('es-CL',{maximumFractionDigits:1})+'</span>').join('')+'</div>':'')+'</div>').join('')+'</div><small>'+(v.aggregate==='count'?'Cuenta registros':'Calcula '+v.aggregate)+' por '+esc(v.category)+(v.breakdown?' y '+esc(v.breakdown):'')+'</small></article>';
+      return'<article class="'+cardClass+'" style="'+cardStyle+'"><h2>'+esc(v.title)+'</h2><div class="visual-rows">'+totals.map(([k,n])=>'<div class="visual-bar-group"><div class="visual-row"><span>'+esc(k)+'</span><i style="width:'+Math.max(3,n/max*100)+'%;background:'+(v.breakdown?'#E2E8F0':color(k,accent))+'"></i><b>'+n.toLocaleString('es-CL',{maximumFractionDigits:1})+'</b></div>'+(v.breakdown?'<div class="visual-bar-series">'+buckets.get(k).map(e=>'<span><i style="background:'+color(e.series,accent)+'"></i>'+esc(e.series)+': '+e.value.toLocaleString('es-CL',{maximumFractionDigits:1})+'</span>').join('')+'</div>':'')+'</div>').join('')+'</div><small>'+(v.aggregate==='count'?'Cuenta registros':'Calcula '+v.aggregate)+' por '+esc(v.category)+(v.breakdown?' y '+esc(v.breakdown):'')+'</small></article>';
     }).join('');
     document.getElementById('count').textContent=rows.length+' registros';
     if(markerLayer){markerLayer.clearLayers();const bounds=[];rows.forEach(r=>{const lat=number(r[C.mapping.lat]),lon=number(r[C.mapping.lon]);if(Number.isFinite(lat)&&Number.isFinite(lon)&&Math.abs(lat)<=90&&Math.abs(lon)<=180){L.circleMarker([lat,lon],{radius:6,color:'#fff',weight:1.5,fillColor:C.design.primary,fillOpacity:.9}).addTo(markerLayer);bounds.push([lat,lon])}});if(bounds.length)map.fitBounds(bounds,{padding:[20,20],maxZoom:16});document.getElementById('mapCount').textContent=bounds.length+' de '+rows.length+' registros visibles con coordenadas válidas'}
@@ -2335,7 +2424,7 @@ function buildViewer(openPreview = false){
   const bannerAbove=state.design.bannerPosition==='above'?banner:'',bannerBelow=state.design.bannerPosition==='below'?banner:'';
   const downloadCsv=['csv','both'].includes(state.design.exportFormat)?'<button id="exportCsv" type="button">Descargar CSV</button>':'';
   const downloadXlsx=['xlsx','both'].includes(state.design.exportFormat)?'<button id="exportXlsx" type="button">Descargar Excel (.xlsx)</button>':'';
-  const mapBlock=mapReady?'<section class="visual-card map-wrap"><h2>Mapa de registros</h2><div id="map"></div><small id="mapCount"></small></section>':'';
+  const mapBlock=mapReady?'<section class="visual-card map-wrap '+(state.design.mapWidth==='half'?'span-half':'span-full')+'"><h2>Mapa de registros</h2><div id="map"></div><small id="mapCount"></small></section>':'';
   const runtime='<script>const C='+safe+';('+viewerRuntime.toString()+')();<\/script>';
   const xlsxScript=['xlsx','both'].includes(state.design.exportFormat)?'<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"><\/script>':'';
   const leaflet=mapReady?'<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>':'';
@@ -2351,14 +2440,16 @@ function buildViewer(openPreview = false){
     .toolbar{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin:12px 0 18px}
     .toolbar button{padding:9px 13px;border:0;border-radius:5px;background:${state.design.primary};color:#fff;font:inherit;cursor:pointer}
     .toolbar button.secondary{background:#fff;color:${state.design.primary};border:1px solid ${state.design.primary}}
-    .filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin:14px 0}
+    .filters{display:grid;grid-template-columns:${['1','2','3','4'].includes(String(state.design.filterLayout))?`repeat(${Number(state.design.filterLayout)},minmax(0,1fr))`:'repeat(auto-fit,minmax(190px,1fr))'};gap:12px;margin:14px 0}
     .filters label{display:grid;gap:5px;font-size:12px;color:${state.design.bg.toUpperCase()==='#1F3A73'?'#fff':'#56636F'}}
     .filters input,.filters select{width:100%;min-width:0;padding:9px;border:1px solid #D7DEE5;border-radius:5px;background:#fff;font:inherit}
-    .kpis{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}
+    .kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:16px 0}
     .kpi{min-width:160px;flex:1;background:#fff;color:#1C244B;border:1px solid #D7DEE5;border-top:4px solid ${state.design.primary};border-radius:6px;padding:14px}
     .kpi strong{display:block;font-size:28px;margin:7px 0}
-    .visuals{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin:14px 0}
+    .visuals{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:14px 0}
     .visual-card{min-width:0;background:#fff;color:#1C244B;border:1px solid #D7DEE5;border-radius:7px;padding:14px;box-shadow:0 1px 3px #0000000d}
+    .span-full{grid-column:1/-1}.span-half{grid-column:span 1}.viz-size-compact{padding:10px;font-size:12px}.viz-size-large{padding:20px;font-size:15px}.viz-size-compact .visual-donut{width:135px;height:135px}.viz-size-large .visual-donut{width:210px;height:210px}.kpi.viz-size-compact strong{font-size:23px}.kpi.viz-size-large strong{font-size:34px}
+    .visual-pagination{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:10px;padding-top:9px;border-top:1px solid #E2E8F0;font-size:12px;color:#64748B}.visual-pagination span{margin-right:auto}.visual-pagination button{padding:6px 10px;border:1px solid #CBD5E1;border-radius:5px;background:#fff;color:#0F69B4;font:inherit;cursor:pointer}.visual-pagination button:disabled{opacity:.45;cursor:not-allowed}
     .visual-card h2{font-size:16px;margin:0 0 10px}.visual-rows{display:grid;gap:8px}
     .visual-row{display:grid;grid-template-columns:minmax(70px,1fr) 2fr 40px;gap:8px;align-items:center;font-size:12px}
     .visual-row i{height:10px;border-radius:6px}.visual-donut{width:170px;height:170px;margin:12px auto;border-radius:50%}
@@ -2366,15 +2457,16 @@ function buildViewer(openPreview = false){
     .visual-legend i,.visual-bar-series i{width:11px;height:11px;border-radius:50%;display:inline-block}
     .visual-bar-group{margin:8px 0}.visual-bar-series{display:flex;flex-wrap:wrap;gap:4px 12px;padding-left:12px;font-size:11px;color:#475569}
     .visual-bar-series span{display:inline-flex;align-items:center;gap:4px}.visual-record{padding:8px;border-bottom:1px solid #E2E8F0}
-    .visual-table{overflow:auto}.visual-table table{width:100%;border-collapse:collapse}
-    .visual-table td,.visual-table th{padding:7px;border-bottom:1px solid #D7DEE5;text-align:left}
+    .visual-table{max-height:480px;overflow:auto;border:1px solid #D7DEE5;border-radius:5px}.visual-table table{width:100%;border-collapse:collapse}.visual-table thead{position:sticky;top:0;z-index:1}.visual-table th{background:${state.design.primary};color:#fff}
+    .visual-table td,.visual-table th{padding:8px;border-bottom:1px solid #D7DEE5;text-align:left}.visual-table tr:nth-child(even){background:#F4F7FA}
     .filter-set{display:grid;gap:6px;min-width:0;margin:0;padding:9px;border:1px solid #D7DEE5;border-radius:6px;background:#fff;color:#1C244B}
     .filter-set legend{padding:0 4px;font-size:12px;font-weight:700}.filter-set label{display:grid;gap:3px;font-size:12px}
     .filter-set input[type=range]{width:100%}.check-option{display:flex!important;grid-template-columns:auto 1fr;align-items:center}
-    .check-option input{width:auto!important}.map-wrap{grid-column:1/-1}
+    .check-option input{width:auto!important}.map-wrap.span-half{grid-column:span 1}.map-wrap.span-full{grid-column:1/-1}
     #map{height:${Number(state.design.mapHeight||440)}px;border:1px solid #D7DEE5;border-radius:6px}
     .map-wrap small{display:block;margin-top:7px;color:#64748B}
-    @media(max-width:600px){main{padding:12px}header h1{font-size:19px}}
+    @media(max-width:900px){.filters{grid-template-columns:repeat(2,minmax(0,1fr))!important}.span-half,.span-full{grid-column:1/-1}}
+    @media(max-width:600px){main{padding:12px}header h1{font-size:19px}.filters{grid-template-columns:1fr!important}.kpis,.visuals{grid-template-columns:1fr}}
   `;
   const html = '<!doctype html><html lang="es"><head>' +
     '<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
@@ -2455,6 +2547,11 @@ $('configFile').onchange = async e => {
       category: saved.headers.includes(v.category) ? v.category : '',
       breakdown: saved.headers.includes(v.breakdown) ? v.breakdown : '',
       color: /^#[0-9a-f]{6}$/i.test(v.color) ? v.color : '#0F69B4',
+      surface: /^#[0-9a-f]{6}$/i.test(v.surface) ? v.surface : '#FFFFFF',
+      text: /^#[0-9a-f]{6}$/i.test(v.text) ? v.text : '#1C244B',
+      size: ['compact','standard','large'].includes(v.size) ? v.size : 'standard',
+      width: ['half','full'].includes(v.width) ? v.width : 'half',
+      pageSize: [5,10,20].includes(Number(v.pageSize)) ? Number(v.pageSize) : 10,
       aggregate: ['count', 'sum', 'average'].includes(v.aggregate) ? v.aggregate : 'count'
     })) : [];
     state.filters = (Array.isArray(saved.filters) ? saved.filters : []).filter(f => f && state.headers.includes(f.field)).map(f => ({
@@ -2479,7 +2576,8 @@ $('configFile').onchange = async e => {
     $('viewSubtitle').value = state.design.subtitle || '';
     $('presentationPalette').value = ['gobierno', 'mono', 'negativa', 'marino'].includes(state.design.palette) ? state.design.palette : 'gobierno';
     $('filterLayout').value = ['auto', '1', '2', '3', '4'].includes(String(state.design.filterLayout)) ? String(state.design.filterLayout) : '3';
-    state.mapCoordinatesConfirmed = saved.mapCoordinatesConfirmed === true && validGeoRows(state.rows, state.mapping).length > 0;
+    const savedMapCoordsAreSwapped = chileGeoCoverage(state.rows, state.mapping.lon, state.mapping.lat) > .8 && chileGeoCoverage(state.rows, state.mapping.lat, state.mapping.lon) < .2;
+    state.mapCoordinatesConfirmed = saved.mapCoordinatesConfirmed === true && validGeoRows(state.rows, state.mapping).length > 0 && !savedMapCoordsAreSwapped;
     $('showMap').checked = state.design.showMap === true && state.mapCoordinatesConfirmed;
     $('showMap').disabled = !state.mapCoordinatesConfirmed;
     if (!state.mapCoordinatesConfirmed) state.design.showMap = false;
