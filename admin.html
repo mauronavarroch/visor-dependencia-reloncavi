@@ -2387,7 +2387,7 @@ function viewerRuntime() {
     filters.innerHTML=C.filters.map((f,i)=>{
       const values=[...new Set(C.rows.map(r=>r[f.field]).filter(x=>x!=null&&String(x).trim()!=='').map(String))].sort((a,b)=>a.localeCompare(b,'es'));
       if(f.control==='search')return'<label>'+esc(f.label)+'<input data-filter="'+i+'" type="search" placeholder="Buscar"></label>';
-      if(f.control==='multi')return'<fieldset class="filter-set"><legend>'+esc(f.label)+'</legend>'+values.map(x=>'<label class="check-option"><input type="checkbox" data-multi="'+i+'" value="'+esc(x)+'">'+esc(x)+'</label>').join('')+'</fieldset>';
+      if(f.control==='multi')return'<fieldset class="filter-set"><legend>'+esc(f.label)+'</legend>'+(values.length>20?'<input type="search" data-multi-search="'+i+'" placeholder="Buscar entre '+values.length+' opciones" aria-label="Buscar opciones de '+esc(f.label)+'">':'')+'<div class="multi-options">'+values.map(x=>'<label class="check-option"><input type="checkbox" data-multi="'+i+'" value="'+esc(x)+'">'+esc(x)+'</label>').join('')+'</div></fieldset>';
       if(f.control==='range'){
         const nums=C.rows.map(r=>number(r[f.field])).filter(Number.isFinite),lo=nums.length?Math.min(...nums):0,hi=nums.length?Math.max(...nums):100;
         F[i]={low:lo,high:hi};
@@ -2398,6 +2398,7 @@ function viewerRuntime() {
     }).join('');
     filters.querySelectorAll('[data-filter]').forEach(x=>x.addEventListener('input',()=>{F[x.dataset.filter]=x.value;render(selectedRows())}));
     filters.querySelectorAll('[data-multi]').forEach(x=>x.addEventListener('change',()=>{const i=x.dataset.multi,a=Array.isArray(F[i])?F[i]:[];F[i]=x.checked?[...new Set(a.concat([x.value]))]:a.filter(v=>v!==x.value);render(selectedRows())}));
+    filters.querySelectorAll('[data-multi-search]').forEach(input=>input.addEventListener('input',()=>{const q=input.value.trim().toLocaleLowerCase('es'),options=input.parentElement.querySelectorAll('.check-option');options.forEach(option=>{option.hidden=!option.textContent.trim().toLocaleLowerCase('es').includes(q)})}));
     filters.querySelectorAll('[data-range]').forEach(x=>x.addEventListener('input',()=>{const i=x.dataset.index,side=x.dataset.range,lo=filters.querySelector('[data-index="'+i+'"][data-range="low"]'),hi=filters.querySelector('[data-index="'+i+'"][data-range="high"]');F[i]=F[i]||{low:Number(lo.value),high:Number(hi.value)};F[i][side]=Number(x.value);if(F[i].low>F[i].high){F[i][side==='low'?'high':'low']=Number(x.value);(side==='low'?hi:lo).value=x.value}filters.querySelector('[data-range-out="'+i+'-low"]').textContent=F[i].low.toLocaleString('es-CL');filters.querySelector('[data-range-out="'+i+'-high"]').textContent=F[i].high.toLocaleString('es-CL');render(selectedRows())}));
     filters.querySelectorAll('[data-date]').forEach(x=>x.addEventListener('change',()=>{F[x.dataset.date]=F[x.dataset.date]||{};F[x.dataset.date].preset=x.value;render(selectedRows())}));
     filters.querySelectorAll('[data-date-side]').forEach(x=>x.addEventListener('change',()=>{const i=x.dataset.index;F[i]=F[i]||{preset:'custom'};F[i].preset='custom';F[i][x.dataset.dateSide]=x.value;const preset=filters.querySelector('[data-date="'+i+'"]');if(preset)preset.value='custom';render(selectedRows())}));
@@ -2459,10 +2460,11 @@ function buildViewer(openPreview = false){
     .visual-bar-series span{display:inline-flex;align-items:center;gap:4px}.visual-record{padding:8px;border-bottom:1px solid #E2E8F0}
     .visual-table{max-height:480px;overflow:auto;border:1px solid #D7DEE5;border-radius:5px}.visual-table table{width:100%;border-collapse:collapse}.visual-table thead{position:sticky;top:0;z-index:1}.visual-table th{background:${state.design.primary};color:#fff}
     .visual-table td,.visual-table th{padding:8px;border-bottom:1px solid #D7DEE5;text-align:left}.visual-table tr:nth-child(even){background:#F4F7FA}
-    .filter-set{display:grid;gap:6px;min-width:0;margin:0;padding:9px;border:1px solid #D7DEE5;border-radius:6px;background:#fff;color:#1C244B}
+    .filter-set{display:grid;align-content:start;gap:6px;min-width:0;margin:0;padding:9px;border:1px solid #D7DEE5;border-radius:6px;background:#fff;color:#1C244B}
     .filter-set legend{padding:0 4px;font-size:12px;font-weight:700}.filter-set label{display:grid;gap:3px;font-size:12px}
+    .multi-options{display:grid;align-content:start;gap:6px;max-height:190px;overflow:auto;padding:2px 3px 2px 0}.filter-set input[type=search]{width:100%;min-width:0;padding:8px;border:1px solid #CBD5E1;border-radius:5px;font:inherit}
     .filter-set input[type=range]{width:100%}.check-option{display:flex!important;grid-template-columns:auto 1fr;align-items:center}
-    .check-option input{width:auto!important}.map-wrap.span-half{grid-column:span 1}.map-wrap.span-full{grid-column:1/-1}
+    .check-option input{width:auto!important}.check-option[hidden]{display:none!important}.map-wrap.span-half{grid-column:span 1}.map-wrap.span-full{grid-column:1/-1}
     #map{height:${Number(state.design.mapHeight||440)}px;border:1px solid #D7DEE5;border-radius:6px}
     .map-wrap small{display:block;margin-top:7px;color:#64748B}
     @media(max-width:900px){.filters{grid-template-columns:repeat(2,minmax(0,1fr))!important}.span-half,.span-full{grid-column:1/-1}}
