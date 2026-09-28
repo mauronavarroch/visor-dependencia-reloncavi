@@ -780,6 +780,7 @@ margin:0;
 max-width:520px}
 .export-options-panel label{
 font-weight:700}
+.data-privacy-notice{margin:14px 0;padding:12px 15px;border-left:4px solid #D89614;border-radius:5px;background:#FFF7E6;color:#453500;line-height:1.45}
 </style>
 </head>
 <body>
@@ -794,7 +795,7 @@ font-weight:700}
 <button class="tab" data-tab="diseno">3. Diseño</button>
 <button class="tab" data-tab="visualizaciones">4. Visualizaciones</button>
 <button class="tab" data-tab="vista">5. Vista previa</button>
-<button id="saveBtn">Guardar configuración</button>
+<button id="saveBtn" title="El archivo JSON también guarda todos los registros cargados.">Guardar configuración</button>
 <button id="loadBtn">Cargar configuración</button>
 <input id="configFile" type="file" accept=".json,application/json" hidden>
 </div>
@@ -807,7 +808,7 @@ font-weight:700}
 <option>Primero carga un archivo</option>
 </select>
 </div>
-<div id="status" class="status">Aún no has cargado un archivo.</div>
+<div id="status" class="status">Aún no has cargado un archivo. El visor HTML y el archivo de configuración incluyen los registros cargados; para esta prueba usa datos ficticios o autorizados.</div>
 <div id="quality" class="chips">
 </div>
 <div class="grid data-layout">
@@ -1114,6 +1115,7 @@ font-weight:700}
 </section>
 <section id="vista" class="panel">
 <h2>Vista previa</h2>
+<p class="data-privacy-notice"><strong>Importante:</strong> al generar el visor, todos los registros del archivo quedan incorporados dentro del HTML descargado. Ese archivo y la configuración JSON pueden contener información sensible. Para probar, usa datos ficticios o autorizados.</p>
 <div class="preview" id="preview">
 <h2>Visor de datos</h2>
 <p>Carga datos y configura filtros para revisar la maqueta.</p>
@@ -1123,7 +1125,8 @@ font-weight:700}
 <button id="prevStep" type="button">Anterior</button>
 <span id="stepText">Paso 1 de 5 · Datos</span>
 <button class="primary" id="nextStep" type="button">Siguiente</button>
-<button class="primary" id="generateBtn" type="button" hidden>Generar visor</button>
+<button id="previewGeneratedBtn" type="button" hidden>Probar visor funcional</button>
+<button class="primary" id="generateBtn" type="button" hidden>Descargar visor HTML</button>
 </div>
 </main>
 <script>
@@ -1336,12 +1339,17 @@ const stepNames = ['Datos', 'Filtros', 'Diseño', 'Visualizaciones', 'Vista prev
 let stepIndex = 0;
 
 function goStep(i) {
+  if (i > 0 && !state.rows.length) {
+    alert('Carga primero un archivo con registros para continuar.');
+    return
+  }
   stepIndex = Math.max(0, Math.min(steps.length - 1, i));
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.tab === steps[stepIndex]));
   document.querySelectorAll('.panel').forEach(x => x.classList.toggle('active', x.id === steps[stepIndex]));
   $('prevStep').disabled = stepIndex === 0;
   $('nextStep').hidden = stepIndex === steps.length - 1;
   $('generateBtn').hidden = stepIndex !== steps.length - 1;
+  $('previewGeneratedBtn').hidden = stepIndex !== steps.length - 1;
   $('stepText').textContent = `Paso ${stepIndex+1} de ${steps.length} · ${stepNames[stepIndex]}`;
   if (steps[stepIndex] === 'filtros') $('filterLayout').value = state.design.filterLayout || '3';
   if (steps[stepIndex] === 'diseno') {
@@ -1372,38 +1380,89 @@ $('nextStep').onclick = () => {
   goStep(stepIndex + 1)
 };
 goStep(0);
+function clearLoadedData(message) {
+  state.workbook = null;
+  state.sheet = '';
+  state.rows = [];
+  state.headers = [];
+  state.mapping = {};
+  state.filters = [];
+  state.visualizations = [];
+  state.mapCoordinatesConfirmed = false;
+  state.cardFields = [];
+  state.categoryColors = {};
+  state.customFieldLabels = {};
+  state.loadedFileName = '';
+  state.design.showMap = false;
+  $('showMap').checked = false;
+  $('showMap').disabled = true;
+  $('sheetSelect').innerHTML = '<option>Primero carga un archivo</option>';
+  $('sheetSelect').disabled = true;
+  $('quality').innerHTML = '';
+  $('status').textContent = message;
+  renderMapping();
+  renderTable();
+  renderFilterFields();
+  renderFilterList();
+  renderDesignFields();
+  renderQuality();
+  renderPreview();
+}
+
 $('file').onchange = async e => {
   const f = e.target.files[0];
   if (!f) return;
+  $('file').value = '';
+  clearLoadedData('Leyendo ' + f.name + '…');
   try {
-    if (!window.XLSX) throw Error('No se pudo cargar el lector Excel. Revisa la conexión.');
-    state.workbook = XLSX.read(await f.arrayBuffer(), {
-      cellDates: true
+    if (!window.XLSX) throw Error('No se pudo cargar el lector de archivos. Revisa tu conexión a internet y vuelve a intentarlo.');
+    const workbook = XLSX.read(await f.arrayBuffer(), {
+      cellDates: true,
+      raw: f.name.toLowerCase().endsWith('.csv')
     });
-    $('sheetSelect').innerHTML = state.workbook.SheetNames.map((n, i) => `<option value="${i}">${n}</option>`).join('');
+    if (!workbook.SheetNames.length) throw Error('El archivo no contiene hojas para leer.');
+    state.workbook = workbook;
+    state.loadedFileName = f.name;
+    $('sheetSelect').innerHTML = workbook.SheetNames.map((n, i) => `<option value="${i}">${escapeAdminHtml(n)}</option>`).join('');
     $('sheetSelect').disabled = false;
-    state.sheet = state.workbook.SheetNames[0];
+    state.sheet = workbook.SheetNames[0];
     loadSheet();
   } catch (err) {
-    $('status').textContent = 'No se pudo leer el archivo: ' + err.message
+    clearLoadedData('No se pudo cargar “' + f.name + '”. ' + err.message + ' El archivo anterior se quitó para evitar generar un visor con datos equivocados.');
   }
 };
 $('sheetSelect').onchange = () => {
+  if (!state.workbook) return;
+  const previous = state.sheet;
   state.sheet = state.workbook.SheetNames[Number($('sheetSelect').value)];
-  loadSheet()
+  if (!loadSheet() && previous) {
+    state.sheet = previous;
+    $('sheetSelect').value = String(state.workbook.SheetNames.indexOf(previous));
+    $('status').textContent = `La hoja seleccionada está vacía. Se conserva la hoja “${previous}” del archivo ${state.loadedFileName}.`;
+  }
 };
 
 function loadSheet() {
   const ws = state.workbook.Sheets[state.sheet];
-  state.rows = XLSX.utils.sheet_to_json(ws, {
-    defval: null
-  });
-  state.headers = state.rows.length ? Object.keys(state.rows[0]) : [];
+  const rows = XLSX.utils.sheet_to_json(ws, { defval: null });
+  const headers = rows.length ? Object.keys(rows[0]) : [];
+  if (!rows.length || !headers.length) {
+    $('status').textContent = `La hoja “${state.sheet}” no contiene filas con datos y encabezados. Elige otra hoja del archivo.`;
+    return false;
+  }
+  state.rows = rows;
+  state.headers = headers;
   for (const k of Object.keys(state.customFieldLabels))
     if (!state.headers.includes(state.mapping[k])) state.mapping[k] = '';
   inferMapping();
-  $('status').textContent = `Hoja ${state.sheet}: ${state.rows.length} registros - ${state.headers.length} columnas detectadas. Asigna los campos que necesites`;
   state.filters = state.filters.filter(f => state.headers.includes(f.field));
+  state.visualizations = state.visualizations.filter(v => {
+    if (v.kind === 'table') return (v.fields || []).length > 0 && v.fields.every(f => state.headers.includes(f));
+    if (v.kind === 'kpi') return v.aggregate === 'count' || state.headers.includes(v.field);
+    if (v.kind === 'bar' || v.kind === 'donut') return state.headers.includes(v.category) && (v.aggregate === 'count' || state.headers.includes(v.field)) && (!v.breakdown || state.headers.includes(v.breakdown));
+    return state.headers.includes(v.field)
+  });
+  $('status').textContent = `Archivo ${state.loadedFileName} · Hoja ${state.sheet}: ${state.rows.length} registros y ${state.headers.length} columnas. Revisa la vista rápida y las asignaciones.`;
   state.cardFields = state.cardFields.filter(k => state.mapping[k]);
   renderMapping();
   renderTable();
@@ -1411,7 +1470,8 @@ function loadSheet() {
   renderFilterList();
   renderDesignFields();
   renderQuality();
-  renderPreview()
+  renderPreview();
+  return true
 }
 
 function inferMapping() {
@@ -1523,7 +1583,11 @@ function formatAdminValue(v) {
 }
 
 function renderTable() {
-  if (!state.rows.length) return;
+  if (!state.rows.length) {
+    $('thead').innerHTML = '';
+    $('tbody').innerHTML = '<tr><td class="status">Carga una hoja con registros para ver sus columnas.</td></tr>';
+    return
+  }
   $('thead').innerHTML = '<tr>' + state.headers.map(h => `<th>${escapeAdminHtml(h)}</th>`).join('') + '</tr>';
   $('tbody').innerHTML = state.rows.slice(0, 12).map(r => '<tr>' + state.headers.map(h => `<td>${escapeAdminHtml(formatAdminValue(r[h]))}</td>`).join('') + '</tr>').join('')
 }
@@ -1789,11 +1853,11 @@ function renderVisualizationFields() {
   $('vizCategoryWrap').style.display = needsCategory ? 'block' : 'none';
   $('vizBreakdownWrap').style.display = kind === 'bar' ? 'block' : 'none';
   $('vizAggregateWrap').style.display = needsMetric ? 'block' : 'none';
-  $('vizFieldWrap').style.display = kind === 'kpi' || (needsMetric && aggregate !== 'count') || kind === 'cards' ? 'block' : 'none';
+  $('vizFieldWrap').style.display = kind === 'cards' || (needsMetric && aggregate !== 'count') ? 'block' : 'none';
   $('vizTableFieldsWrap').style.display = kind === 'table' ? 'block' : 'none';
-  $('vizFieldWrap').querySelector('label').textContent = kind === 'cards' ? 'Campo que se mostrar? en cada tarjeta' : kind === 'kpi' ? 'Campo del indicador' : 'Campo num?rico que se calcular?';
-  $('vizAggregateWrap').querySelector('label').textContent = kind === 'kpi' ? 'C?lculo del indicador' : 'C?lculo del gr?fico';
-  $('vizMetricHelp').textContent = aggregate === 'count' ? 'Cuenta todos los registros de cada grupo. No requiere elegir un campo num&eacute;rico.' : 'Suma o promedia los valores num?ricos del campo seleccionado.';
+  $('vizFieldWrap').querySelector('label').textContent = kind === 'cards' ? 'Campo que se mostrará en cada tarjeta' : kind === 'kpi' ? 'Campo del indicador' : 'Campo numérico que se calculará';
+  $('vizAggregateWrap').querySelector('label').textContent = kind === 'kpi' ? 'Cálculo del indicador' : 'Cálculo del gráfico';
+  $('vizMetricHelp').textContent = aggregate === 'count' ? 'Cuenta registros. No necesitas elegir una columna.' : 'Suma o promedia los valores numéricos del campo seleccionado.';
   if (kind === 'table') {
     const selected = new Set([...document.querySelectorAll('.viz-table-field:checked')].map(x => x.value));
     $('vizTableFields').innerHTML = state.headers.map((h, i) => `<label class="viz-table-field-row"><input class="viz-table-field" type="checkbox" value="${escapeAdminHtml(h)}" ${selected.has(h)||(!selected.size&&i===0)?'checked':''}><span>${escapeAdminHtml(h)}</span></label>`).join('');
@@ -1854,9 +1918,9 @@ function groupedMetrics(rows, v) {
     seriesField = v.kind === 'bar' ? v.breakdown : '';
   rows.forEach(r => {
     const raw = r[v.category],
-      category = raw === null || raw === '' ? 'Sin informaci?n' : String(raw);
+      category = raw === null || raw === '' ? 'Sin información' : String(raw);
     const rawSeries = seriesField ? r[seriesField] : 'Todos',
-      series = rawSeries === null || rawSeries === '' ? 'Sin informaci?n' : String(rawSeries);
+      series = rawSeries === null || rawSeries === '' ? 'Sin información' : String(rawSeries);
     const key = JSON.stringify([category, series]),
       entry = groups.get(key) || {
         category,
@@ -1887,16 +1951,16 @@ function previewVisualization(v) {
     title = escapeAdminHtml(v.title || v.field || v.category || 'Vista previa'),
     color = safeVizColor(v.color);
   if (v.kind === 'kpi') {
-    if (!v.field) return `<article class="viz-card"><h3>${title}</h3><p>Selecciona el campo del indicador.</p></article>`;
-    const n = metricForValues(values, v.aggregate);
-    return `<article class="viz-card viz-kpi" style="border-top-color:${color}"><small>${title}</small><strong>${Number(n).toLocaleString('es-CL',{maximumFractionDigits:1})}</strong><span>${v.aggregate==='sum'?'Suma':v.aggregate==='average'?'Promedio':'Registros con dato'}</span></article>`;
+    if (v.aggregate !== 'count' && !v.field) return `<article class="viz-card"><h3>${title}</h3><p>Selecciona el campo del indicador.</p></article>`;
+    const n = v.aggregate === 'count' ? rows.length : metricForValues(values, v.aggregate);
+    return `<article class="viz-card viz-kpi" style="border-top-color:${color}"><small>${title}</small><strong>${Number(n).toLocaleString('es-CL',{maximumFractionDigits:1})}</strong><span>${v.aggregate==='sum'?'Suma':v.aggregate==='average'?'Promedio':'Registros'}</span></article>`;
   }
   if (v.kind === 'cards') return `<article class="viz-card" style="border-top:3px solid ${color}"><h3>${title}</h3><div class="viz-cards">${rows.slice(0,3).map(r=>`<div class="viz-record"><b>${escapeAdminHtml(r[state.mapping.nombre]||r[state.mapping.id]||'Registro')}</b><span>${escapeAdminHtml(r[v.field]??'Sin dato')}</span></div>`).join('')}</div><small>Vista resumida de 3 registros; el visor completo muestra hasta 100 por bloque.</small></article>`;
   if (v.kind === 'table') {
     const fields = tableColumns(v);
     return `<article class="viz-card" style="border-top:3px solid ${color}"><h3>${title}</h3><div class="table-wrap"><table><thead><tr>${fields.map(f=>`<th>${escapeAdminHtml(f)}</th>`).join('')}</tr></thead><tbody>${rows.slice(0,5).map(r=>`<tr>${fields.map(f=>`<td>${escapeAdminHtml(r[f]??'')}</td>`).join('')}</tr>`).join('')}</tbody></table></div><small>Muestra de 5 filas; los filtros del visor reducir&aacute;n el conjunto.</small></article>`;
   }
-  if (!v.category) return `<article class="viz-card"><h3>${title}</h3><p>Selecciona la categor?a principal para agrupar los valores.</p></article>`;
+  if (!v.category) return `<article class="viz-card"><h3>${title}</h3><p>Selecciona la categoría principal para agrupar los valores.</p></article>`;
   const entries = groupedMetrics(rows, v),
     cats = [...new Set(entries.map(e => e.category))],
     total = entries.reduce((t, e) => t + e.value, 0) || 1;
@@ -1997,12 +2061,12 @@ function refreshVisualizationDraft() {
     $('vizDraftPreview').innerHTML = '<strong>Vista previa provisional</strong><p>Carga un archivo en el paso Datos para probar los c&aacute;lculos con datos reales.</p>';
     return
   }
-  if (kind === 'kpi' && !field || kind === 'cards' && !field || kind === 'table' && !fields.length) {
-    $('vizDraftPreview').innerHTML = '<strong>Vista previa provisional</strong><p>' + (kind === 'table' ? 'Selecciona una o m&aacute;s columnas para la tabla.' : 'Selecciona el campo que usar&aacute; esta visualizaci?n.') + '</p>';
+  if (kind === 'kpi' && $('vizAggregate').value !== 'count' && !field || kind === 'cards' && !field || kind === 'table' && !fields.length) {
+    $('vizDraftPreview').innerHTML = '<strong>Vista previa provisional</strong><p>' + (kind === 'table' ? 'Selecciona una o m&aacute;s columnas para la tabla.' : 'Selecciona el campo que usará esta visualización.') + '</p>';
     return
   }
   if (['bar', 'donut'].includes(kind) && !category) {
-    $('vizDraftPreview').innerHTML = '<strong>Vista previa provisional</strong><p>Selecciona la categor?a principal que agrupar&aacute; el gr&aacute;fico.</p>';
+    $('vizDraftPreview').innerHTML = '<strong>Vista previa provisional</strong><p>Selecciona la categoría principal que agrupará el gráfico.</p>';
     return
   }
   $('vizDraftPreview').innerHTML = '<strong>Vista previa provisional &middot; a&uacute;n no se agrega al visor</strong>' + previewVisualization(v) + '<small class="draft-note">La muestra usa todos los registros cargados. En el visor publicado, los c&aacute;lculos y las filas se actualizar&aacute;n al aplicar los filtros.</small>';
@@ -2020,12 +2084,12 @@ function addVisualization() {
     category = $('vizCategory').value,
     breakdown = $('vizBreakdown').value,
     fields = [...document.querySelectorAll('.viz-table-field:checked')].map(x => x.value);
-  if ((kind === 'kpi' || kind === 'cards') && !field) {
-    alert('Selecciona el campo que usar&aacute; esta visualizaci?n.');
+  if ((kind === 'kpi' && $('vizAggregate').value !== 'count' || kind === 'cards') && !field) {
+    alert('Selecciona el campo que usará esta visualización.');
     return
   }
   if (['bar', 'donut'].includes(kind) && !category) {
-    alert('Selecciona la categor?a principal del gr&aacute;fico.');
+    alert('Selecciona la categoría principal del gráfico.');
     return
   }
   if (['bar', 'donut'].includes(kind) && $('vizAggregate').value !== 'count' && !field) {
@@ -2036,7 +2100,8 @@ function addVisualization() {
     alert('Marca al menos una columna para la tabla.');
     return
   }
-  const title = $('vizTitle').value.trim() || (['bar','donut'].includes(kind) ? $('vizCategory').selectedOptions[0]?.text : $('vizField').selectedOptions[0]?.text) || 'Registros';
+  const defaultTitle = ['bar','donut'].includes(kind) ? $('vizCategory').selectedOptions[0]?.text : kind === 'kpi' && $('vizAggregate').value === 'count' ? 'Registros' : $('vizField').selectedOptions[0]?.text;
+  const title = $('vizTitle').value.trim() || defaultTitle || 'Registros';
   state.visualizations.push({
     id: String(Date.now()) + '_' + Math.random().toString(36).slice(2, 7),
     kind,
@@ -2214,20 +2279,20 @@ function viewerRuntime() {
   function metric(values,kind){if(kind==='count')return values.length;const nums=values.map(number).filter(Number.isFinite);if(!nums.length)return 0;return kind==='sum'?nums.reduce((a,b)=>a+b,0):nums.reduce((a,b)=>a+b,0)/nums.length}
   function render(rows){
     const kpis=document.getElementById('kpis');
-    kpis.innerHTML=C.visualizations.filter(v=>v.kind==='kpi').map(v=>{const vals=rows.map(r=>r[v.field]).filter(x=>x!=null&&x!=='');const n=metric(vals,v.aggregate);return'<article class="kpi" style="border-top-color:'+esc(v.color)+'"><small>'+esc(v.title)+'</small><strong>'+n.toLocaleString('es-CL',{maximumFractionDigits:1})+'</strong><span>'+(v.aggregate==='sum'?'Suma':v.aggregate==='average'?'Promedio':'Registros con dato')+'</span></article>'}).join('');
+    kpis.innerHTML=C.visualizations.filter(v=>v.kind==='kpi').map(v=>{const vals=rows.map(r=>r[v.field]).filter(x=>x!=null&&x!=='');const n=v.aggregate==='count'?rows.length:metric(vals,v.aggregate);return'<article class="kpi" style="border-top-color:'+esc(v.color)+'"><small>'+esc(v.title)+'</small><strong>'+n.toLocaleString('es-CL',{maximumFractionDigits:1})+'</strong><span>'+(v.aggregate==='sum'?'Suma':v.aggregate==='average'?'Promedio':'Registros')+'</span></article>'}).join('');
     output.innerHTML=C.visualizations.filter(v=>v.kind!=='kpi').map(v=>{
       const accent=/^#[0-9a-f]{6}$/i.test(v.color)?v.color:'#0F69B4';
       if(v.kind==='cards')return'<article class="visual-card" style="border-top:3px solid '+accent+'"><h2>'+esc(v.title)+'</h2><div class="cards">'+rows.slice(0,100).map(r=>'<div class="visual-record"><b>'+esc((C.mapping.nombre&&r[C.mapping.nombre])||(C.mapping.id&&r[C.mapping.id])||'Registro')+'</b><div>'+esc(r[v.field])+'</div></div>').join('')+'</div></article>';
       if(v.kind==='table'){const fields=v.fields&&v.fields.length?v.fields:[v.field].filter(Boolean);return'<article class="visual-card" style="border-top:3px solid '+accent+'"><h2>'+esc(v.title)+'</h2><div class="visual-table"><table><thead><tr>'+fields.map(f=>'<th>'+esc(f)+'</th>').join('')+'</tr></thead><tbody>'+rows.slice(0,100).map(r=>'<tr>'+fields.map(f=>'<td>'+esc(r[f])+'</td>').join('')+'</tr>').join('')+'</tbody></table></div></article>'}
       const grouped=new Map(),seriesField=v.kind==='bar'?v.breakdown:'';
-      rows.forEach(r=>{const cat=r[v.category]==null||r[v.category]===''?'Sin informaci?n':String(r[v.category]),series=seriesField?(r[seriesField]==null||r[seriesField]===''?'Sin informaci?n':String(r[seriesField])):'Todos',key=JSON.stringify([cat,series]),entry=grouped.get(key)||{cat,series,values:[],count:0};entry.count++;if(v.aggregate!=='count')entry.values.push(r[v.field]);grouped.set(key,entry)});
+      rows.forEach(r=>{const cat=r[v.category]==null||r[v.category]===''?'Sin información':String(r[v.category]),series=seriesField?(r[seriesField]==null||r[seriesField]===''?'Sin información':String(r[seriesField])):'Todos',key=JSON.stringify([cat,series]),entry=grouped.get(key)||{cat,series,values:[],count:0};entry.count++;if(v.aggregate!=='count')entry.values.push(r[v.field]);grouped.set(key,entry)});
       let data=[...grouped.values()].map(e=>({cat:e.cat,series:e.series,value:v.aggregate==='count'?e.count:metric(e.values,v.aggregate)}));
       if(v.kind==='donut'){data.sort((a,b)=>b.value-a.value);if(data.length>10)data=data.slice(0,9).concat([{cat:'Otros',series:'Todos',value:data.slice(9).reduce((a,b)=>a+b.value,0)}]);const total=data.reduce((a,b)=>a+b.value,0)||1;let pos=0;const stops=data.map(e=>{const from=pos;pos+=e.value/total*100;return color(e.cat,accent)+' '+from+'% '+pos+'%'}).join(',');return'<article class="visual-card" style="border-top:3px solid '+accent+'"><h2>'+esc(v.title)+'</h2><div class="visual-donut" style="background:conic-gradient('+stops+')"></div><div class="visual-rows">'+data.map(e=>'<div class="visual-legend"><i style="background:'+color(e.cat,accent)+'"></i><span>'+esc(e.cat)+'</span><b>'+e.value.toLocaleString('es-CL',{maximumFractionDigits:1})+'</b></div>').join('')+'</div><small>'+(v.aggregate==='count'?'Personas por ':'Valor por ')+esc(v.category)+'</small></article>'}
       const buckets=new Map();data.forEach(e=>{const a=buckets.get(e.cat)||[];a.push(e);buckets.set(e.cat,a)});const totals=[...buckets].map(([k,a])=>[k,a.reduce((n,e)=>n+e.value,0)]).sort((a,b)=>b[1]-a[1]).slice(0,12),max=Math.max(1,...totals.map(x=>x[1]));
       return'<article class="visual-card" style="border-top:3px solid '+accent+'"><h2>'+esc(v.title)+'</h2><div class="visual-rows">'+totals.map(([k,n])=>'<div class="visual-bar-group"><div class="visual-row"><span>'+esc(k)+'</span><i style="width:'+Math.max(3,n/max*100)+'%;background:'+(v.breakdown?'#E2E8F0':color(k,accent))+'"></i><b>'+n.toLocaleString('es-CL',{maximumFractionDigits:1})+'</b></div>'+(v.breakdown?'<div class="visual-bar-series">'+buckets.get(k).map(e=>'<span><i style="background:'+color(e.series,accent)+'"></i>'+esc(e.series)+': '+e.value.toLocaleString('es-CL',{maximumFractionDigits:1})+'</span>').join('')+'</div>':'')+'</div>').join('')+'</div><small>'+(v.aggregate==='count'?'Cuenta registros':'Calcula '+v.aggregate)+' por '+esc(v.category)+(v.breakdown?' y '+esc(v.breakdown):'')+'</small></article>';
     }).join('');
     document.getElementById('count').textContent=rows.length+' registros';
-    if(markerLayer){markerLayer.clearLayers();const bounds=[];rows.forEach(r=>{const lat=number(r[C.mapping.lat]),lon=number(r[C.mapping.lon]);if(Number.isFinite(lat)&&Number.isFinite(lon)&&Math.abs(lat)<=90&&Math.abs(lon)<=180){L.circleMarker([lat,lon],{radius:6,color:'#fff',weight:1.5,fillColor:C.design.primary,fillOpacity:.9}).addTo(markerLayer);bounds.push([lat,lon])}});if(bounds.length)map.fitBounds(bounds,{padding:[20,20],maxZoom:16});document.getElementById('mapCount').textContent=bounds.length+' de '+rows.length+' registros visibles con coordenadas v?lidas'}
+    if(markerLayer){markerLayer.clearLayers();const bounds=[];rows.forEach(r=>{const lat=number(r[C.mapping.lat]),lon=number(r[C.mapping.lon]);if(Number.isFinite(lat)&&Number.isFinite(lon)&&Math.abs(lat)<=90&&Math.abs(lon)<=180){L.circleMarker([lat,lon],{radius:6,color:'#fff',weight:1.5,fillColor:C.design.primary,fillOpacity:.9}).addTo(markerLayer);bounds.push([lat,lon])}});if(bounds.length)map.fitBounds(bounds,{padding:[20,20],maxZoom:16});document.getElementById('mapCount').textContent=bounds.length+' de '+rows.length+' registros visibles con coordenadas válidas'}
   }
   function renderFilterControls(){
     filters.innerHTML=C.filters.map((f,i)=>{
@@ -2250,15 +2315,21 @@ function viewerRuntime() {
   }
   renderFilterControls();
   document.getElementById('reset').onclick=()=>{F={};renderFilterControls();render(C.rows)};
-  const csv=document.getElementById('exportCsv');if(csv)csv.onclick=()=>{const lines=[C.headers.map(x=>'"'+String(x).replace(/"/g,'""')+'"').join(',')].concat(selectedRows().map(r=>C.headers.map(h=>'"'+String(r[h]==null?'':r[h]).replace(/"/g,'""')+'"').join(','))),blob=new Blob(['\ufeff'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='datos_filtrados.csv';a.click();URL.revokeObjectURL(a.href)};
-  const xlsx=document.getElementById('exportXlsx');if(xlsx)xlsx.onclick=()=>{if(!window.XLSX){alert('No fue posible cargar el m?dulo de Excel.');return}const ws=XLSX.utils.json_to_sheet(selectedRows()),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Datos');XLSX.writeFile(wb,'datos_filtrados.xlsx')};
+  const csvCell=value=>{let s=String(value==null?'':value);if(/^\s*[=+\-@]/.test(s))s="'"+s;return'"'+s.replace(/"/g,'""')+'"'};
+  const csv=document.getElementById('exportCsv');if(csv)csv.onclick=()=>{const lines=[C.headers.map(csvCell).join(';')].concat(selectedRows().map(r=>C.headers.map(h=>csvCell(r[h])).join(';'))),blob=new Blob(['\ufeff'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='datos_filtrados.csv';a.click();URL.revokeObjectURL(a.href)};
+  const xlsx=document.getElementById('exportXlsx');if(xlsx)xlsx.onclick=()=>{if(!window.XLSX){alert('No fue posible cargar el módulo de Excel.');return}const ws=XLSX.utils.json_to_sheet(selectedRows()),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Datos');XLSX.writeFile(wb,'datos_filtrados.xlsx')};
   if(C.design.showMap&&window.L){map=L.map('map').setView([-41.5,-72.8],7);L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{x}/{y}',{maxZoom:18,attribution:'&copy; Esri, OpenStreetMap contributors'}).addTo(map);markerLayer=L.layerGroup().addTo(map)}render(C.rows)
 }
-function buildViewer(){
+function buildViewer(openPreview = false){
   if(!state.rows.length){alert('Primero carga un archivo de datos.');return}
   if(!state.logoData){alert('El logo institucional es obligatorio.');return}
   const geoRows=validGeoRows(state.rows,state.mapping),mapReady=!!(state.design.showMap&&state.mapCoordinatesConfirmed&&geoRows.length);
-  if(state.design.showMap&&!mapReady){alert('Confirma coordenadas v?lidas antes de incluir el mapa.');return}
+  if(state.design.showMap&&!mapReady){alert('Confirma coordenadas válidas antes de incluir el mapa.');return}
+  const previewTab = openPreview ? window.open('about:blank', '_blank') : null;
+  if (openPreview && !previewTab) {
+    alert('El navegador bloqueó la pestaña de prueba. Permite ventanas emergentes para esta página e inténtalo de nuevo.');
+    return
+  }
   const config={title:state.design.title,rows:state.rows,headers:state.headers,mapping:state.mapping,filters:state.filters,visualizations:state.visualizations,design:state.design,cardFields:state.cardFields,categoryColors:state.categoryColors,customFieldLabels:state.customFieldLabels,logoData:state.logoData,geoCount:geoRows.length};
   const safe=JSON.stringify(config).replace(/</g,'\\u003c'),banner='<img class="institutional-banner" src="'+institutionalBannerData+'" alt="Gobierno de Chile - Trabajando para usted">';
   const bannerAbove=state.design.bannerPosition==='above'?banner:'',bannerBelow=state.design.bannerPosition==='below'?banner:'';
@@ -2314,9 +2385,21 @@ function buildViewer(){
     bannerBelow + '<main><div class="toolbar"><button id="reset" class="secondary" type="button">Restablecer filtros</button>' +
     downloadCsv + downloadXlsx + '<span id="count"></span></div><div id="filters" class="filters"></div>' +
     '<div id="kpis" class="kpis"></div>' + mapBlock + '<div id="visuals" class="visuals"></div></main>' + runtime + '</body></html>';
-  const blob=new Blob([html],{type:'text/html;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='visor_datos.html';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  if (previewTab) {
+    previewTab.location.href = url;
+    setTimeout(() => URL.revokeObjectURL(url), 30 * 60 * 1000);
+    return
+  }
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'visor_datos.html';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 60000)
 }
-$('generateBtn').onclick = buildViewer;
+$('generateBtn').onclick = () => buildViewer(false);
+$('previewGeneratedBtn').onclick = () => buildViewer(true);
 $('saveBtn').onclick = () => {
   syncDesign();
   const saved = {
@@ -2357,12 +2440,20 @@ $('configFile').onchange = async e => {
     state.visualizations = [];
     const savedCustom = saved.customFieldLabels && typeof saved.customFieldLabels === 'object' ? saved.customFieldLabels : {};
     state.mapping = Object.fromEntries(Object.entries(saved.mapping).filter(([k]) => genericKeys.includes(k) || Object.prototype.hasOwnProperty.call(savedCustom, k)).map(([k, v]) => [k, state.headers.includes(v) ? v : '']));
-    state.visualizations = Array.isArray(saved.visualizations) ? saved.visualizations.filter(v => v && ['kpi', 'cards', 'bar', 'donut', 'table'].includes(v.kind) && saved.headers.includes(v.field)).map(v => ({
+    state.visualizations = Array.isArray(saved.visualizations) ? saved.visualizations.filter(v => {
+      if (!v || !['kpi', 'cards', 'bar', 'donut', 'table'].includes(v.kind)) return false;
+      if (v.kind === 'table') return Array.isArray(v.fields) && v.fields.length > 0 && v.fields.every(f => saved.headers.includes(f));
+      if (v.kind === 'kpi' && v.aggregate === 'count' && !v.field) return true;
+      if (v.kind === 'bar' || v.kind === 'donut') return saved.headers.includes(v.category) && (v.aggregate === 'count' || saved.headers.includes(v.field));
+      return saved.headers.includes(v.field)
+    }).map(v => ({
       id: String(v.id || Date.now() + Math.random()),
       kind: v.kind,
-      title: String(v.title || v.field),
-      field: v.field,
+      title: String(v.title || v.field || v.category || 'Registros'),
+      field: saved.headers.includes(v.field) ? v.field : '',
+      fields: Array.isArray(v.fields) ? v.fields.filter(f => saved.headers.includes(f)) : [],
       category: saved.headers.includes(v.category) ? v.category : '',
+      breakdown: saved.headers.includes(v.breakdown) ? v.breakdown : '',
       color: /^#[0-9a-f]{6}$/i.test(v.color) ? v.color : '#0F69B4',
       aggregate: ['count', 'sum', 'average'].includes(v.aggregate) ? v.aggregate : 'count'
     })) : [];
