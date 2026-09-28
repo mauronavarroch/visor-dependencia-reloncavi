@@ -188,6 +188,17 @@ margin:0 0 10px}
 height:260px;
 border:1px solid var(--line);
 border-radius:5px}
+.map-preview-panel{margin:14px 0;padding:14px;border:1px solid var(--line);border-radius:7px;background:#F8FAFC}
+.map-preview-panel h3{margin:0 0 5px}.map-preview-panel p{margin:0 0 10px;color:#64748B;font-size:13px}
+#coordinateMapPreview{height:300px;border:1px solid var(--line);border-radius:6px;background:#E8EFF2}
+.preview-component-tools{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin:0 0 10px;padding:7px 9px;border:1px solid #D7DEE5;border-radius:6px;background:#F8FAFC;cursor:default}
+.preview-component-tools span{font-size:11px;color:#526174;font-weight:600}
+.preview-component-tools button{padding:5px 9px;border:1px solid #B8C7D8;border-radius:5px;background:#fff;color:#174A7E;font:inherit;font-size:11px;cursor:pointer}
+.preview-component-tools button:hover{background:#EAF3FA;border-color:#0F69B4}
+.preview-component-tools button[data-preview-remove],.preview-component-tools button[data-map-action="remove"]{color:#A32828}
+.preview-component-tools button[aria-pressed="true"]{background:#0F69B4;color:#fff;border-color:#0F69B4}
+.viz-card.preview-sortable{padding-top:14px}
+.viz-card.preview-sortable:before{display:none}
 .preview{
 border:1px solid var(--line);
 border-radius:8px;
@@ -1029,6 +1040,11 @@ font-weight:700}
 </select>
 </div>
 </div>
+<section class="map-preview-panel">
+<h3>Vista previa de coordenadas</h3>
+<p>El mapa se actualiza al elegir las columnas. Rev&iacute;salo antes de confirmar y agregarlo al visor.</p>
+<div id="coordinateMapPreview" role="region" aria-label="Vista previa del mapa con las coordenadas seleccionadas"></div>
+</section>
 <button id="confirmMapColumns" type="button">Confirmar coordenadas</button>
 <p id="mapCoordinateStatus" class="status">Selecciona las columnas de latitud y longitud y confirma antes de mostrar el mapa.</p>
 <div class="grid map-layout-controls">
@@ -1072,8 +1088,12 @@ font-weight:700}
 <label for="vizAggregate">C&aacute;lculo</label>
 <select id="vizAggregate">
 <option value="count">Contar registros</option>
-<option value="sum">Sumar valores num&eacute;ricos</option>
-<option value="average">Promedio</option>
+<option class="kpi-only-option" value="count_values">Contar datos informados</option>
+<option class="kpi-only-option" value="distinct">Contar valores &uacute;nicos</option>
+<option class="numeric-metric-option" value="sum">Sumar valores num&eacute;ricos</option>
+<option class="numeric-metric-option" value="average">Promedio</option>
+<option class="numeric-metric-option" value="minimum">Valor m&iacute;nimo</option>
+<option class="numeric-metric-option" value="maximum">Valor m&aacute;ximo</option>
 </select>
 <small id="vizMetricHelp">Elige qu&eacute; valor se calcular&aacute;.</small>
 </div>
@@ -1374,7 +1394,7 @@ const chileGeoCoverage = (rows, latField, lonField) => {
     return lat >= -56 && lat <= -17 && lon >= -110 && lon <= -65
   }).length / valid.length;
 };
-let adminMap = null;
+let adminMap = null, coordinateMap = null;
 const steps = ['datos', 'filtros', 'diseno', 'visualizaciones', 'vista'];
 const stepNames = ['Datos', 'Filtros', 'Diseño', 'Visualizaciones', 'Vista previa'];
 let stepIndex = 0;
@@ -1457,9 +1477,10 @@ $('file').onchange = async e => {
   clearLoadedData('Leyendo ' + f.name + '…');
   try {
     if (!window.XLSX) throw Error('No se pudo cargar el lector de archivos. Revisa tu conexión a internet y vuelve a intentarlo.');
+    const isCsv = f.name.toLowerCase().endsWith('.csv');
     const workbook = XLSX.read(await f.arrayBuffer(), {
-      cellDates: true,
-      raw: f.name.toLowerCase().endsWith('.csv')
+      cellDates: !isCsv,
+      raw: isCsv
     });
     if (!workbook.SheetNames.length) throw Error('El archivo no contiene hojas para leer.');
     state.workbook = workbook;
@@ -1857,6 +1878,7 @@ function renderDesignFields() {
 }
 
 function parseAdminMetricNumber(value) {
+  if (value instanceof Date) return NaN;
   if (typeof value === 'number') return Number.isFinite(value) ? value : NaN;
   if (value === null || value === undefined) return NaN;
   let s = String(value).trim().replace(/[^0-9,.-]/g, '');
@@ -1889,16 +1911,19 @@ function renderVisualizationFields() {
   if (state.headers.includes(oldBreakdown)) $('vizBreakdown').value = oldBreakdown;
   const kind = $('vizKind').value,
     aggregate = $('vizAggregate').value;
+  document.querySelectorAll('.kpi-only-option').forEach(option => option.hidden = kind !== 'kpi');
+  document.querySelectorAll('.numeric-metric-option').forEach(option => option.hidden = !['kpi','bar','donut'].includes(kind));
+  if (kind !== 'kpi' && ['count_values','distinct'].includes(aggregate)) $('vizAggregate').value = 'count';
   const needsCategory = ['bar', 'donut'].includes(kind),
     needsMetric = ['kpi', 'bar', 'donut'].includes(kind);
   $('vizCategoryWrap').style.display = needsCategory ? 'block' : 'none';
   $('vizBreakdownWrap').style.display = kind === 'bar' ? 'block' : 'none';
   $('vizAggregateWrap').style.display = needsMetric ? 'block' : 'none';
-  $('vizFieldWrap').style.display = kind === 'cards' || (needsMetric && aggregate !== 'count') ? 'block' : 'none';
+  $('vizFieldWrap').style.display = kind === 'cards' || (kind === 'kpi' && aggregate !== 'count' || ['bar','donut'].includes(kind) && aggregate !== 'count') ? 'block' : 'none';
   $('vizTableFieldsWrap').style.display = kind === 'table' ? 'block' : 'none';
   $('vizFieldWrap').querySelector('label').textContent = kind === 'cards' ? 'Campo que se mostrará en cada tarjeta' : kind === 'kpi' ? 'Campo del indicador' : 'Campo numérico que se calculará';
   $('vizAggregateWrap').querySelector('label').textContent = kind === 'kpi' ? 'Cálculo del indicador' : 'Cálculo del gráfico';
-  $('vizMetricHelp').textContent = aggregate === 'count' ? 'Cuenta registros. No necesitas elegir una columna.' : 'Suma o promedia los valores numéricos del campo seleccionado.';
+  $('vizMetricHelp').textContent = aggregate === 'count' ? 'Cuenta los registros filtrados; no requiere una columna.' : aggregate === 'count_values' ? 'Cuenta las celdas no vacías de cualquier columna.' : aggregate === 'distinct' ? 'Cuenta cuántos valores distintos hay en la columna.' : 'Este cálculo usa valores numéricos de la columna seleccionada.';
   if (kind === 'table') {
     const selected = new Set([...document.querySelectorAll('.viz-table-field:checked')].map(x => x.value));
     $('vizTableFields').innerHTML = state.headers.map((h, i) => `<label class="viz-table-field-row"><input class="viz-table-field" type="checkbox" value="${escapeAdminHtml(h)}" ${selected.has(h)||(!selected.size&&i===0)?'checked':''}><span>${escapeAdminHtml(h)}</span></label>`).join('');
@@ -1915,10 +1940,10 @@ function renderVisualizationList() {
     donut: 'Gr&aacute;fico circular',
     table: 'Tabla'
   };
-  $('visualizationList').innerHTML = state.visualizations.length ? state.visualizations.map((v, i) => {
+    $('visualizationList').innerHTML = state.visualizations.length ? state.visualizations.map((v, i) => {
     const fields = v.kind === 'table' ? (v.fields || [v.field]).join(', ') : v.kind === 'bar' && v.breakdown ? `${v.category} por ${v.breakdown}` : v.category || v.field || 'Registros';
     const sizeName = v.size === 'compact' ? 'Compacto' : v.size === 'large' ? 'Amplio' : 'Est&aacute;ndar', widthName = v.width === 'full' ? 'Fila completa' : 'Media fila';
-    return `<div class="filter-item"><span class="drag-handle">${i+1}</span><strong>${names[v.kind]}</strong><span>${escapeAdminHtml(v.title)} &middot; ${escapeAdminHtml(fields)} &middot; ${v.aggregate==='count'?'Cuenta registros':v.aggregate==='sum'?'Suma':'Promedio'}<small style="display:block;margin-top:4px">${sizeName} · ${widthName}${['table','cards'].includes(v.kind)?' · '+(v.pageSize||10)+' por p&aacute;gina':''}</small></span><span title="Acento, fondo y texto" style="display:flex;gap:4px"><i style="width:20px;height:20px;border-radius:4px;background:${safeVizColor(v.color)};border:1px solid #CBD5E1"></i><i style="width:20px;height:20px;border-radius:4px;background:${safeVizColor(v.surface,'#FFFFFF')};border:1px solid #CBD5E1"></i><i style="width:20px;height:20px;border-radius:4px;background:${safeVizColor(v.text,'#1C244B')};border:1px solid #CBD5E1"></i></span><button type="button" data-remove-viz="${v.id}">Quitar</button></div>`
+    return `<div class="filter-item"><span class="drag-handle">${i+1}</span><strong>${names[v.kind]}</strong><span>${escapeAdminHtml(v.title)} &middot; ${escapeAdminHtml(fields)} &middot; ${metricLabel(v.aggregate)}<small style="display:block;margin-top:4px">${sizeName} · ${widthName}${['table','cards'].includes(v.kind)?' · '+(v.pageSize||10)+' por p&aacute;gina':''}</small></span><span title="Acento, fondo y texto" style="display:flex;gap:4px"><i style="width:20px;height:20px;border-radius:4px;background:${safeVizColor(v.color)};border:1px solid #CBD5E1"></i><i style="width:20px;height:20px;border-radius:4px;background:${safeVizColor(v.surface,'#FFFFFF')};border:1px solid #CBD5E1"></i><i style="width:20px;height:20px;border-radius:4px;background:${safeVizColor(v.text,'#1C244B')};border:1px solid #CBD5E1"></i></span><button type="button" data-remove-viz="${v.id}">Quitar</button></div>`
   }).join('') : '<p class="status">A&uacute;n no hay visualizaciones.</p>';
   document.querySelectorAll('[data-remove-viz]').forEach(x => x.onclick = () => {
     state.visualizations = state.visualizations.filter(v => v.id !== x.dataset.removeViz);
@@ -1949,10 +1974,25 @@ function renderCategoryColors() {
 }
 
 function metricForValues(values, aggregate) {
-  if (aggregate === 'count') return values.filter(x => x !== null && x !== '').length;
-  const nums = values.map(parseAdminMetricNumber).filter(Number.isFinite);
+  const present = values.filter(x => x !== null && x !== undefined && String(x).trim() !== '');
+  if (aggregate === 'count') return values.length;
+  if (aggregate === 'count_values') return present.length;
+  if (aggregate === 'distinct') return new Set(present.map(x => String(x).trim())).size;
+  const nums = present.map(parseAdminMetricNumber).filter(Number.isFinite);
   if (!nums.length) return 0;
-  return aggregate === 'sum' ? nums.reduce((a, b) => a + b, 0) : nums.reduce((a, b) => a + b, 0) / nums.length
+  if (aggregate === 'sum') return nums.reduce((a, b) => a + b, 0);
+  if (aggregate === 'minimum') return Math.min(...nums);
+  if (aggregate === 'maximum') return Math.max(...nums);
+  return nums.reduce((a, b) => a + b, 0) / nums.length
+}
+
+function metricLabel(aggregate) {
+  return ({count:'Registros',count_values:'Datos informados',distinct:'Valores &uacute;nicos',sum:'Suma',average:'Promedio',minimum:'M&iacute;nimo',maximum:'M&aacute;ximo'})[aggregate] || 'Registros'
+}
+
+function visualizationMetricLabel(v) {
+  const label = metricLabel(v.aggregate);
+  return v.aggregate === 'count' ? label : label + (v.field ? ' de ' + escapeAdminHtml(v.field) : '')
 }
 
 function groupedMetrics(rows, v) {
@@ -1978,7 +2018,7 @@ function groupedMetrics(rows, v) {
   let entries = [...groups.values()].map(e => ({
     category: e.category,
     series: e.series,
-    value: v.aggregate === 'count' ? e.count : v.aggregate === 'sum' ? e.values.reduce((a, b) => a + b, 0) : e.values.length ? e.values.reduce((a, b) => a + b, 0) / e.values.length : 0
+    value: ['count','count_values','distinct'].includes(v.aggregate) ? (v.aggregate === 'count' ? e.count : metricForValues(rows.filter(r => String(r[v.category] ?? 'Sin información') === e.category && String(v.breakdown ? r[v.breakdown] ?? 'Sin información' : 'Todos') === e.series).map(r => r[v.field]), v.aggregate)) : metricForValues(e.values, v.aggregate)
   }));
   return entries.sort((a, b) => a.category.localeCompare(b.category, 'es') || a.series.localeCompare(b.series, 'es'));
 }
@@ -2002,7 +2042,7 @@ function previewVisualization(v) {
   if (v.kind === 'kpi') {
     if (v.aggregate !== 'count' && !v.field) return `<article class="viz-card"><h3>${title}</h3><p>Selecciona el campo del indicador.</p></article>`;
     const n = v.aggregate === 'count' ? rows.length : metricForValues(values, v.aggregate);
-    return `<article class="viz-card viz-kpi ${wrapperClass}" style="${cardStyle}"><small>${title}</small><strong>${Number(n).toLocaleString('es-CL',{maximumFractionDigits:1})}</strong><span>${v.aggregate==='sum'?'Suma':v.aggregate==='average'?'Promedio':'Registros'}</span></article>`;
+    return `<article class="viz-card viz-kpi ${wrapperClass}" style="${cardStyle}"><small>${title}</small><strong>${Number(n).toLocaleString('es-CL',{maximumFractionDigits:1})}</strong><span>${visualizationMetricLabel(v)}</span></article>`;
   }
   if (v.kind === 'cards') return `<article class="viz-card ${wrapperClass}" style="${cardStyle}"><h3>${title}</h3><div class="viz-cards">${rows.slice(0,pageSize).map(r=>`<div class="viz-record"><b>${escapeAdminHtml(r[state.mapping.nombre]||r[state.mapping.id]||'Registro')}</b><span>${escapeAdminHtml(r[v.field]??'Sin dato')}</span></div>`).join('')}</div><small>Vista previa: ${Math.min(pageSize,rows.length)} de ${rows.length} registros por p&aacute;gina.</small></article>`;
   if (v.kind === 'table') {
@@ -2026,7 +2066,7 @@ function previewVisualization(v) {
       pos += e.value / total * 100;
       return `${safeVizColor(state.categoryColors[e.category],color)} ${start}% ${pos}%`
     }).join(',');
-    return `<article class="viz-card ${wrapperClass}" style="${cardStyle}"><h3>${title}</h3><div class="viz-donut" style="background:conic-gradient(${stops})"></div><div class="viz-legend">${rolled.map(e=>`<div><i style="background:${safeVizColor(state.categoryColors[e.category],color)}"></i><span>${escapeAdminHtml(e.category)}</span><b>${Number(e.value).toLocaleString('es-CL',{maximumFractionDigits:1})}</b></div>`).join('')}</div><small>${v.aggregate==='count'?'Personas':v.aggregate==='sum'?'Suma de':'Promedio de'} ${v.aggregate==='count'?'':escapeAdminHtml(v.field)+' '}por ${escapeAdminHtml(v.category)}.${cats.length>10?' Se agrupan las categor&iacute;as menores en &laquo;Otros&raquo;.':''}</small></article>`;
+    return `<article class="viz-card ${wrapperClass}" style="${cardStyle}"><h3>${title}</h3><div class="viz-donut" style="background:conic-gradient(${stops})"></div><div class="viz-legend">${rolled.map(e=>`<div><i style="background:${safeVizColor(state.categoryColors[e.category],color)}"></i><span>${escapeAdminHtml(e.category)}</span><b>${Number(e.value).toLocaleString('es-CL',{maximumFractionDigits:1})}</b></div>`).join('')}</div><small>${metricLabel(v.aggregate)}${v.aggregate==='count'?'':' de '+escapeAdminHtml(v.field)} por ${escapeAdminHtml(v.category)}.${cats.length>10?' Se agrupan las categor&iacute;as menores en &laquo;Otros&raquo;.':''}</small></article>`;
   }
   const perCategory = new Map();
   entries.forEach(e => {
@@ -2037,12 +2077,35 @@ function previewVisualization(v) {
   const totals = [...perCategory].map(([k, a]) => [k, a.reduce((t, e) => t + e.value, 0)]).sort((a, b) => b[1] - a[1]);
   const shown = totals.slice(0, 12),
     max = Math.max(1, ...shown.map(x => x[1]));
-  return `<article class="viz-card ${wrapperClass}" style="${cardStyle}"><h3>${title}</h3><div class="viz-bars">${shown.map(([k,n])=>{const parts=perCategory.get(k),denom=max;return `<div class="viz-bar-group"><div class="viz-bar-row"><span>${escapeAdminHtml(k)}</span><i style="width:${Math.max(3,n/denom*100)}%;background:${v.breakdown?'#E2E8F0':safeVizColor(state.categoryColors[k],color)}"></i><b>${Number(n).toLocaleString('es-CL',{maximumFractionDigits:1})}</b></div>${v.breakdown?`<div class="viz-bar-series">${parts.map(e=>`<span><i style="background:${safeVizColor(state.categoryColors[e.series],color)}"></i>${escapeAdminHtml(e.series)}: ${Number(e.value).toLocaleString('es-CL',{maximumFractionDigits:1})}</span>`).join('')}</div>`:''}</div>`}).join('')}</div><small>${v.aggregate==='count'?'Cuenta registros':v.aggregate==='sum'?'Suma':'Promedio'}${v.aggregate==='count'?'':' de '+escapeAdminHtml(v.field)} por ${escapeAdminHtml(v.category)}${v.breakdown?' y '+escapeAdminHtml(v.breakdown):''}.${totals.length>12?' Se muestran las 12 categor&iacute;as con mayor valor.':''}</small></article>`;
+  return `<article class="viz-card ${wrapperClass}" style="${cardStyle}"><h3>${title}</h3><div class="viz-bars">${shown.map(([k,n])=>{const parts=perCategory.get(k),denom=max;return `<div class="viz-bar-group"><div class="viz-bar-row"><span>${escapeAdminHtml(k)}</span><i style="width:${Math.max(3,n/denom*100)}%;background:${v.breakdown?'#E2E8F0':safeVizColor(state.categoryColors[k],color)}"></i><b>${Number(n).toLocaleString('es-CL',{maximumFractionDigits:1})}</b></div>${v.breakdown?`<div class="viz-bar-series">${parts.map(e=>`<span><i style="background:${safeVizColor(state.categoryColors[e.series],color)}"></i>${escapeAdminHtml(e.series)}: ${Number(e.value).toLocaleString('es-CL',{maximumFractionDigits:1})}</span>`).join('')}</div>`:''}</div>`}).join('')}</div><small>${metricLabel(v.aggregate)}${v.aggregate==='count'?'':' de '+escapeAdminHtml(v.field)} por ${escapeAdminHtml(v.category)}${v.breakdown?' y '+escapeAdminHtml(v.breakdown):''}.${totals.length>12?' Se muestran las 12 categor&iacute;as con mayor valor.':''}</small></article>`;
 }
 
 function sortablePreviewVisualization(v) {
   const id = escapeAdminHtml(v.id || ''), label = escapeAdminHtml(v.title || v.field || v.category || 'Visualizaci&oacute;n');
-  return previewVisualization(v).replace(/^<article class="([^"]*)"/, '<article class="$1 preview-sortable" draggable="true" tabindex="0" data-preview-viz="' + id + '" aria-label="' + label + '. Arrastra para cambiar su posici&oacute;n, o usa las flechas del teclado"');
+  const width = v.width === 'full' ? 'full' : 'half', size = ['compact','large'].includes(v.size) ? v.size : 'standard';
+  const tools = `<div class="preview-component-tools" contenteditable="false"><span>Editar: ${label}</span><div><button type="button" data-preview-width="half" data-preview-id="${id}" aria-pressed="${width==='half'}">Media fila</button><button type="button" data-preview-width="full" data-preview-id="${id}" aria-pressed="${width==='full'}">Fila completa</button></div><div><button type="button" data-preview-size="compact" data-preview-id="${id}" aria-pressed="${size==='compact'}">Compacto</button><button type="button" data-preview-size="standard" data-preview-id="${id}" aria-pressed="${size==='standard'}">Mediano</button><button type="button" data-preview-size="large" data-preview-id="${id}" aria-pressed="${size==='large'}">Amplio</button><button type="button" data-preview-remove="${id}">Quitar</button></div></div>`;
+  return previewVisualization(v).replace(/^<article class="([^"]*)"/, '<article class="$1 preview-sortable" draggable="true" tabindex="0" data-preview-viz="' + id + '" aria-label="' + label + '. Arrastra para cambiar su posici&oacute;n, o usa las flechas del teclado"').replace(/^(<article[^>]*>)/, '$1' + tools);
+}
+
+function bindPreviewEditing() {
+  $('preview').querySelectorAll('[data-preview-width],[data-preview-size],[data-preview-remove],[data-map-action]').forEach(button => button.addEventListener('click', () => {
+    const id = button.dataset.previewId;
+    if (button.hasAttribute('data-preview-remove')) {
+      state.visualizations = state.visualizations.filter(v => v.id !== button.dataset.previewRemove);
+      renderVisualizationList(); renderPreview(); return
+    }
+    if (id) {
+      const v = state.visualizations.find(item => item.id === id); if (!v) return;
+      if (button.dataset.previewWidth) v.width = button.dataset.previewWidth;
+      if (button.dataset.previewSize) v.size = button.dataset.previewSize;
+      renderVisualizationList(); renderPreview(); return
+    }
+    if (button.dataset.mapAction === 'remove') {
+      state.design.showMap = false; $('showMap').checked = false; syncDesign(); renderPreview(); return
+    }
+    if (button.dataset.mapWidth) { state.design.mapWidth = button.dataset.mapWidth; $('mapWidth').value = button.dataset.mapWidth; syncDesign(); renderPreview(); return }
+    if (button.dataset.mapHeight) { state.design.mapHeight = Number(button.dataset.mapHeight); $('mapHeight').value = button.dataset.mapHeight; syncDesign(); renderPreview() }
+  }))
 }
 
 function moveVisualization(id, offset) {
@@ -2180,6 +2243,7 @@ function addVisualization() {
 }
 $('addVisualization').onclick = addVisualization;
 $('vizKind').onchange = () => {
+  if ($('vizKind').value !== 'kpi' && ['count_values','distinct'].includes($('vizAggregate').value)) $('vizAggregate').value = 'count';
   renderVisualizationFields();
   refreshVisualizationDraft()
 };
@@ -2222,6 +2286,33 @@ function renderMapColumnFields() {
     const swapped = swappedChileFit > .8 && directChileFit < .2;
     status.textContent = `${valid.length} coordenadas v\u00e1lidas; latitud ${minLat.toFixed(4)} a ${maxLat.toFixed(4)}, longitud ${minLon.toFixed(4)} a ${maxLon.toFixed(4)}.${swapped?' ALERTA: parece que latitud y longitud est\u00e1n intercambiadas. Revisa las columnas seleccionadas.':looksLosLagos&&inside<valid.length?' ALERTA: hay puntos fuera del \u00e1rea aproximada de la Regi\u00f3n de Los Lagos.':' '+(state.mapCoordinatesConfirmed?'Coordenadas confirmadas.':'Confirma que el rango corresponda a la ubicaci\u00f3n esperada.')}`
   }
+  renderCoordinateMapPreview(valid);
+}
+
+function renderCoordinateMapPreview(rows = validGeoRows(state.rows, state.mapping)) {
+  const el = $('coordinateMapPreview');
+  if (!el) return;
+  if (coordinateMap) { coordinateMap.remove(); coordinateMap = null; }
+  if (!state.mapping.lat || !state.mapping.lon || !rows.length || typeof L === 'undefined') {
+    el.innerHTML = '<div class="viz-map-placeholder">Selecciona columnas con coordenadas para previsualizar el mapa.</div>';
+    return
+  }
+  const directFit = chileGeoCoverage(state.rows,state.mapping.lat,state.mapping.lon), swappedFit = chileGeoCoverage(state.rows,state.mapping.lon,state.mapping.lat);
+  if (swappedFit > .8 && directFit < .2) {
+    el.innerHTML = '<div class="viz-map-placeholder" style="height:100%;padding:24px;text-align:center">Las columnas elegidas sit&uacute;an los puntos fuera de Chile. Revisa el orden de latitud y longitud; el mapa no dibujar&aacute; ubicaciones incorrectas.</div>';
+    return
+  }
+  el.innerHTML = '';
+  coordinateMap = L.map(el, {scrollWheelZoom:false}).setView([-41.5,-72.8],7);
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{x}/{y}', {attribution:'&copy; Esri, OpenStreetMap contributors', maxZoom:18}).addTo(coordinateMap);
+  const bounds = [];
+  rows.forEach(row => {
+    const lat = parseCoordinate(row[state.mapping.lat]), lon = parseCoordinate(row[state.mapping.lon]);
+    L.circleMarker([lat,lon], {radius:5,color:'#fff',weight:1.5,fillColor:state.design.primary,fillOpacity:.9}).addTo(coordinateMap);
+    bounds.push([lat,lon]);
+  });
+  if (bounds.length) coordinateMap.fitBounds(bounds,{padding:[16,16],maxZoom:13});
+  setTimeout(() => coordinateMap && coordinateMap.invalidateSize(),100)
 }
 
 function confirmMapCoordinates() {
@@ -2325,6 +2416,7 @@ function renderAdminFilterPreview(filter) {
 
 function renderPreview() {
   if (adminMap) { adminMap.remove(); adminMap = null; }
+  if (coordinateMap) { coordinateMap.remove(); coordinateMap = null; }
   const n = state.rows.length || 0, geoRows = validGeoRows(state.rows, state.mapping);
   $('preview').style.background = state.design.bg;
   $('preview').style.color = state.design.bg.toUpperCase() === '#1F3A73' ? '#FFFFFF' : '#1C244B';
@@ -2336,12 +2428,13 @@ function renderPreview() {
   const banner = '<img class="institutional-banner" src="' + institutionalBannerData + '" alt="Gobierno de Chile - Trabajando para usted">';
   const direction = state.design.logoPosition === 'right' ? 'row-reverse' : state.design.logoPosition === 'top' ? 'column' : 'row';
   const head = '<div class="preview-identity" style="background:' + state.design.header + ';border-color:' + state.design.accent + ';flex-direction:' + direction + '"><img src="' + state.logoData + '" alt="Logo institucional"><div><h2>' + escapeAdminHtml(state.design.title) + '</h2><p>' + escapeAdminHtml(state.design.subtitle) + '</p></div></div>';
-  const mapPreview = state.design.showMap ? '<article class="viz-card viz-map ' + (state.design.mapWidth === 'half' ? 'viz-span-half' : 'viz-span-full') + '"><h3>Mapa de registros</h3><div id="adminMap"></div><p>' + geoRows.length + ' de ' + n + ' registros con coordenadas v&aacute;lidas</p></article>' : '';
+  const mapTools = `<div class="preview-component-tools"><span>Editar: Mapa de registros</span><div><button type="button" data-map-width="half" aria-pressed="${state.design.mapWidth==='half'}">Media fila</button><button type="button" data-map-width="full" aria-pressed="${state.design.mapWidth!=='half'}">Fila completa</button></div><div><button type="button" data-map-height="320" aria-pressed="${Number(state.design.mapHeight)===320}">Compacto</button><button type="button" data-map-height="440" aria-pressed="!state.design.mapHeight||Number(state.design.mapHeight)===440">Mediano</button><button type="button" data-map-height="560" aria-pressed="${Number(state.design.mapHeight)===560}">Amplio</button><button type="button" data-map-action="remove">Quitar mapa</button></div></div>`;
+  const mapPreview = geoRows.length ? '<article class="viz-card viz-map preview-map ' + (state.design.mapWidth === 'half' ? 'viz-span-half' : 'viz-span-full') + '" style="' + (state.design.showMap?'':'opacity:.82;border-style:dashed') + '">' + mapTools + '<h3>Mapa de registros</h3><div id="adminMap" style="height:' + (Number(state.design.mapHeight)||440) + 'px"></div><p>' + geoRows.length + ' de ' + n + ' registros con coordenadas v&aacute;lidas' + (state.design.showMap?' · incluido en el visor':' · vista de configuraci&oacute;n; act&iacute;valo arriba para incluirlo') + '</p></article>' : '';
   const visuals = state.visualizations.map(sortablePreviewVisualization).join('') || '<p class="status">A&uacute;n no hay KPI, tarjetas ni gr&aacute;ficos agregados.</p>';
-  $('preview').innerHTML = (state.design.bannerPosition === 'above' ? banner : '') + head + (state.design.bannerPosition === 'below' ? banner : '') + '<main class="preview-main">' + filters + '<div class="preview-summary"><span><b>' + n + '</b> registros cargados</span>' + (exportLabel ? '<button type="button">' + exportLabel + '</button>' : '') + '</div><p class="preview-sort-help">Puedes arrastrar los KPI, tarjetas y gr&aacute;ficos para cambiar su orden. En un bloque seleccionado, usa las flechas ↑ y ↓ del teclado para reordenarlo.</p><div class="viz-stage">' + visuals + mapPreview + '</div></main>';
-  if (state.design.showMap && geoRows.length && typeof L !== 'undefined') {
+  $('preview').innerHTML = (state.design.bannerPosition === 'above' ? banner : '') + head + (state.design.bannerPosition === 'below' ? banner : '') + '<main class="preview-main">' + filters + '<div class="preview-summary"><span><b>' + n + '</b> registros cargados</span>' + (exportLabel ? '<button type="button">' + exportLabel + '</button>' : '') + '</div><p class="preview-sort-help">Puedes arrastrar los componentes para cambiar su orden. Usa los controles de cada bloque para cambiar tama&ntilde;o, ancho o quitarlo.</p><div class="viz-stage">' + visuals + mapPreview + '</div></main>';
+  if (geoRows.length && typeof L !== 'undefined') {
     adminMap = L.map('adminMap', { scrollWheelZoom: false }).setView([-41.5, -72.8], 7);
-    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', { attribution: '&copy; Esri, OpenStreetMap contributors', maxZoom: 18 }).addTo(adminMap);
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{x}/{y}', { attribution: '&copy; Esri, OpenStreetMap contributors', maxZoom: 18 }).addTo(adminMap);
     const bounds = [];
     geoRows.forEach(row => {
       const lat = parseCoordinate(row[state.mapping.lat]), lon = parseCoordinate(row[state.mapping.lon]);
@@ -2352,6 +2445,7 @@ function renderPreview() {
     setTimeout(() => adminMap && adminMap.invalidateSize(), 100);
   }
   bindPreviewReordering();
+  bindPreviewEditing();
 }
 function viewerRuntime() {
   const $ = id => document.getElementById(id);
@@ -2363,11 +2457,12 @@ function viewerRuntime() {
   output.addEventListener('click',event=>{const button=event.target.closest('[data-page]');if(!button||button.disabled)return;const id=button.dataset.viz;pages[id]=Math.max(0,(pages[id]||0)+Number(button.dataset.page));render(selectedRows())});
   const dateValue=value=>{if(!value)return null;const text=String(value).trim();let m=text.match(/^(\d{1,2})[/.\-](\d{1,2})[/.\-](\d{4})$/);if(m)return new Date(+m[3],+m[2]-1,+m[1]);m=text.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m)return new Date(+m[1],+m[2]-1,+m[3]);const d=new Date(text);return Number.isNaN(d.getTime())?null:d;};
   function selectedRows(){return C.rows.filter(row=>C.filters.every((f,i)=>{const val=F[i],raw=row[f.field];if(f.control==='search')return!val||String(raw==null?'':raw).toLowerCase().includes(String(val).toLowerCase());if(f.control==='multi')return!Array.isArray(val)||!val.length||val.includes(String(raw));if(f.control==='range'){if(!val)return true;const n=number(raw);return Number.isFinite(n)&&n>=val.low&&n<=val.high}if(f.control==='date'){if(!val||val.preset==='all'||val.preset==='custom'&&!val.from&&!val.to)return true;const d=dateValue(raw);if(!d)return false;const today=new Date(),to=new Date(today.getFullYear(),today.getMonth(),today.getDate());let from=null;if(val.preset==='last7')from=new Date(to.getFullYear(),to.getMonth(),to.getDate()-6);else if(val.preset==='last30')from=new Date(to.getFullYear(),to.getMonth(),to.getDate()-29);else if(val.preset==='month')from=new Date(to.getFullYear(),to.getMonth(),1);else if(val.preset==='ytd')from=new Date(to.getFullYear(),0,1);else{from=val.from?dateValue(val.from):null;const end=val.to?dateValue(val.to):null;return(!from||d>=from)&&(!end||d<=end)}return d>=from&&d<=to}return!val||String(raw==null?'':raw)===String(val)}))}
-  function metric(values,kind){if(kind==='count')return values.length;const nums=values.map(number).filter(Number.isFinite);if(!nums.length)return 0;return kind==='sum'?nums.reduce((a,b)=>a+b,0):nums.reduce((a,b)=>a+b,0)/nums.length}
+  function metric(values,kind){const present=values.filter(x=>x!=null&&String(x).trim()!=='');if(kind==='count')return values.length;if(kind==='count_values')return present.length;if(kind==='distinct')return new Set(present.map(x=>String(x).trim())).size;const nums=present.map(number).filter(Number.isFinite);if(!nums.length)return 0;if(kind==='sum')return nums.reduce((a,b)=>a+b,0);if(kind==='minimum')return Math.min(...nums);if(kind==='maximum')return Math.max(...nums);return nums.reduce((a,b)=>a+b,0)/nums.length}
+  function metricLabel(kind){return({count:'Registros',count_values:'Datos informados',distinct:'Valores únicos',sum:'Suma',average:'Promedio',minimum:'Mínimo',maximum:'Máximo'})[kind]||'Registros'}
   function pageSlice(rows,v,size){const pagesCount=Math.max(1,Math.ceil(rows.length/size)),page=Math.min(pages[v.id]||0,pagesCount-1),start=page*size;pages[v.id]=page;return{page,start,shown:rows.slice(start,start+size),pagesCount}}
   function render(rows){
     const kpis=document.getElementById('kpis');
-    kpis.innerHTML=C.visualizations.filter(v=>v.kind==='kpi').map(v=>{const vals=rows.map(r=>r[v.field]).filter(x=>x!=null&&x!=='');const n=v.aggregate==='count'?rows.length:metric(vals,v.aggregate),size=['compact','standard','large'].includes(v.size)?v.size:'standard',width=v.width==='full'?'span-full':'span-half',surface=/^#[0-9a-f]{6}$/i.test(v.surface)?v.surface:'#FFFFFF',text=/^#[0-9a-f]{6}$/i.test(v.text)?v.text:'#1C244B';return'<article class="kpi viz-size-'+size+' '+width+'" style="border-top-color:'+esc(v.color)+';background:'+surface+';color:'+text+'"><small>'+esc(v.title)+'</small><strong>'+n.toLocaleString('es-CL',{maximumFractionDigits:1})+'</strong><span>'+(v.aggregate==='sum'?'Suma':v.aggregate==='average'?'Promedio':'Registros')+'</span></article>'}).join('');
+    kpis.innerHTML=C.visualizations.filter(v=>v.kind==='kpi').map(v=>{const vals=rows.map(r=>r[v.field]);const n=v.aggregate==='count'?rows.length:metric(vals,v.aggregate),size=['compact','standard','large'].includes(v.size)?v.size:'standard',width=v.width==='full'?'span-full':'span-half',surface=/^#[0-9a-f]{6}$/i.test(v.surface)?v.surface:'#FFFFFF',text=/^#[0-9a-f]{6}$/i.test(v.text)?v.text:'#1C244B',label=metricLabel(v.aggregate)+(v.aggregate==='count'?'':v.field?' de '+v.field:'');return'<article class="kpi viz-size-'+size+' '+width+'" style="border-top-color:'+esc(v.color)+';background:'+surface+';color:'+text+'"><small>'+esc(v.title)+'</small><strong>'+n.toLocaleString('es-CL',{maximumFractionDigits:1})+'</strong><span>'+esc(label)+'</span></article>'}).join('');
     output.innerHTML=C.visualizations.filter(v=>v.kind!=='kpi').map(v=>{
       const accent=/^#[0-9a-f]{6}$/i.test(v.color)?v.color:'#0F69B4';
       const size=['compact','standard','large'].includes(v.size)?v.size:'standard',width=v.width==='full'?'span-full':'span-half',pageSize=[5,10,20].includes(Number(v.pageSize))?Number(v.pageSize):10,surface=/^#[0-9a-f]{6}$/i.test(v.surface)?v.surface:'#FFFFFF',text=/^#[0-9a-f]{6}$/i.test(v.text)?v.text:'#1C244B',cardClass='visual-card viz-size-'+size+' '+width,cardStyle='border-top:3px solid '+accent+';background:'+surface+';color:'+text;
@@ -2408,13 +2503,19 @@ function viewerRuntime() {
   const csvCell=value=>{let s=String(value==null?'':value);if(/^\s*[=+\-@]/.test(s))s="'"+s;return'"'+s.replace(/"/g,'""')+'"'};
   const csv=document.getElementById('exportCsv');if(csv)csv.onclick=()=>{const lines=[C.headers.map(csvCell).join(';')].concat(selectedRows().map(r=>C.headers.map(h=>csvCell(r[h])).join(';'))),blob=new Blob(['\ufeff'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='datos_filtrados.csv';a.click();URL.revokeObjectURL(a.href)};
   const xlsx=document.getElementById('exportXlsx');if(xlsx)xlsx.onclick=()=>{if(!window.XLSX){alert('No fue posible cargar el módulo de Excel.');return}const ws=XLSX.utils.json_to_sheet(selectedRows()),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Datos');XLSX.writeFile(wb,'datos_filtrados.xlsx')};
-  if(C.design.showMap&&window.L){map=L.map('map').setView([-41.5,-72.8],7);L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{x}/{y}',{maxZoom:18,attribution:'&copy; Esri, OpenStreetMap contributors'}).addTo(map);markerLayer=L.layerGroup().addTo(map)}render(C.rows)
+  if(C.design.showMap&&window.L){const direct=C.rows.filter(r=>Number.isFinite(number(r[C.mapping.lat]))&&Number.isFinite(number(r[C.mapping.lon]))),inside=direct.filter(r=>number(r[C.mapping.lat])>=-56&&number(r[C.mapping.lat])<=-17&&number(r[C.mapping.lon])>=-110&&number(r[C.mapping.lon])<=-65).length,swapped=C.rows.filter(r=>Number.isFinite(number(r[C.mapping.lon]))&&Number.isFinite(number(r[C.mapping.lat]))).filter(r=>number(r[C.mapping.lon])>=-56&&number(r[C.mapping.lon])<=-17&&number(r[C.mapping.lat])>=-110&&number(r[C.mapping.lat])<=-65).length;if(!direct.length||inside/direct.length<.5||swapped/direct.length>.8){const host=document.getElementById('map');host.innerHTML='<p style="padding:18px;color:#8A2626">No se muestra el mapa porque las coordenadas no corresponden a ubicaciones de Chile. Revisa latitud y longitud en la configuraci&oacute;n.</p>'}else{map=L.map('map').setView([-41.5,-72.8],7);L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{x}/{y}',{maxZoom:18,attribution:'&copy; Esri, OpenStreetMap contributors'}).addTo(map);markerLayer=L.layerGroup().addTo(map)}}render(C.rows)
 }
 function buildViewer(openPreview = false){
   if(!state.rows.length){alert('Primero carga un archivo de datos.');return}
   if(!state.logoData){alert('El logo institucional es obligatorio.');return}
   const geoRows=validGeoRows(state.rows,state.mapping),mapReady=!!(state.design.showMap&&state.mapCoordinatesConfirmed&&geoRows.length);
   if(state.design.showMap&&!mapReady){alert('Confirma coordenadas válidas antes de incluir el mapa.');return}
+  if (mapReady) {
+    const direct = chileGeoCoverage(state.rows,state.mapping.lat,state.mapping.lon), swapped = chileGeoCoverage(state.rows,state.mapping.lon,state.mapping.lat);
+    if (swapped > .8 && direct < .2) { alert('No se generó el visor: las coordenadas seleccionadas parecen estar invertidas y ubican los registros fuera de Chile. Revisa latitud/longitud y vuelve a confirmar.'); return }
+    const regionText = state.mapping.region ? state.rows.map(r => String(r[state.mapping.region] || '')).join(' ').toLowerCase() : '';
+    if (regionText.includes('chile') && direct < .5) { alert('No se generó el visor: las coordenadas de Chile no coinciden con las columnas asignadas. Revisa latitud y longitud.'); return }
+  }
   const previewTab = openPreview ? window.open('about:blank', '_blank') : null;
   if (openPreview && !previewTab) {
     alert('El navegador bloqueó la pestaña de prueba. Permite ventanas emergentes para esta página e inténtalo de nuevo.');
@@ -2554,7 +2655,7 @@ $('configFile').onchange = async e => {
       size: ['compact','standard','large'].includes(v.size) ? v.size : 'standard',
       width: ['half','full'].includes(v.width) ? v.width : 'half',
       pageSize: [5,10,20].includes(Number(v.pageSize)) ? Number(v.pageSize) : 10,
-      aggregate: ['count', 'sum', 'average'].includes(v.aggregate) ? v.aggregate : 'count'
+      aggregate: ['count', 'count_values', 'distinct', 'sum', 'average', 'minimum', 'maximum'].includes(v.aggregate) ? v.aggregate : 'count'
     })) : [];
     state.filters = (Array.isArray(saved.filters) ? saved.filters : []).filter(f => f && state.headers.includes(f.field)).map(f => ({
       field: f.field,
