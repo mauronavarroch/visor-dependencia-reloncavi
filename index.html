@@ -17,6 +17,10 @@
     --bg-elev: #FFFFFF;
     --surface: #FFFFFF;
     --surface-2: #F3F6F8;
+    --oxygen-surface: #EEF6FC;
+    --adult-bg: #E8F3EC; --adult-text: #286440; --adult-accent: #56866A;
+    --child-bg: #F1EAF7; --child-text: #70438B; --child-accent: #9874B1;
+    --kpi-value: #1C244B;
     --border: #D7DEE5;
     --text: #0A132D;
     --text-dim: #4A4A4A;
@@ -24,7 +28,7 @@
 
     --electro: #006FB3;
     --oxigeno: #E0701E;
-    --ambas: #6633CC;
+    
     --centro-pt: #4A4A4A;
     --c-vigente: #2D717C;
     --c-alerta: #FE6565;
@@ -40,17 +44,21 @@
 
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --bg: #0F151B; --bg-elev: #161F27; --surface: #18212A; --surface-2: #1E2831;
-      --border: #2A3742; --text: #E7ECF1; --text-dim: #9AA7B2; --text-faint: #5C6974;
-      --electro: #4FA3D1; --oxigeno: #F29A5A; --ambas: #A98AE3; --centro-pt: #A8B7C7;
+      --bg: #0F151B; --bg-elev: #161F27; --surface: #18212A; --surface-2: #1E2831; --oxygen-surface: #243442; --kpi-value: #E7ECF1;
+    --adult-bg: #253E32; --adult-text: #B6DDC3; --adult-accent: #86B79A;
+    --child-bg: #382D45; --child-text: #DBC2EC; --child-accent: #B393CB;
+      --border: #2A3742; --text: #E7ECF1; --text-dim: #9AA7B2; --text-faint: #A8B7C7;
+      --electro: #4FA3D1; --oxigeno: #F29A5A;  --centro-pt: #A8B7C7;
       --c-vigente: #45B37B; --c-alerta: #E5555C; --c-media: #E09A45;
       --land: #202B22; --land-line: #2C3B2C; --lake: #16232C;
     }
   }
   :root[data-theme="dark"] {
-    --bg: #0F151B; --bg-elev: #161F27; --surface: #18212A; --surface-2: #1E2831;
-    --border: #2A3742; --text: #E7ECF1; --text-dim: #9AA7B2; --text-faint: #5C6974;
-    --electro: #4FA3D1; --oxigeno: #F29A5A; --ambas: #A98AE3; --centro-pt: #A8B7C7;
+    --bg: #0F151B; --bg-elev: #161F27; --surface: #18212A; --surface-2: #1E2831; --oxygen-surface: #243442; --kpi-value: #E7ECF1;
+    --adult-bg: #253E32; --adult-text: #B6DDC3; --adult-accent: #86B79A;
+    --child-bg: #382D45; --child-text: #DBC2EC; --child-accent: #B393CB;
+    --border: #2A3742; --text: #E7ECF1; --text-dim: #9AA7B2; --text-faint: #A8B7C7;
+    --electro: #4FA3D1; --oxigeno: #F29A5A;  --centro-pt: #A8B7C7;
     --c-vigente: #45B37B; --c-alerta: #E5555C; --c-media: #E09A45;
     --land: #202B22; --land-line: #2C3B2C; --lake: #16232C;
   }
@@ -83,12 +91,12 @@
 
   .kpis { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); margin: 20px 0; }
   .kpi { background: var(--surface); padding: 14px 16px; border-top: 4px solid var(--kpi-color, var(--border)); }
-  .kpi .value { color: #1C244B; }
+  .kpi .value { color: var(--kpi-value); }
   .kpi:nth-child(1) { --kpi-color: #0F69B4; }
   .kpi:nth-child(2) { --kpi-color: #0F69B4; }
   .kpi:nth-child(3) { --kpi-color: #E0701E; }
-  .kpi:nth-child(4) { --kpi-color: #833CA3; }
-  .kpi:nth-child(5) { --kpi-color: #2D717C; }
+  .kpi:nth-child(4) { --kpi-color: var(--adult-accent); }
+  .kpi:nth-child(5) { --kpi-color: var(--child-accent); }
   :root[data-theme="dark"] .kpis { background:#2A3742; border-color:#2A3742; }
   :root[data-theme="dark"] .kpi { background:#18212A; border-color:#2A3742; }
   :root[data-theme="dark"] .kpi .label { color:#B9C7D2; }
@@ -145,7 +153,7 @@
   .legend .sq { width: 8px; height: 8px; transform: rotate(45deg); background: var(--centro-pt); }
 
   .map-box { position: relative; border: 1px solid var(--border); border-radius: 10px; background: linear-gradient(145deg,#eef5f7 0%,#dce9e4 100%); overflow: hidden; box-shadow: 0 8px 24px rgba(23,33,43,.08); }
-  #leafletMap { width: 100%; height: min(680px, 68vw); min-height: 430px; }
+  #leafletMap { width: 100%; height: clamp(260px, 38vh, 360px); }
   .map-box .leaflet-container { background: var(--surface-2); font-family: var(--font-ui); }
   .map-box .leaflet-popup-content { margin: 11px 14px; line-height: 1.5; }
   .map-box .leaflet-control-attribution { font-size: 10px; }
@@ -177,6 +185,9 @@
   .card .name { font-weight: 600; font-size: 14px; font-family: var(--font-mono); }
   .card .age { color: var(--text-faint); font-weight: 400; font-size: 12.5px; font-family: var(--font-ui); }
   .badge { font-family: var(--font-mono); font-size: 10.5px; padding: 2px 7px; border-radius: 4px; white-space: nowrap; color: var(--bg-elev); background: var(--badgecolor, var(--text-faint)); font-weight: 600; }
+  .card .age-tag { display:inline-block; padding:2px 7px; border-radius:4px; font-size:12px; font-weight:600; line-height:1.5; vertical-align:baseline; }
+  .card .age-tag--adult { background:var(--adult-bg); color:var(--adult-text); }
+  .card .age-tag--child { background:var(--child-bg); color:var(--child-text); }
   .card .addr { font-size: 12.5px; color: var(--text-dim); margin-bottom: 8px; }
   .card .tipo-line { display: flex; align-items: center; gap: 6px; font-size: 12.5px; margin-bottom: 6px; }
   .card .tipo-line .sw { width: 8px; height: 8px; border-radius: 50%; flex: none; }
@@ -194,6 +205,7 @@
 
 
   footer.note { max-width: 1180px; margin: 34px auto 0; padding: 0 20px; font-size: 11.5px; color: var(--text-faint); line-height: 1.7; }
+[hidden]{display:none!important}.card .name{overflow-wrap:anywhere}.meta-list{overflow-wrap:anywhere}.oxygen-summary{display:flex;gap:12px;margin:12px 0;padding:10px;background:var(--oxygen-surface);color:var(--text);border-radius:6px}.oxygen-summary b{display:block;font-size:20px}.oxygen-summary span{flex:1;font-size:12px}
 </style>
 </head>
 <body>
@@ -215,7 +227,7 @@
 <div class="wrap">
 
   <div class="filters" style="margin-bottom:16px; align-items:center;">
-    <div class="filter-group" style="flex:1; min-width:260px;"><span class="fg-label">Actualizar información</span><span class="results-note" id="loadNote">Seleccione un archivo Excel o CSV. Se procesa solo en este navegador.</span></div>
+    <div class="filter-group" style="flex:1; min-width:260px;"><span class="fg-label">Actualizar información</span><span class="results-note" id="loadNote">Seleccione un archivo Excel o CSV. Los registros se procesan en este navegador; el mapa y las bibliotecas usan conexión externa.</span></div>
     <label class="export-btn" for="fileInput" style="cursor:pointer;">Cargar Excel / CSV</label><input id="fileInput" type="file" accept=".xlsx,.xls,.csv" hidden>
   </div>
   <div class="kpis" id="kpis"></div>
@@ -226,11 +238,11 @@
       <div class="chip-row" id="tipoChips"></div>
     </div>
     <div class="filter-group">
-      <span class="fg-label">Estado de credencial</span>
+      <span class="fg-label">Equipo</span>
       <select id="credSelect"></select>
     </div>
-    <div class="filter-group">
-      <span class="fg-label">Provincia</span>
+    <div class="filter-group" id="servicioFilter" hidden>
+      <span class="fg-label">Servicio de Salud</span>
       <select id="provinciaSelect"></select>
     </div>
     <div class="filter-group">
@@ -238,16 +250,16 @@
       <select id="comunaSelect"></select>
     </div>
     <div class="filter-group">
-      <span class="fg-label">Grupo etario</span>
+      <span class="fg-label">Adulto / niño</span>
       <select id="etarioSelect"></select>
     </div>
     <div class="filter-group">
-      <span class="fg-label">Área</span>
-      <div class="chip-row" id="areaChips"></div>
+      <span class="fg-label">Establecimiento APS</span>
+      <select id="centroSelect"></select>
     </div>
     <div class="filter-group" style="flex:1; min-width:180px;">
-      <span class="fg-label">Buscar por ID o comuna</span>
-      <input type="search" id="searchInput" placeholder="ej. identificador, Castro…">
+      <span class="fg-label">Buscar persona</span>
+      <input type="search" id="searchInput" placeholder="Nombre, RUT, dirección o teléfono…">
     </div>
     <button class="export-btn" id="resetFiltersBtn" type="button">Restablecer filtros</button>
     <button class="export-btn" id="exportCsvBtn" type="button">Exportar CSV filtrado</button>
@@ -260,7 +272,6 @@
       <span class="legend">
         <span class="li"><span class="sw" style="background:var(--electro)"></span>⚡ Electrodependiente</span>
         <span class="li"><span class="sw" style="background:var(--oxigeno)"></span>🫁 Oxigenodependiente</span>
-        <span class="li"><span class="sw" style="background:var(--ambas)"></span>⚡🫁 Ambas</span>
         <span class="li"><span class="center-key">◆</span>Centro de salud vigente</span>
       </span>
     </div>
@@ -273,7 +284,7 @@
     </div>
   </div>
 
-  <div class="section-title"><span>Listado</span></div>
+  <div class="section-title"><span>Listado <span id="mapSelectionNote" class="results-note" aria-live="polite"></span></span><button class="export-btn" id="clearMapSelection" type="button" hidden>Mostrar todas las tarjetas</button></div>
   <div class="cards-grid" id="cardsGrid"></div>
   <div class="empty-state" id="emptyState" style="display:none;">Ningún registro coincide con los filtros seleccionados.</div>
   <div class="load-more-wrap" id="loadMoreWrap" style="display:none;">
@@ -282,7 +293,7 @@
 
 </div>
 
-<footer class="note">Plantilla sin registros precargados. La información que se cargue desde Excel o CSV se procesa de forma local en el navegador. Las ubicaciones, si existen, deben corresponder a referencias territoriales y no a domicilios exactos.</footer>
+<footer class="note">Plantilla sin registros precargados. La información que se cargue desde Excel o CSV se procesa de forma local en el navegador. Las ubicaciones corresponden a las coordenadas del archivo cargado.</footer>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -294,13 +305,11 @@ const CENTROS = [{"id": "124010", "nombre": "Actividades gestionadas por la Dire
 
   const TIPO_VAR = {
     "Solo electrodependiente": "--electro",
-    "Solo oxigenodependiente": "--oxigeno",
-    "Ambas": "--ambas"
+    "Solo oxigenodependiente": "--oxigeno"
   };
   const TIPO_LABEL = {
     "Solo electrodependiente": "⚡ Electrodependiente",
-    "Solo oxigenodependiente": "🫁 Oxigenodependiente",
-    "Ambas": "⚡🫁 Ambas"
+    "Solo oxigenodependiente": "🫁 Oxigenodependiente"
   };
   function credVar(c){
     if (c === "Vigente") return "--c-vigente";
@@ -308,44 +317,37 @@ const CENTROS = [{"id": "124010", "nombre": "Actividades gestionadas por la Dire
     return "--c-media"; // En trámite, Sin información
   }
 
-  let state = { tipo: "todas", cred: "todas", provincia: "todas", comuna: "todas", etario: "todas", area: "todas", search: "" };
+  let state = { tipo: "todas", cred: "todas", provincia: "todas", comuna: "todas", etario: "todas", centro: "todas", search: "" };
   let visibleCount = 30;
   const PAGE = 30;
   let activeId = null;
 
   /* ---------------- filter controls ---------------- */
   const tipoChips = document.getElementById("tipoChips");
-  const tipoOptions = [["todas","Todas"],["Solo electrodependiente","⚡ Electrodependiente"],["Solo oxigenodependiente","🫁 Oxigenodependiente"],["Ambas","⚡🫁 Ambas"]];
+  const tipoOptions = [["todas","Todas"],["Solo electrodependiente","⚡ Electrodependiente"],["Solo oxigenodependiente","🫁 Oxigenodependiente"]];
   tipoOptions.forEach(([val,label])=>{
     const b = document.createElement("button");
     b.className = "chip"; b.type = "button";
     b.setAttribute("aria-pressed", val===state.tipo ? "true":"false");
     if (val !== "todas") b.style.setProperty("--sw", `var(${TIPO_VAR[val]})`);
     b.innerHTML = (val!=="todas" ? '<span class="swatch"></span>' : '') + label;
-    b.addEventListener("click", ()=>{ state.tipo = val; visibleCount = PAGE; render(); });
+    b.addEventListener("click", ()=>{ state.tipo = val; state.cred = "todas"; actualizarEquipos(); visibleCount = PAGE; render(); });
     b.dataset.val = val;
     tipoChips.appendChild(b);
   });
 
-  const areaChips = document.getElementById("areaChips");
-  [["todas","Todas"],["Urbana","Urbana"],["Rural","Rural"]].forEach(([val,label])=>{
-    const b = document.createElement("button");
-    b.className = "chip"; b.type = "button";
-    b.setAttribute("aria-pressed", val===state.area ? "true":"false");
-    b.textContent = label;
-    b.addEventListener("click", ()=>{ state.area = val; visibleCount = PAGE; render(); });
-    b.dataset.val = val;
-    areaChips.appendChild(b);
-  });
+  const centroSelect = document.getElementById("centroSelect");
+  const centroTodas = document.createElement("option"); centroTodas.value="todas"; centroTodas.textContent="Todos"; centroSelect.appendChild(centroTodas);
+  centroSelect.addEventListener("change",()=>{state.centro=centroSelect.value;visibleCount=PAGE;render();});
 
   const credSelect = document.getElementById("credSelect");
-  ["todas","Vigente","En trámite","Vencida","Sin credencial","Sin información"].forEach(v=>{
+  ["todas"].forEach(v=>{
     const o = document.createElement("option"); o.value = v; o.textContent = v==="todas" ? "Todas" : v;
     credSelect.appendChild(o);
   });
   credSelect.addEventListener("change", ()=>{ state.cred = credSelect.value; visibleCount = PAGE; render(); });
 
-  const provincias = [...new Set(PERSONAS.map(p=>p.provincia))].sort();
+  const provincias = [...new Set(PERSONAS.map(p=>p.servicio))].sort();
   const provinciaSelect = document.getElementById("provinciaSelect");
   const optTodasProv = document.createElement("option"); optTodasProv.value="todas"; optTodasProv.textContent="Todas";
   provinciaSelect.appendChild(optTodasProv);
@@ -357,7 +359,7 @@ const CENTROS = [{"id": "124010", "nombre": "Actividades gestionadas por la Dire
     comunaSelect.innerHTML = "";
     const optTodas = document.createElement("option"); optTodas.value="todas"; optTodas.textContent="Todas";
     comunaSelect.appendChild(optTodas);
-    const pool = state.provincia === "todas" ? PERSONAS : PERSONAS.filter(p=>p.provincia === state.provincia);
+    const pool = state.provincia === "todas" ? PERSONAS : PERSONAS.filter(p=>p.servicio === state.provincia);
     [...new Set(pool.map(p=>p.comuna))].sort().forEach(v=>{
       const o = document.createElement("option"); o.value = v; o.textContent = v; comunaSelect.appendChild(o);
     });
@@ -380,7 +382,7 @@ const CENTROS = [{"id": "124010", "nombre": "Actividades gestionadas por la Dire
 
   const resetFiltersBtn = document.getElementById("resetFiltersBtn");
   resetFiltersBtn.addEventListener("click", ()=>{
-    state = { tipo:"todas", cred:"todas", provincia:"todas", comuna:"todas", etario:"todas", area:"todas", search:"" };
+    state = { tipo:"todas", cred:"todas", provincia:"todas", comuna:"todas", etario:"todas", centro:"todas", search:"" };
     visibleCount = PAGE;
     activeId = null;
     credSelect.value = "todas";
@@ -389,6 +391,7 @@ const CENTROS = [{"id": "124010", "nombre": "Actividades gestionadas por la Dire
     populateComunas();
     comunaSelect.value = "todas";
     etarioSelect.value = "todas";
+    centroSelect.value = "todas";
     searchInput.value = "";
     render();
     resetFiltersBtn.textContent = "Filtros restablecidos";
@@ -398,9 +401,10 @@ const CENTROS = [{"id": "124010", "nombre": "Actividades gestionadas por la Dire
   const exportCsvBtn = document.getElementById("exportCsvBtn");
   exportCsvBtn.addEventListener("click", ()=>{
     const rows = filtered();
-    const cols = ["id","edad","sexo","ge","area","comuna","provincia","tipo","electro","oxi","credencial","centro","lat","lon","geocalidad"];
+    const cols = ["servicio","rut","dv","nombre","ge","dependencia","equipo","flujo","horas","direccion","observacion","lat","lon","comuna","centro","telefono"];
+    const headers = ["Servicio de Salud","RUT","Digito Verificador","Nombre/Apellido","ADULTO/NIÑO","Dependencia","Equipo","Flujo (L/m)","Horas","DIRECCION","Observación","Latitud","Longitud","Comuna","ESTABLECIMIENTO APS","NÚMERO TELEFONO"];
     const esc = v => `"${String(v ?? "").replaceAll('"','""')}"`;
-    const csv = [cols.join(","), ...rows.map(r=>cols.map(c=>esc(r[c])).join(","))].join("\r\n");
+    const csv = [headers.map(esc).join(","), ...rows.map(r=>cols.map(c=>esc(r[c])).join(","))].join("\r\n");
     const blob = new Blob(["\uFEFF"+csv], {type:"text/csv;charset=utf-8;"});
     const a = document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="registros_filtrados_los_lagos.csv"; a.click(); URL.revokeObjectURL(a.href);
   });
@@ -482,7 +486,7 @@ const CENTROS = [{"id": "124010", "nombre": "Actividades gestionadas por la Dire
     }).join(" ") + " Z";
   }
 
-  function drawMap(){
+  function drawLegacySvgMap(){
     svg.innerHTML = "";
     for (let i=0;i<=7;i++){
       const x = PAD + i*(W-PAD*2)/7;
@@ -537,7 +541,7 @@ const CENTROS = [{"id": "124010", "nombre": "Actividades gestionadas por la Dire
       const dim = !visibleIds.has(p.id);
       const c = svgEl("circle", {
         cx:x, cy:y, r: dim ? 4 : 6,
-        fill: `var(${TIPO_VAR[p.tipo]})`,
+        fill: `var(${TIPO_VAR[p.tipo] || "--oxigeno"})`,
         class: "pt" + (dim ? " dim" : "") + (activeId===p.id ? " active" : ""),
         "data-id": p.id
       });
@@ -598,7 +602,7 @@ const CENTROS = [{"id": "124010", "nombre": "Actividades gestionadas por la Dire
 
   function centerStyle(tipo){ return {emoji:"◆", color:"#526273"}; }
 
-  function drawMap(){
+  function drawMap(adjustView = true){
     ensureLeafletMap();
     personLayer.clearLayers();
     healthLayer.clearLayers();
@@ -621,7 +625,7 @@ const CENTROS = [{"id": "124010", "nombre": "Actividades gestionadas por la Dire
         radius: activeId===p.id ? 9 : 7,
         color:"#fff", weight:2, fillColor:color, fillOpacity:.9
       });
-      marker.bindPopup(`<strong>${htmlSafe(p.id)}</strong><br>${htmlSafe(p.comuna)} · ${htmlSafe(TIPO_LABEL[p.tipo] || p.tipo)}<br>Credencial: ${htmlSafe(p.credencial)}<br><small>${htmlSafe(p.geocalidad)}</small>`);
+      marker.bindPopup(`<strong>${htmlSafe(p.nombre || p.id)}</strong><br>${htmlSafe(p.comuna)} · ${htmlSafe(TIPO_LABEL[p.tipo] || p.tipo)}<br>Equipo: ${htmlSafe(p.equipo)}<br><small>${htmlSafe(p.geocalidad)}</small>`);
       marker.on("click", ()=>focusPersona(p.id));
       marker.addTo(personLayer);
       bounds.push([lat,lon]);
@@ -635,10 +639,12 @@ const CENTROS = [{"id": "124010", "nombre": "Actividades gestionadas por la Dire
       });
     }
 
-    if (bounds.length) leafletMap.fitBounds(bounds,{padding:[28,28],maxZoom:16});
-    else leafletMap.setView([-41.55,-72.9],7);
+    if (adjustView) {
+      if (bounds.length) leafletMap.fitBounds(bounds,{padding:[28,28],maxZoom:16});
+      else leafletMap.setView([-41.55,-72.9],7);
+    }
     const missing = list.filter(p=>!hasCoords(p)).length;
-    document.getElementById("mapCaption").textContent = `${bounds.length} de ${list.length} registros filtrados con coordenadas · ubicaciones aproximadas de localidad, no domicilios exactos · ${missing} sin coordenadas`;
+    document.getElementById("mapCaption").textContent = `${bounds.length} de ${list.length} registros filtrados con coordenadas · coordenadas informadas en el archivo · ${missing} sin coordenadas`;
     requestAnimationFrame(()=>leafletMap.invalidateSize());
   }
 
@@ -646,14 +652,16 @@ const CENTROS = [{"id": "124010", "nombre": "Actividades gestionadas por la Dire
   function filtered(){
     return PERSONAS.filter(p=>{
       if (state.tipo !== "todas" && p.tipo !== state.tipo) return false;
-      if (state.cred !== "todas" && p.credencial !== state.cred) return false;
-      if (state.provincia !== "todas" && p.provincia !== state.provincia) return false;
+      if (state.cred !== "todas" && p.equipo !== state.cred) return false;
+      if (state.provincia !== "todas" && p.servicio !== state.provincia) return false;
       if (state.comuna !== "todas" && p.comuna !== state.comuna) return false;
       if (state.etario !== "todas" && p.ge !== state.etario) return false;
-      if (state.area !== "todas" && p.area !== state.area) return false;
+      if (state.centro !== "todas" && p.centro !== state.centro) return false;
       if (state.search){
-        const hay = (p.id + " " + p.comuna).toLowerCase();
-        if (!hay.includes(state.search)) return false;
+        const hay = [p.id,p.rut,formatearRut(p.rut,p.dv),p.nombre,p.comuna,p.centro,p.direccion,p.telefono].join(" ").toLowerCase();
+        const consulta=state.search.replace(/[.\s-]/g,"");
+        const rutCompleto=formatearRut(p.rut,p.dv).toLowerCase().replace(/[.\s-]/g,"");
+        if (!hay.includes(state.search) && !(consulta && /^[0-9k]+$/.test(consulta) && rutCompleto.includes(consulta))) return false;
       }
       return true;
     });
@@ -662,19 +670,8 @@ const CENTROS = [{"id": "124010", "nombre": "Actividades gestionadas por la Dire
   /* ---------------- KPIs ---------------- */
   const kpisEl = document.getElementById("kpis");
   function renderKpis(list){
-    const total = PERSONAS.length;
-    const electro = list.filter(p=>p.electro).length;
-    const oxi = list.filter(p=>p.oxi).length;
-    const ambas = list.filter(p=>p.tipo==="Ambas").length;
-    const vigente = list.filter(p=>p.credencial==="Vigente").length;
-    const pct = list.length ? Math.round(vigente/list.length*100) : 0;
-    kpisEl.innerHTML = `
-      <div class="kpi"><div class="label">Personas visibles</div><div class="value">${list.length} <small>/ ${total}</small></div></div>
-      <div class="kpi" style="--dotcolor:var(--electro)"><div class="label">Electrodependientes</div><div class="value">${electro}</div></div>
-      <div class="kpi" style="--dotcolor:var(--oxigeno)"><div class="label">Oxigenodependientes</div><div class="value">${oxi}</div></div>
-      <div class="kpi" style="--dotcolor:var(--ambas)"><div class="label">Ambas condiciones</div><div class="value">${ambas}</div></div>
-      <div class="kpi" style="--dotcolor:var(--c-vigente)"><div class="label">% credencial vigente</div><div class="value">${pct}<small>%</small></div></div>
-    `;
+    const metrics = [["Total de personas",list.length],["Oxigenodependientes",list.filter(p=>p.oxi).length],["Electrodependientes",list.filter(p=>p.electro).length],["Adultos",list.filter(p=>p.ge==="Adulto").length],["Niños",list.filter(p=>p.ge==="Niño").length]];
+    kpisEl.innerHTML=metrics.map(([label,value])=>`<div class="kpi"><div class="label">${label}</div><div class="value">${value}</div></div>`).join("");
   }
 
   /* ---------------- cards ---------------- */
@@ -682,32 +679,34 @@ const CENTROS = [{"id": "124010", "nombre": "Actividades gestionadas por la Dire
   const emptyState = document.getElementById("emptyState");
   const loadMoreWrap = document.getElementById("loadMoreWrap");
 
+  const clearMapSelection = document.getElementById("clearMapSelection");
+  clearMapSelection.addEventListener("click",()=>{activeId=null;renderCards(filtered());drawMap(false);});
   function renderCards(list){
+    if(activeId && !list.some(p=>p.id===activeId)) activeId=null;
+    const totalFiltrado=list.length;
+    if(activeId) list=list.filter(p=>p.id===activeId);
+    clearMapSelection.hidden=!activeId;
+    document.getElementById("mapSelectionNote").textContent=activeId ? "— selección del mapa · " + list.length + " de " + totalFiltrado + " registros" : "";
     cardsGrid.innerHTML = "";
     emptyState.style.display = list.length ? "none" : "block";
     const slice = list.slice(0, visibleCount);
     slice.forEach(p=>{
       const card = document.createElement("div");
       card.className = "card" + (activeId===p.id ? " active" : "");
-      card.style.setProperty("--stripe", `var(${TIPO_VAR[p.tipo]})`);
+      card.style.setProperty("--stripe", `var(${TIPO_VAR[p.tipo] || "--oxigeno"})`);
       card.dataset.id = p.id;
-      const coordsTxt = (p.lat!=null && p.lon!=null) ? `${p.lat.toFixed(3)}, ${p.lon.toFixed(3)}` : "sin coordenadas";
-      const autonomiaTxt = p.autonomia ? ` (${p.autonomia} h de autonomía)` : "";
+      const coordsTxt = `Latitud: ${p.lat ?? "Sin información"} · Longitud: ${p.lon ?? "Sin información"}`;
+      const show = value => htmlSafe(value == null || value === "" ? "Sin información" : String(value));
+      const ageTag = p.ge === "Adulto" ? "adult" : p.ge === "Niño" ? "child" : "";
+      const ageLabel = ageTag ? `<span class="age-tag age-tag--${ageTag}">${show(p.ge)}</span>` : show(p.ge);
       card.innerHTML = `
-        <div class="row-top">
-          <div><span class="name">${p.id}</span><br><span class="age">${p.edad ?? "s/i"} años · ${p.sexo ?? "s/i"}</span></div>
-          <span class="badge" style="--badgecolor:var(${credVar(p.credencial)})">${p.credencial}</span>
-        </div>
-        <div class="addr">${p.comuna}, ${p.provincia} · ${p.area}</div>
-        <div class="tipo-line"><span class="sw" style="background:var(${TIPO_VAR[p.tipo]})"></span>${TIPO_LABEL[p.tipo]} · ${p.equipo}</div>
-        <div class="meta-list">
-          Respaldo eléctrico: <b>${p.respaldo}</b>${autonomiaTxt}<br>
-          Cuidador: <b>${p.cuidador}</b><br>
-          Grupo etario: <b>${p.ge}</b><br>
-          Centro asignado: <b>${p.centro}</b>
-        </div>
-        <div class="foot"><span>${p.geocalidad}</span><span class="coords">${coordsTxt}</span></div>
-      `;
+        <div class="row-top"><div><span class="name">${show(p.nombre || p.id)}</span><br><span class="age">RUT: ${show(formatearRut(p.rut,p.dv))} · ${ageLabel}</span></div></div>
+        <div class="addr">Dirección: ${show(p.direccion)}<br><br>Comuna: ${show(p.comuna)}</div>
+        <div class="tipo-line">${show(TIPO_LABEL[p.tipo] || p.tipo)}${p.tipo==="Sin clasificar" && p.dependencia ? " · " + show(p.dependencia) : ""}</div>
+        <div class="tipo-line">Equipo: <b>${show(p.equipo)}</b></div>
+        <div class="oxygen-summary"><span>Flujo (L/m)<b>${show(p.flujo)}</b></span><span>Horas de uso<b>${show(p.horas)}</b></span></div>
+        <div class="meta-list">Establecimiento APS: <b>${show(p.centro)}</b><br>Servicio de Salud: <b>${show(p.servicio)}</b><br>Teléfono: <b>${show(p.telefono)}</b><br>Observación: ${show(p.observacion)}</div>
+        <div class="foot"><span>${p.lat!=null&&p.lon!=null?"Ubicación informada":"Sin ubicación"}</span><span class="coords">${coordsTxt}</span></div>`;
       card.addEventListener("click", ()=>focusPersona(p.id, false));
       cardsGrid.appendChild(card);
     });
@@ -716,19 +715,17 @@ const CENTROS = [{"id": "124010", "nombre": "Actividades gestionadas por la Dire
 
   function focusPersona(id, scrollToCard){
     activeId = (activeId === id) ? null : id;
-    render();
-    if (activeId && scrollToCard !== false){
-      const el = cardsGrid.querySelector(`[data-id="${activeId}"]`);
-      if (el) el.scrollIntoView({behavior:"smooth", block:"center"});
-    }
+    renderCards(filtered());
+    drawMap(false);
+    if (activeId && scrollToCard !== false) cardsGrid.scrollIntoView({behavior:"smooth",block:"start"});
   }
 
   function updateChipStates(){
     tipoChips.querySelectorAll(".chip").forEach(b=>b.setAttribute("aria-pressed", b.dataset.val===state.tipo ? "true":"false"));
-    areaChips.querySelectorAll(".chip").forEach(b=>b.setAttribute("aria-pressed", b.dataset.val===state.area ? "true":"false"));
   }
 
   function render(){
+    actualizarEquipos();
     updateChipStates();
     const list = filtered();
     document.getElementById("resultsNote").textContent = Math.min(visibleCount,list.length) + " de " + list.length + " filtrados (" + PERSONAS.length + " en total)";
@@ -737,22 +734,89 @@ const CENTROS = [{"id": "124010", "nombre": "Actividades gestionadas por la Dire
     drawMap();
   }
 
+  function formatearRut(rut, dv){
+    const raw=String(rut ?? "").trim();
+    if(!raw) return "";
+    const partes=raw.replace(/\./g,"").replace(/\s/g,"").match(/^(\d+)(?:-([0-9kK]))?$/);
+    if(!partes) return raw;
+    const cuerpo=partes[1].replace(/\B(?=(\d{3})+(?!\d))/g,".");
+    const digito=String(dv ?? "").trim().toUpperCase() || (partes[2] || "").toUpperCase();
+    return cuerpo + (digito ? " - " + digito : "");
+  }
   function normalizarEncabezado(value){ return String(value ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, ""); }
   function valorFila(row, ...nombres){ const columnas = Object.keys(row); const encontrada = columnas.find(columna => nombres.includes(normalizarEncabezado(columna))); return encontrada ? String(row[encontrada] ?? "").trim() : ""; }
   function booleano(value){ return ["si","true","1","x","s"].includes(normalizarEncabezado(value)); }
-  function grupoEtario(edad){ const numero = Number(edad); if (!Number.isFinite(numero)) return "Sin información"; if (numero <= 5) return "0-5"; if (numero <= 11) return "6-11"; if (numero <= 17) return "12-17"; if (numero <= 29) return "18-29"; if (numero <= 44) return "30-44"; if (numero <= 59) return "45-59"; if (numero <= 74) return "60-74"; return "75 y más"; }
+  function grupoEtario(edad){ if (edad == null || String(edad).trim() === "") return "Sin información"; const numero = Number(edad); if (!Number.isFinite(numero)) return "Sin información"; if (numero <= 5) return "0-5"; if (numero <= 11) return "6-11"; if (numero <= 17) return "12-17"; if (numero <= 29) return "18-29"; if (numero <= 44) return "30-44"; if (numero <= 59) return "45-59"; if (numero <= 74) return "60-74"; return "75 y más"; }
+  function clasificacion(value){ const key=normalizarEncabezado(value); return key==="adulto"?"Adulto":["nino","nina"].includes(key)?"Niño":value; }
+  function coordenada(value, limite){ if(!String(value).trim()) return null; const n=Number(String(value).replace(",",".")); return Number.isFinite(n)&&Math.abs(n)<=limite?n:null; }
+  function normalizarEquipo(value){
+    const nombres = {cilindro:"Cilindro",termo:"Termo",concentrador:"Concentrador",ventiladormecanico:"Ventilador mecánico"};
+    return nombres[normalizarEncabezado(value)] || String(value || "").trim() || "Sin información";
+  }
+  function clasificarDependencia(value,equipo){
+    const key=normalizarEncabezado(value);
+    if(!key) return tipoEquipo(equipo);
+    if(["oxigenodependiente","oxigenodependientes","oxigenodependencia","solooxigenodependiente","oxigeno","oxi"].includes(key)) return "Solo oxigenodependiente";
+    if(["electrodependiente","electrodependientes","electrodependencia","soloelectrodependiente","electro"].includes(key)) return "Solo electrodependiente";
+    return "Sin clasificar";
+  }
+  function tipoEquipo(equipo){
+    if (["Cilindro","Termo"].includes(equipo)) return "Solo oxigenodependiente";
+    if (["Concentrador","Ventilador mecánico"].includes(equipo)) return "Solo electrodependiente";
+    return "Sin clasificar";
+  }
+  function actualizarEquipos(){
+    const pool=state.tipo==="todas"?PERSONAS:PERSONAS.filter(p=>p.tipo===state.tipo);
+    const disponibles=[...new Set(pool.map(p=>p.equipo))].sort();
+    if(!disponibles.includes(state.cred)) state.cred="todas";
+    credSelect.innerHTML="";
+    [["todas","Todos los equipos"],...disponibles.map(v=>[v,v])].forEach(([value,label])=>{
+      const option=document.createElement("option");option.value=value;option.textContent=label;credSelect.appendChild(option);
+    });
+    credSelect.value=state.cred;
+  }
   function cargarRegistros(rows, archivo){
     PERSONAS = rows.filter(row => Object.values(row).some(value => String(value ?? "").trim())).map((row, index) => {
-      const edad = valorFila(row,"edad"); const electro = booleano(valorFila(row,"electro","electrodependiente","electrodependencia")); const oxi = booleano(valorFila(row,"oxi","oxigeno","oxigenodependiente","oxigenodependencia"));
-      const tipoArchivo = valorFila(row,"tipo","tipodependencia","dependencia"); const tipo = tipoArchivo || (electro && oxi ? "Ambas" : electro ? "Solo electrodependiente" : oxi ? "Solo oxigenodependiente" : "Sin información");
-      return { id:valorFila(row,"id","identificador","codigo","folio") || `REG_${String(index+1).padStart(4,"0")}`, edad:edad || null, sexo:valorFila(row,"sexo","genero") || "Sin información", ge:valorFila(row,"grupoetario","ge") || grupoEtario(edad), geo:index, area:valorFila(row,"area","zonageografica") || "Sin información", comuna:valorFila(row,"comuna") || "Sin información", provincia:valorFila(row,"provincia") || "Sin información", electro, oxi, tipo, equipo:valorFila(row,"equipo","equipamiento") || "Sin información", respaldo:valorFila(row,"respaldo","respaldoelectrico") || "Sin información", autonomia:valorFila(row,"autonomia","autonomiah") || null, cuidador:valorFila(row,"cuidador") || "Sin información", credencial:valorFila(row,"credencial","estadocredencial") || "Sin información", centro:valorFila(row,"centro","establecimiento","centrosalud") || "Sin información", lat:Number(String(valorFila(row,"lat","latitud")).replace(",",".")) || null, lon:Number(String(valorFila(row,"lon","lng","longitud","longitude")).replace(",",".")) || null, geocalidad:valorFila(row,"geocalidad","referenciaubicacion") || "Sin información" };
+      const edad = valorFila(row,"edad");
+      const equipo = normalizarEquipo(valorFila(row,"equipo","equipamiento"));
+      const dependencia = valorFila(row,"dependencia","tipodependencia","tipo");
+      const tipo = clasificarDependencia(dependencia,equipo);
+      const electro = tipo === "Solo electrodependiente", oxi = tipo === "Solo oxigenodependiente";
+      return { servicio:valorFila(row,"serviciodesalud","servicio"), rut:valorFila(row,"rut"), dv:valorFila(row,"digitoverificador","dv").toUpperCase(), nombre:valorFila(row,"nombreapellido","nombre","nombres"), flujo:valorFila(row,"flujolm","flujo"), horas:valorFila(row,"horas"), direccion:valorFila(row,"direccion"), observacion:valorFila(row,"observacion","observaciones"), telefono:valorFila(row,"numerotelefono","telefono"), id:valorFila(row,"rut","id","identificador","codigo","folio") || `REG_${String(index+1).padStart(4,"0")}`, edad:edad || null, sexo:valorFila(row,"sexo","genero") || "Sin información", ge:clasificacion(valorFila(row,"adultonino","grupoetario","ge")) || grupoEtario(edad), geo:index, area:valorFila(row,"area","zonageografica") || "Sin información", comuna:valorFila(row,"comuna") || "Sin información", provincia:valorFila(row,"provincia") || "Sin información", electro, oxi, tipo, dependencia, equipo, respaldo:valorFila(row,"respaldo","respaldoelectrico") || "Sin información", autonomia:valorFila(row,"autonomia","autonomiah") || null, cuidador:valorFila(row,"cuidador") || "Sin información", credencial:valorFila(row,"credencial","estadocredencial") || "Sin información", centro:valorFila(row,"establecimientoaps","centro","establecimiento","centrosalud") || "Sin información", lat:coordenada(valorFila(row,"lat","latitud"),90), lon:coordenada(valorFila(row,"lon","lng","longitud","longitude"),180), geocalidad:valorFila(row,"geocalidad","referenciaubicacion") || "Sin información" };
     });
     const opciones = (select, values, todas) => { select.innerHTML=""; const primera=document.createElement("option"); primera.value="todas"; primera.textContent=todas; select.appendChild(primera); [...new Set(values.filter(Boolean))].sort().forEach(value=>{ const option=document.createElement("option"); option.value=value; option.textContent=value; select.appendChild(option); }); };
-    opciones(credSelect, PERSONAS.map(p=>p.credencial), "Todas"); opciones(provinciaSelect, PERSONAS.map(p=>p.provincia), "Todas"); opciones(etarioSelect, PERSONAS.map(p=>p.ge), "Todos");
-    state = { tipo:"todas", cred:"todas", provincia:"todas", comuna:"todas", etario:"todas", area:"todas", search:"" }; visibleCount=PAGE; activeId=null; populateComunas(); render();
+    opciones(credSelect, PERSONAS.map(p=>p.equipo), "Todas"); opciones(provinciaSelect, PERSONAS.map(p=>p.servicio), "Todas"); opciones(etarioSelect, PERSONAS.map(p=>p.ge), "Todos");
+    opciones(centroSelect, PERSONAS.map(p=>p.centro), "Todos");
+    document.getElementById("servicioFilter").hidden = new Set(PERSONAS.map(p=>p.servicio).filter(Boolean)).size <= 1;
+    searchInput.value=""; state = { tipo:"todas", cred:"todas", provincia:"todas", comuna:"todas", etario:"todas", centro:"todas", search:"" }; visibleCount=PAGE; activeId=null; populateComunas(); render();
     document.getElementById("loadNote").textContent = `${archivo.name}: ${PERSONAS.length} registros cargados localmente.`;
   }
-  document.getElementById("fileInput").addEventListener("change", event => { const archivo=event.target.files[0]; if(!archivo) return; const lector=new FileReader(); lector.onload = load => { try { const libro=XLSX.read(load.target.result,{type:archivo.name.toLowerCase().endsWith(".csv")?"string":"array"}); const hoja=libro.Sheets[libro.SheetNames[0]]; cargarRegistros(XLSX.utils.sheet_to_json(hoja,{defval:""}),archivo); } catch(error) { alert("No fue posible leer el archivo. Verifique los encabezados y vuelva a intentarlo."); } }; archivo.name.toLowerCase().endsWith(".csv") ? lector.readAsText(archivo,"UTF-8") : lector.readAsArrayBuffer(archivo); });
+  document.getElementById("fileInput").addEventListener("change", event => {
+    const input=event.target, archivo=input.files[0];
+    if(!archivo) return;
+    if(typeof XLSX === "undefined"){
+      alert("No se cargó la biblioteca para leer Excel/CSV. Verifique la conexión a Internet y recargue el visor.");
+      input.value=""; return;
+    }
+    const lector=new FileReader();
+    lector.onerror=()=>{alert("No fue posible acceder al archivo. Compruebe que esté disponible en este equipo.");input.value="";};
+    lector.onload=load=>{
+      let rows;
+      try {
+        const libro=XLSX.read(load.target.result,{type:archivo.name.toLowerCase().endsWith(".csv")?"string":"array"});
+        const hoja=libro.Sheets[libro.SheetNames[0]];
+        if(!hoja) throw new Error("El archivo no contiene una hoja de datos.");
+        rows=XLSX.utils.sheet_to_json(hoja,{defval:""});
+      } catch(error){
+        alert("No fue posible leer el Excel/CSV. Compruebe el formato y la primera hoja del archivo.");
+        input.value="";return;
+      }
+      try { cargarRegistros(rows,archivo); }
+      catch(error){ alert("El archivo se leyó, pero ocurrió un error al mostrar los registros. Detalle: " + error.message); }
+      finally { input.value=""; }
+    };
+    archivo.name.toLowerCase().endsWith(".csv")?lector.readAsText(archivo,"UTF-8"):lector.readAsArrayBuffer(archivo);
+  });
   render();
 })();
 </script>
