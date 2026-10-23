@@ -70,7 +70,7 @@
       renderTable();
     }
     function renderHorizontal(width,type,total){
-      const compact=width<530,left=compact?8:Math.min(210,Math.max(110,width*.28)),right=compact?112:145,rowHeight=compact?72:49,h=rows.length*rowHeight+40,chartW=Math.max(60,width-left-right);
+      const compact=width<530,left=compact?8:Math.min(210,Math.max(110,width*.28)),right=compact?112:145,rowHeight=compact?64:46,h=rows.length*rowHeight+40,chartW=Math.max(60,width-left-right);
       const values=rows.flatMap(r=>type==='range'?[r.low,r.high]:[r.value,...(['target','progress'].includes(type)?[r.target]:[])]).filter(v=>v!==null),domain=ticks(Math.min(0,...values),Math.max(0,...values)),{min,max}=domain,span=max-min||1,x=v=>left+(v-min)/span*chartW;
       svg.setAttribute('viewBox',`0 0 ${width} ${h}`);
       for(const v of domain.values){line(x(v),12,x(v),h-27);text(x(v),h-7,number(v,2),{'text-anchor':'middle',class:'viz-muted','font-size':10});}
@@ -87,9 +87,9 @@
       if(['target','progress'].includes(type))legend.append(html('span','', '┆ Referencia: meta informada por categoría (detalle en tabla).'));
     }
     function renderComposition(width,total){
-      const height=rows.length*90+30,left=8,cw=width-16;
+      const height=rows.length*74+24,left=8,cw=width-16;
       svg.setAttribute('viewBox',`0 0 ${width} ${height}`);
-      rows.forEach((r,i)=>{const y=26+i*90;const label=text(left,y,r.label.length>Math.floor((width-130)/7)?r.label.slice(0,Math.max(8,Math.floor((width-130)/7)-1))+'…':r.label,{'font-weight':600});label.append(node('title',{},r.label));text(width-8,y,number(r.value)+' '+(config.unit||'registros'),{'text-anchor':'end','font-size':11,class:'viz-muted'});let offset=0;
+      rows.forEach((r,i)=>{const y=22+i*74;const label=text(left,y,r.label.length>Math.floor((width-130)/7)?r.label.slice(0,Math.max(8,Math.floor((width-130)/7)-1))+'…':r.label,{'font-weight':600});label.append(node('title',{},r.label));text(width-8,y,number(r.value)+' '+(config.unit||'registros'),{'text-anchor':'end','font-size':11,class:'viz-muted'});let offset=0;
         if(r.value===null||r.value<=0){text(left,y+25,r.value===null?'Sin dato':'0 registros · sin proporción');return;}
         const active=r.parts.filter(p=>!hidden.has(p.label)&&p.value!==null);active.forEach(p=>{const w=Math.max(0,cw*p.value/r.value);rect(left+offset,y+12,w,25,p.color||color(p.label),r,p.value,r.value,p.label);if(w>80)text(left+offset+w/2,y+29,number(p.value)+' · '+pct(p.value,r.value),{'text-anchor':'middle','font-size':11,fill:'#fff',style:'fill:#fff;font-weight:700;paint-order:stroke;stroke:#0005;stroke-width:2px'});offset+=w;});
         const detail=active.map(p=>p.label+': '+number(p.value)+' ('+pct(p.value,r.value)+')').join(' · ');const lab=text(left,y+56,detail.length>width/6?detail.slice(0,Math.floor(width/6)-1)+'…':detail,{'font-size':10,class:'viz-muted'});lab.append(node('title',{},detail));
@@ -112,7 +112,7 @@
       if(!config.onSeriesSelect&&hidden.size){const reset=html('button','viz-legend-item','Ver todas las series');reset.type='button';reset.addEventListener('click',()=>{hidden.clear();render();});legend.append(reset);}
     }
     function renderColumns(width,type,total){
-      const series=[...new Set(rows.flatMap(r=>r.parts.map(p=>p.label)))],isStack=['stacked','stacked100'].includes(type),grouped=type==='grouped',slot=Math.max(110,...rows.map(r=>(number(r.value).length+10)*6)),minWidth=Math.max(width,rows.length*(grouped?Math.max(slot,series.length*26):slot)+82),height=340,left=50,right=type==='pareto'?54:20,top=34,bottom=74,cw=minWidth-left-right,ch=height-top-bottom,step=cw/rows.length;
+      const series=[...new Set(rows.flatMap(r=>r.parts.map(p=>p.label)))],isStack=['stacked','stacked100'].includes(type),grouped=type==='grouped',slot=Math.max(110,...rows.map(r=>(number(r.value).length+10)*6)),minWidth=Math.max(width,rows.length*(grouped?Math.max(slot,series.length*26):slot)+82),height=Math.round(Math.max(260,Math.min(320,width*.25))),left=50,right=type==='pareto'?54:20,top=34,bottom=74,cw=minWidth-left-right,ch=height-top-bottom,step=cw/rows.length;
       svg.setAttribute('viewBox',`0 0 ${minWidth} ${height}`);svg.style.minWidth=minWidth+'px';plot.style.overflowX='auto';
       const active=r=>r.parts.filter(p=>!hidden.has(p.label)&&p.value!==null),extent=rows.flatMap(r=>isStack?[active(r).filter(p=>p.value>=0).reduce((a,p)=>a+p.value,0),active(r).filter(p=>p.value<0).reduce((a,p)=>a+p.value,0)]:grouped?active(r).map(p=>p.value):[r.value]);
       const domain=ticks(Math.min(0,...extent.filter(finite)),Math.max(0,...extent.filter(finite))),{min,max}=domain,span=max-min||1,y=v=>top+ch-(v-min)/span*ch;
@@ -129,8 +129,8 @@
       if(series.length&&(isStack||grouped))renderSeriesLegend();
     }
     function renderCircle(width,type,total){
-      width=360;
-      const actual=sum(rows),semi=type==='semi',height=semi?215:285,cx=width/2,cy=semi?175:132,outer=Math.min(108,width*.31),inner=type==='pie'?0:outer*.72;
+      width=244;
+      const actual=sum(rows),semi=type==='semi',height=semi?144:244,cx=width/2,cy=semi?120:122,outer=108,inner=type==='pie'?0:outer*.72;
       svg.setAttribute('viewBox',`0 0 ${width} ${height}`);
       if(actual<=0){text(cx,cy,'No hay valores positivos',{'text-anchor':'middle'});return;}
       let angle=semi?Math.PI:-Math.PI/2;const sweep=semi?Math.PI:Math.PI*2;
