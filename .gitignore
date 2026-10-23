@@ -1,0 +1,8 @@
+*.xlsx
+*.xls
+*.csv
+*.sqlite*
+*.db
+ACCESOS*
+__pycache__/
+*.log

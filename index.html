@@ -1,13 +1,13 @@
 ﻿<!DOCTYPE html>
 <html lang="es">
-<head>
+<head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Registro de Electro y Oxigenodependencia - Regi&oacute;n de Los Lagos</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+
+
+<link rel="stylesheet" href="visor_prueba_assets/leaflet.css">
 <style>
   :root {
     --font-ui: Aptos, 'Segoe UI', Arial, sans-serif;
@@ -26,8 +26,8 @@
     --text-dim: #4A4A4A;
     --text-faint: #93A0AB;
 
-    --electro: #006FB3;
-    --oxigeno: #E0701E;
+    --electro: #E0701E;
+    --oxigeno: #0F69B4;
     
     --centro-pt: #4A4A4A;
     --c-vigente: #2D717C;
@@ -48,7 +48,7 @@
     --adult-bg: #253E32; --adult-text: #B6DDC3; --adult-accent: #86B79A;
     --child-bg: #382D45; --child-text: #DBC2EC; --child-accent: #B393CB;
       --border: #2A3742; --text: #E7ECF1; --text-dim: #9AA7B2; --text-faint: #A8B7C7;
-      --electro: #4FA3D1; --oxigeno: #F29A5A;  --centro-pt: #A8B7C7;
+      --electro: #F29A5A; --oxigeno: #4FA3D1;  --centro-pt: #A8B7C7;
       --c-vigente: #45B37B; --c-alerta: #E5555C; --c-media: #E09A45;
       --land: #202B22; --land-line: #2C3B2C; --lake: #16232C;
     }
@@ -58,7 +58,7 @@
     --adult-bg: #253E32; --adult-text: #B6DDC3; --adult-accent: #86B79A;
     --child-bg: #382D45; --child-text: #DBC2EC; --child-accent: #B393CB;
     --border: #2A3742; --text: #E7ECF1; --text-dim: #9AA7B2; --text-faint: #A8B7C7;
-    --electro: #4FA3D1; --oxigeno: #F29A5A;  --centro-pt: #A8B7C7;
+    --electro: #F29A5A; --oxigeno: #4FA3D1;  --centro-pt: #A8B7C7;
     --c-vigente: #45B37B; --c-alerta: #E5555C; --c-media: #E09A45;
     --land: #202B22; --land-line: #2C3B2C; --lake: #16232C;
   }
@@ -93,8 +93,8 @@
   .kpi { background: var(--surface); padding: 14px 16px; border-top: 4px solid var(--kpi-color, var(--border)); }
   .kpi .value { color: var(--kpi-value); }
   .kpi:nth-child(1) { --kpi-color: #0F69B4; }
-  .kpi:nth-child(2) { --kpi-color: #0F69B4; }
-  .kpi:nth-child(3) { --kpi-color: #E0701E; }
+  .kpi:nth-child(2) { --kpi-color: var(--oxigeno); }
+  .kpi:nth-child(3) { --kpi-color: var(--electro); }
   .kpi:nth-child(4) { --kpi-color: var(--adult-accent); }
   .kpi:nth-child(5) { --kpi-color: var(--child-accent); }
   :root[data-theme="dark"] .kpis { background:#2A3742; border-color:#2A3742; }
@@ -206,9 +206,95 @@
 
   footer.note { max-width: 1180px; margin: 34px auto 0; padding: 0 20px; font-size: 11.5px; color: var(--text-faint); line-height: 1.7; }
 [hidden]{display:none!important}.card .name{overflow-wrap:anywhere}.meta-list{overflow-wrap:anywhere}.oxygen-summary{display:flex;gap:12px;margin:12px 0;padding:10px;background:var(--oxygen-surface);color:var(--text);border-radius:6px}.oxygen-summary b{display:block;font-size:20px}.oxygen-summary span{flex:1;font-size:12px}
+
+  .dashboard-intro{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:24px 0 14px}
+  .dashboard-intro h2{margin:0;font-size:19px}.dashboard-intro p{margin:5px 0;color:var(--text-dim);font-size:12px}
+  .dashboard-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-bottom:28px}
+  .dashboard-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:20px;min-width:0}
+  .dashboard-card h3{font-size:15px;margin:0 0 6px}.dashboard-card p{font-size:12px;color:var(--text-dim);margin:0 0 16px;line-height:1.5}
+  .dashboard-legend{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:14px;font-size:11px;color:var(--text-dim)}
+  .dashboard-legend i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px}
+  .dashboard-chart{max-height:340px;overflow:auto;padding-right:6px}.chart-row{margin-bottom:15px}.chart-row-head{display:flex;justify-content:space-between;gap:12px;font-size:12px;margin-bottom:6px}.chart-row-head span{overflow-wrap:anywhere}
+  .chart-track{display:flex;min-height:13px;border-radius:4px;background:var(--surface-2);overflow:hidden}.chart-segment{height:13px;min-width:0;flex-shrink:0}
+  .chart-detail{font-size:11px;color:var(--text-dim);margin-top:5px;line-height:1.5}.chart-empty{padding:28px 8px;text-align:center;color:var(--text-dim);font-size:13px}
+  .prototype-note{font-size:12px;color:var(--text-dim);margin:12px 0;padding:10px 12px;border-left:3px solid var(--adult-accent);background:var(--surface)}
+  @media(max-width:760px){.dashboard-grid{grid-template-columns:1fr}.dashboard-card{padding:16px}}
+  button.kpi{font:inherit;text-align:left;color:var(--text);border-right:0;border-bottom:0;border-left:0;cursor:pointer}
+  button.kpi[aria-pressed="true"]{box-shadow:inset 0 0 0 2px var(--kpi-color)}
+  button.chart-row{display:block;width:100%;font:inherit;text-align:left;color:var(--text);background:transparent;border:1px solid transparent;border-radius:5px;padding:8px;cursor:pointer}
+  button.chart-row:hover{background:var(--surface-2)}button.chart-row[aria-pressed="true"]{border-color:var(--text-dim);background:var(--surface-2)}
 </style>
-</head>
-<body>
+<link rel="stylesheet" href="visor_prueba_assets/shared.css"><style>[hidden]{display:none!important}#demoDialog{max-width:440px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:24px}#demoDialog label,#demoEdit label{display:grid;gap:6px;margin:8px 0}#demoEdit{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;padding:20px;background:var(--surface);border:1px solid var(--border)}#demoEdit h3{grid-column:1/-1}#demoEdit input,#demoDialog input{min-width:0;padding:9px;background:var(--surface);color:var(--text);border:1px solid var(--border)}#demoList .entry{display:flex;gap:12px;padding:12px;align-items:center;border-bottom:1px solid var(--border)}#demoList .entry span{flex:1}#demoHistory details{padding:12px;border-bottom:1px solid var(--border)}@media(max-width:600px){#demoEdit{grid-template-columns:1fr}#demoList .entry{flex-wrap:wrap}}</style></head>
+<style id="visor-public-layout">
+.visor-publico{background:var(--bg);font-family:Arial,Helvetica,sans-serif}
+.visor-publico .public-main{max-width:1440px;padding:0 24px 28px}
+.visor-publico .top .wrap{max-width:1440px}
+.visor-publico .prototype-note{margin:14px 0;font-size:12px;padding:8px 12px}
+.visor-publico .filters{background:var(--surface);border:1px solid var(--border);padding:16px;gap:12px 16px;margin:0;align-items:flex-end;border-radius:6px}
+.visor-publico .filter-group{flex:1 1 155px;min-width:145px;gap:4px}
+.visor-publico .filter-group:first-child{flex:1.7 1 370px}
+.visor-publico .fg-label{font-size:12px;margin:0}
+.visor-publico .filters select,.visor-publico .filters button{font-size:12px;min-height:32px;padding:6px 10px}
+.visor-publico .chip-row{flex-wrap:wrap}
+.visor-publico .kpis{gap:12px;background:transparent;border:0;margin:16px 0 20px;grid-template-columns:repeat(5,minmax(0,1fr))}
+.visor-publico .kpi{border:1px solid var(--border);border-top:3px solid var(--kpi-color);border-radius:6px;padding:14px;min-height:108px;box-shadow:0 1px 2px #00000008}
+.visor-publico .kpi .label{font-size:12px;margin-bottom:8px}
+.visor-publico .kpi .value{font-size:28px;line-height:1.15;color:var(--kpi-value)}
+.visor-publico .kpi-context{font-size:11px;color:var(--text-dim);margin-top:6px}
+.visor-publico .dashboard-intro{margin:16px 0 8px}.visor-publico .dashboard-intro h2{font-size:18px;margin:0}.visor-publico #status{margin:5px 0}
+.visor-publico .dashboard-grid{gap:16px;align-items:stretch}
+.visor-publico .panel-section{grid-column:1/-1;font-size:14px;font-weight:500;color:var(--text);margin:8px 0 0;padding-bottom:7px;border-bottom:2px solid var(--oxigeno)}
+.visor-publico .chart-wide{grid-column:1/-1}
+.visor-publico .dashboard-card{padding:18px 20px;border-radius:6px}
+.visor-publico .dashboard-card h3{font-size:14px;margin-bottom:4px;color:var(--text)}
+.visor-publico .dashboard-card p{font-size:12px;margin-bottom:12px}
+.visor-publico .dashboard-chart{max-height:none;overflow:visible;padding:0}
+.visor-publico .chart-wide .chart-row{display:grid;grid-template-columns:220px minmax(0,1fr);gap:4px 18px;align-items:center;padding:10px 8px;margin-bottom:4px}
+.visor-publico .chart-wide .chart-row-head{margin:0;font-size:12px;gap:12px}
+.visor-publico .chart-wide .chart-detail{grid-column:2;margin:0;font-size:11px}
+.visor-publico .chart-track,.visor-publico .chart-segment{height:18px;min-height:18px}
+.visor-publico .chart-track{background:var(--surface-2);border-radius:3px}
+.visor-publico .panel-source{font-size:11px;color:var(--text-dim);padding:16px 0 0;border-top:1px solid var(--border);line-height:1.6}
+@media(max-width:800px){.visor-publico .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.visor-publico .dashboard-grid{grid-template-columns:1fr}.visor-publico .chart-wide .chart-row{display:block}.visor-publico .chart-wide .chart-row-head{margin-bottom:6px}.visor-publico .chart-wide .chart-detail{margin-top:5px}.visor-publico .public-main{padding-inline:16px}}
+</style>
+<style id="visor-refinement">
+.visor-publico{background:#edf1f5}.visor-publico .top{padding:14px 0;background:#103f69}.visor-publico .top .service-logo{width:52px;height:52px;object-fit:contain}.visor-publico .top h1{font-size:18px}.visor-publico .top .subtitle{font-size:12px}.visor-publico .top .department{font-size:11px}.visor-publico .gov-banner{height:5px;min-height:5px;padding:0;overflow:hidden}.visor-publico .gov-banner span{display:none}
+.visor-publico .public-main{max-width:1540px;margin:24px auto;background:var(--bg);padding:0 22px 24px}
+.panel-blue-head{background:#103f69;color:#fff;margin:0 -22px;padding:16px 22px}.panel-blue-head h2{font-size:20px;line-height:1.3;margin:0 0 5px;font-weight:700}.panel-blue-head h2 span{display:inline-block;background:#f5b800;color:#172d40;border-radius:2px;padding:2px 7px;font-size:10px;vertical-align:middle;margin-left:8px}.panel-blue-head p{font-size:12px;margin:0;color:#e4edf5}
+.visor-publico .prototype-note{margin:0 -22px;padding:6px 22px;border:0;background:var(--surface);font-size:11px;color:var(--text-dim)}
+.visor-publico .filters{margin:0 -22px;padding:12px 22px 14px;border:0;border-bottom:1px solid var(--border);border-radius:0;gap:10px 12px}.visor-publico .filters select{border-radius:2px;min-height:28px;padding:3px 8px}.visor-publico .filters .chip{min-height:28px;padding:4px 8px;font-size:11px;border-radius:3px}.visor-publico .filter-group:first-child{flex-basis:340px}.visor-publico .fg-label{font-size:11px}
+.visor-publico .kpis{gap:10px;margin:16px 0 12px}.visor-publico .kpi{border-top:1px solid var(--border);border-radius:5px;padding:14px;min-height:112px;box-shadow:0 1px 2px #00000012}.visor-publico .kpi .value{color:#17466b;font-size:28px;font-weight:500}.visor-publico .kpi .label{font-size:11px}.visor-publico .kpi-context{font-size:11px}.visor-publico .dashboard-intro{margin:4px 0}.visor-publico .dashboard-intro p{font-size:11px}
+.visor-publico .panel-section{font-size:14px;margin:4px 0 0;padding-bottom:5px;color:var(--text)}.visor-publico .dashboard-grid{gap:12px}.visor-publico .dashboard-card{border:0;box-shadow:0 1px 3px #0000000a;padding:16px;border-radius:5px}.visor-publico .dashboard-card h3{font-size:13px;color:var(--text);font-weight:700}.visor-publico .dashboard-card p{font-size:11px}.visor-publico .dashboard-legend{font-size:11px;margin-bottom:12px}
+.column-chart{display:flex;height:290px;padding-top:20px;margin-top:8px}.axis-labels{width:34px;flex-shrink:0;display:flex;flex-direction:column;justify-content:space-between;padding-bottom:40px;color:var(--text-dim);font-size:11px;text-align:right;padding-right:8px}
+.column-plot{display:flex;flex:1;min-width:0;gap:24px;padding:0 30px;position:relative;background:repeating-linear-gradient(to top,transparent 0,transparent calc(25% - 1px),var(--border) calc(25% - 1px),var(--border) 25%);background-size:100% calc(100% - 40px);background-repeat:no-repeat;border-left:1px solid var(--border)}
+.column-item{display:flex;flex-direction:column;align-items:center;flex:1;min-width:0;border:0;background:transparent;cursor:pointer;padding:0;color:var(--text)}.column-space{height:calc(100% - 40px);width:100%;display:flex;align-items:flex-end;justify-content:center}.column-stack{position:relative;width:min(100%,100px);display:flex;flex-direction:column-reverse}.column-stack>span:not(.column-value){display:block;width:100%}.column-value{position:absolute;bottom:100%;margin-bottom:5px;font-size:11px;font-weight:600;white-space:nowrap;width:100%;text-align:center}.column-label{height:40px;padding-top:10px;font-size:12px;line-height:1.2}.column-item:hover .column-stack{opacity:.8}.column-item[aria-pressed=true] .column-stack{outline:2px solid var(--text);outline-offset:3px}
+:root[data-theme=dark] .visor-publico{background:var(--bg)}:root[data-theme=dark] .visor-publico .kpi .value{color:var(--text)}
+@media(max-width:800px){.visor-publico .public-main{margin:12px auto;padding:0 14px 20px}.panel-blue-head{margin:0 -14px;padding:14px}.panel-blue-head h2{font-size:16px}.visor-publico .filters,.visor-publico .prototype-note{margin-inline:-14px}.column-plot{gap:10px;padding-inline:10px}.column-label{font-size:10px}.column-value{font-size:10px}.column-chart{height:240px}}
+</style><style>
+.visor-privado .dashboard-intro h2{display:none}.visor-privado .dashboard-intro p{font-size:11px}
+.visor-privado .map-section{background:var(--surface);border-radius:5px;padding:16px;margin-top:16px;border:1px solid var(--border)}
+.visor-privado .section-title{font-size:14px;border-bottom:2px solid var(--oxigeno);padding-bottom:8px;margin-top:20px}
+.visor-privado .cards-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.visor-privado .card{background:var(--surface);padding:18px;border-radius:5px;box-shadow:0 1px 3px #0000000a}
+.visor-privado .card .name{font-size:15px}.visor-privado .card .meta-list{font-size:12px}.visor-privado .card .foot{font-size:11px}
+.visor-privado .filters{margin-bottom:16px}.visor-privado #resultsNote{flex-basis:100%;font-size:11px}
+.visor-admin .admin-intro{padding:18px 0 12px}.visor-admin .admin-intro p{font-size:12px;color:var(--text-dim);margin:0 0 12px}
+.visor-admin .admin-actions{gap:10px}.visor-admin #new,.visor-admin .admin-actions a{font-size:12px;padding:8px 12px;min-height:34px}
+.visor-admin #edit{margin:12px 0 22px;padding:18px;gap:14px 20px;border:0;border-radius:5px;box-shadow:0 1px 3px #0000000a;grid-template-columns:repeat(4,minmax(0,1fr))}
+.visor-admin #edit label{font-size:11px}.visor-admin #edit input,.visor-admin #edit select{height:34px;font-size:12px;margin-top:4px;padding:6px 9px;border-radius:3px}
+.visor-admin #edit>button{grid-column:1/-1;justify-self:end;min-width:160px;min-height:34px;font-size:12px}
+.visor-admin .form-section{grid-column:1/-1;font-size:13px;color:var(--text);font-weight:600;border-bottom:1px solid var(--border);padding-bottom:7px;margin:4px 0}
+.visor-admin #list{background:var(--surface);border-radius:5px;overflow:hidden}.visor-admin .entry{display:grid;grid-template-columns:minmax(0,1fr) auto auto;padding:12px 16px;gap:12px}.visor-admin .entry button{margin:0;font-size:12px;min-height:32px;padding:6px 12px}
+.visor-admin .audit-panel{border:0;border-radius:5px;padding:18px;margin-top:22px;box-shadow:0 1px 3px #0000000a}.visor-admin .audit-head h2{font-size:16px}.visor-admin .audit-table th,.visor-admin .audit-table td{padding:10px 12px;font-size:12px}
+.visor-admin #search{font-size:12px;min-height:34px;margin-top:12px}.visor-admin .panel-section{margin-top:16px}
+@media(max-width:1000px){.visor-privado .cards-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.visor-admin #edit{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.visor-privado .cards-grid,.visor-admin #edit{grid-template-columns:1fr}.visor-admin .entry{grid-template-columns:1fr 1fr}.visor-admin .entry .record-title{grid-column:1/-1}}
+</style><style id="audit-visual-fixes">
+ .visor-publico .top,.panel-blue-head{background:#103f69}
+ .visor-publico .kpi{border-top:3px solid var(--kpi-color)}
+ .visor-publico .kpi .value{color:var(--kpi-value)}
+ @media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .visor-publico{background:var(--bg)}}
+ </style><style>.column-chart{overflow-x:auto;overflow-y:hidden}.column-plot{flex-shrink:0;min-width:0}.column-item{min-width:100px}.column-stack>span:not(.column-value){cursor:help}</style><link rel="stylesheet" href="visor_prueba_assets/public-charts.css"><link rel="stylesheet" href="visor_prueba_assets/clinical-ui.css"><body class="visor-publico visor-privado">
 
 <header class="top">
   <div class="wrap brand-wrap">
@@ -216,26 +302,32 @@
     <div class="eyebrow-row">
       <div>
         <h1>Registro de Electro y Oxigenodependencia</h1>
-        <p class="subtitle">Plantilla lista para cargar registros</p><p class="department">Departamento de Estudios y Planificación Sanitaria</p>
+        <p class="subtitle">Prueba local · Carga transitoria de Excel</p><p class="department">Departamento de Estudios y Planificación Sanitaria</p>
       </div>
-      <button class="theme-toggle" id="themeToggle" type="button">tema: sistema</button>
+      <div class="header-actions"><button class="theme-toggle" id="themeToggle" type="button">tema: sistema</button></div>
     </div>
   </div>
-</header>
+<button id="themeButton" hidden></button></header>
 <div class="gov-banner" aria-label="Identidad Gobierno de Chile"><span class="gov">Gobierno de Chile</span><span class="star">★</span><span class="work">Trabajando para usted</span></div>
 
-<div class="wrap">
+<div class="wrap public-main"><div class="panel-blue-head"><h2>Panel de Electro y Oxigenodependencia <span>v2.0</span></h2><p>Prueba independiente · Estadísticas, ubicación y fichas</p></div>
 
-  <div class="filters" style="margin-bottom:16px; align-items:center;">
-    <div class="filter-group" style="flex:1; min-width:260px;"><span class="fg-label">Actualizar información</span><span class="results-note" id="loadNote">Seleccione un archivo Excel o CSV. Los registros se procesan en este navegador; el mapa y las bibliotecas usan conexión externa.</span></div>
-    <label class="export-btn" for="fileInput" style="cursor:pointer;">Cargar Excel / CSV</label><input id="fileInput" type="file" accept=".xlsx,.xls,.csv" hidden>
-  </div>
-  <div class="kpis" id="kpis"></div>
+<p class="prototype-note" id="loadNote">Sin datos cargados. Esta copia de prueba no utiliza la base oficial.</p><div class="map-tools"><label class="export-btn" for="fileInput" style="cursor:pointer">Cargar Excel / CSV</label><input id="fileInput" type="file" accept=".xlsx,.xls,.csv" hidden><button type="button" id="clearLoaded">Vaciar datos de prueba</button></div>
+
 
   <div class="filters">
     <div class="filter-group">
       <span class="fg-label">Tipo de dependencia</span>
       <div class="chip-row" id="tipoChips"></div>
+    </div>
+    <div class="filter-group" id="subtipoFilter" hidden>
+      <label class="fg-label" for="subtipoSelect">Subtipo de electrodependencia</label>
+      <select id="subtipoSelect">
+        <option value="todas">Todos los subtipos</option>
+        <option value="oxigenoterapia">Con oxigenoterapia</option>
+        <option value="ventilacion">Con ventilación mecánica</option>
+        <option value="sin_especificar">Sin especificar</option>
+      </select>
     </div>
     <div class="filter-group">
       <span class="fg-label">Equipo</span>
@@ -266,9 +358,15 @@
     <span class="results-note" id="resultsNote"></span>
   </div>
 
-  <div class="map-section">
+  <div class="active-filters" id="activeFilters" aria-label="Filtros activos"></div><div class="kpis" id="kpis"></div><section aria-labelledby="dashboardTitle">
+    <div class="dashboard-intro"><div><h2 id="dashboardTitle">Panorama del registro</h2><p id="dashboardSummary" aria-live="polite"></p></div></div>
+    <p class="prototype-note">Copia de prueba · Los datos cargados quedan en memoria durante esta sesión. Cerrar o recargar vacía la carga; no elimina el Excel original.</p>
+    <div class="dashboard-grid" id="charts"></div>
+  </section>
+
+  <section data-demo-private hidden><h2 class="panel-section">3 · Ubicación y fichas de pacientes</h2><div class="map-section">
     <div class="section-title">
-      <span>Ubicación aproximada de residencia — Región de Los Lagos</span>
+      <span>Ubicación informada — Región de Los Lagos</span>
       <span class="legend">
         <span class="li"><span class="sw" style="background:var(--electro)"></span>⚡ Electrodependiente</span>
         <span class="li"><span class="sw" style="background:var(--oxigeno)"></span>🫁 Oxigenodependiente</span>
@@ -278,28 +376,28 @@
     <label class="check" style="margin-bottom:8px;">
       <input type="checkbox" id="toggleCentros"> Mostrar centros de salud (CESFAM, hospitales, etc.)
     </label>
-    <div class="map-box">
+    <div class="result-toolbar" id="mapResults" aria-live="polite"></div><div class="map-tools"><button type="button" id="fitMap">Ver extensión filtrada</button><button type="button" id="resetNearMap">Restablecer filtros</button></div><p id="cartographyStatus">Cargando cartografía local…</p><div class="map-box">
       <div id="leafletMap" role="region" aria-label="Mapa interactivo de personas y centros de salud"></div>
       <div class="map-caption" id="mapCaption"></div>
     </div>
   </div>
 
-  <div class="section-title"><span>Listado <span id="mapSelectionNote" class="results-note" aria-live="polite"></span></span><button class="export-btn" id="clearMapSelection" type="button" hidden>Mostrar todas las tarjetas</button></div>
+  <div class="section-title"><span>Listado <span id="mapSelectionNote" class="results-note" aria-live="polite"></span></span><button class="export-btn" id="clearMapSelection" type="button" hidden>Limpiar selección de paciente</button></div>
   <div class="cards-grid" id="cardsGrid"></div>
   <div class="empty-state" id="emptyState" style="display:none;">Ningún registro coincide con los filtros seleccionados.</div>
   <div class="load-more-wrap" id="loadMoreWrap" style="display:none;">
     <button class="load-more" id="loadMoreBtn" type="button">Mostrar más registros</button>
   </div>
 
-</div>
+</section></div>
 
-<footer class="note">Plantilla sin registros precargados. La información que se cargue desde Excel o CSV se procesa de forma local en el navegador. Las ubicaciones corresponden a las coordenadas del archivo cargado.</footer>
+<footer class="note">Prueba temporal en memoria. Ingreso simulado; no es una protección de datos. Cartografía base local. Coordenadas informadas, sin verificación de precisión domiciliaria.</footer>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="visor_prueba_assets/leaflet.js"></script><script src="visor_prueba_assets/public-charts.js"></script><script src="visor_prueba_assets/public-dashboard.js"></script><script src="visor_prueba_assets/cartografia-local.js"></script><script src="visor_prueba_assets/clinical-view.js"></script><script src="visor_prueba_assets/xlsx.full.min.js"></script>
+
 <script>
 let PERSONAS = [];
-const CENTROS = [{"id": "124010", "nombre": "Actividades gestionadas por la Dirección del Servicio para apoyo de la Red (S.S Del Reloncaví)", "tipo": "Dirección", "comuna": "Puerto Montt", "lat": -41.4721, "lon": -72.9359}, {"id": "124011", "nombre": "PRAIS (S.S Del Reloncaví)", "tipo": "PRAIS", "comuna": "Puerto Montt", "lat": -41.4721, "lon": -72.9359}, {"id": "124105", "nombre": "Hospital de Puerto Montt", "tipo": "Hospital", "comuna": "Puerto Montt", "lat": -41.4485, "lon": -72.9573}, {"id": "124110", "nombre": "Hospital de Llanquihue", "tipo": "Hospital", "comuna": "Llanquihue", "lat": -41.2565, "lon": -73.0106}, {"id": "124115", "nombre": "Hospital de Frutillar", "tipo": "Hospital", "comuna": "Frutillar", "lat": -41.1381, "lon": -73.0315}, {"id": "124120", "nombre": "Hospital de Fresia", "tipo": "Hospital", "comuna": "Fresia", "lat": -41.1553, "lon": -73.423}, {"id": "124125", "nombre": "Hospital de Maullín", "tipo": "Hospital", "comuna": "Maullín", "lat": -41.6169, "lon": -73.5985}, {"id": "124130", "nombre": "Hospital de Calbuco", "tipo": "Hospital", "comuna": "Calbuco", "lat": -41.7698, "lon": -73.1332}, {"id": "124140", "nombre": "Hospital de Palena", "tipo": "Hospital", "comuna": "Palena", "lat": -43.6179, "lon": -71.8081}, {"id": "124145", "nombre": "Hospital de Futaleufú", "tipo": "Hospital", "comuna": "Futaleufú", "lat": -43.1834, "lon": -71.8691}, {"id": "124305", "nombre": "Centro de Salud Familiar Angelmó", "tipo": "Cesfam", "comuna": "Puerto Montt", "lat": -41.4733, "lon": -72.9541}, {"id": "124310", "nombre": "Centro de Salud Familiar Antonio Varas", "tipo": "Cesfam", "comuna": "Puerto Montt", "lat": -41.4612, "lon": -72.9295}, {"id": "124315", "nombre": "Centro de Salud Familiar Carmela Carvajal", "tipo": "Cesfam", "comuna": "Puerto Montt", "lat": -41.4684, "lon": -72.9166}, {"id": "124320", "nombre": "Centro de Salud Familiar Techo para todos (ONG)", "tipo": "ONG", "comuna": "Puerto Montt", "lat": -41.4618, "lon": -72.9651}, {"id": "124325", "nombre": "Centro de Salud Familiar Carelmapu", "tipo": "Cesfam", "comuna": "Maullín", "lat": -41.7411, "lon": -73.7016}, {"id": "124330", "nombre": "Centro de Salud Familiar Los Muermos", "tipo": "Cesfam", "comuna": "Los Muermos", "lat": -41.3988, "lon": -73.4595}, {"id": "124335", "nombre": "Centro de Salud Familiar Nº 1 Puerto Varas", "tipo": "Cesfam", "comuna": "Puerto Varas", "lat": -41.329, "lon": -72.9691}, {"id": "124365", "nombre": "Centro de Salud Familiar Frutillar Alto", "tipo": "Cesfam", "comuna": "Frutillar", "lat": -41.1295, "lon": -73.0594}, {"id": "124370", "nombre": "Centro de Salud Familiar Los Volcanes", "tipo": "Cesfam", "comuna": "Llanquihue", "lat": -41.2688, "lon": -72.9987}, {"id": "124380", "nombre": "Centro de Salud Familiar Río Negro Hornopirén", "tipo": "Cesfam", "comuna": "Hualaihué", "lat": -41.9627, "lon": -72.4689}, {"id": "124381", "nombre": "Centro de Salud Familiar Padre Hurtado", "tipo": "Cesfam", "comuna": "Puerto Montt", "lat": -41.475, "lon": -72.9846}, {"id": "124385", "nombre": "Centro de Salud Familiar San Pablo Mirasol (ONG)", "tipo": "ONG", "comuna": "Puerto Montt", "lat": -41.4751, "lon": -72.9619}, {"id": "124395", "nombre": "Centro de Salud Familiar Alerce", "tipo": "Cesfam", "comuna": "Puerto Montt", "lat": -41.3976, "lon": -72.9035}, {"id": "124396", "nombre": "Centro de Salud Familiar Calbuco", "tipo": "Cesfam", "comuna": "Calbuco", "lat": -41.7697, "lon": -73.1294}, {"id": "124401", "nombre": "Posta de Salud Rural Lago Chapo", "tipo": "PSR", "comuna": "Puerto Montt", "lat": -41.4157, "lon": -72.5947}, {"id": "124402", "nombre": "Posta de Salud Rural Correntoso", "tipo": "PSR", "comuna": "Puerto Montt", "lat": -41.4532, "lon": -72.6584}, {"id": "124403", "nombre": "Posta de Salud Rural Chaicas", "tipo": "PSR", "comuna": "Puerto Montt", "lat": -41.6147, "lon": -72.6544}, {"id": "124404", "nombre": "Posta de Salud Rural Lenca", "tipo": "PSR", "comuna": "Puerto Montt", "lat": -41.6044, "lon": -72.6886}, {"id": "124405", "nombre": "Posta de Salud Rural Las Quemas (Puerto Montt)", "tipo": "PSR", "comuna": "Puerto Montt", "lat": -41.402, "lon": -73.1793}, {"id": "124406", "nombre": "Posta de Salud Rural Maillén", "tipo": "PSR", "comuna": "Puerto Montt", "lat": -41.5831, "lon": -73.0002}, {"id": "124407", "nombre": "Posta de Salud Rural Salto Grande", "tipo": "PSR", "comuna": "Puerto Montt", "lat": -41.538, "lon": -73.2769}, {"id": "124408", "nombre": "Posta de Salud Rural Salto Chico", "tipo": "PSR", "comuna": "Puerto Montt", "lat": -41.4857, "lon": -73.2742}, {"id": "124409", "nombre": "Posta de Salud Rural Trapén", "tipo": "PSR", "comuna": "Puerto Montt", "lat": -41.529, "lon": -73.1231}, {"id": "124410", "nombre": "Posta de Salud Rural Panitao", "tipo": "PSR", "comuna": "Puerto Montt", "lat": -41.5724, "lon": -73.0936}, {"id": "124411", "nombre": "Posta de Salud Rural Cochamó", "tipo": "PSR", "comuna": "Cochamó", "lat": -41.4925, "lon": -72.3087}, {"id": "124412", "nombre": "Centro de Salud Familiar Cochamó", "tipo": "Cesfam", "comuna": "Cochamó", "lat": -41.6641, "lon": -72.2958}, {"id": "124413", "nombre": "Posta de Salud Rural Sotomó", "tipo": "PSR", "comuna": "Cochamó", "lat": -41.6473, "lon": -72.3169}, {"id": "124414", "nombre": "Posta de Salud Rural Llanada Grande", "tipo": "PSR", "comuna": "Cochamó", "lat": -41.8743, "lon": -71.936}, {"id": "124415", "nombre": "Posta de Salud Rural Paso El Bolsón o Segundo Corral", "tipo": "PSR", "comuna": "Cochamó", "lat": -42.0664, "lon": -71.8554}, {"id": "124416", "nombre": "Posta de Salud Rural Paso El León", "tipo": "PSR", "comuna": "Cochamó", "lat": -41.5047, "lon": -71.8575}, {"id": "124420", "nombre": "Centro Comunitario de Salud Familiar Hualaihué", "tipo": "Cecof", "comuna": "Hualaihué", "lat": -42.0233, "lon": -72.6866}, {"id": "124421", "nombre": "Posta de Salud Rural Ensenada", "tipo": "PSR", "comuna": "Puerto Varas", "lat": -41.2266, "lon": -72.5671}, {"id": "124422", "nombre": "Posta de Salud Rural Peulla", "tipo": "PSR", "comuna": "Puerto Varas", "lat": -41.0856, "lon": -72.0193}, {"id": "124423", "nombre": "Posta de Salud Rural Nueva Braunau", "tipo": "PSR", "comuna": "Puerto Varas", "lat": -41.3248, "lon": -73.0726}, {"id": "124424", "nombre": "Posta de Salud Rural Petrohué", "tipo": "PSR", "comuna": "Puerto Varas", "lat": -41.1372, "lon": -72.4017}, {"id": "124425", "nombre": "Posta de Salud Rural Colonia Río Sur", "tipo": "PSR", "comuna": "Puerto Varas", "lat": -41.3398, "lon": -72.7007}, {"id": "124426", "nombre": "Posta de Salud Rural Ralún", "tipo": "PSR", "comuna": "Puerto Varas", "lat": -41.3886, "lon": -72.3279}, {"id": "124427", "nombre": "Posta de Salud Rural Loncotoro", "tipo": "PSR", "comuna": "Llanquihue", "lat": -41.2925, "lon": -73.2137}, {"id": "124428", "nombre": "Posta de Salud Rural Pellines (Llanquihue)", "tipo": "PSR", "comuna": "Llanquihue", "lat": -41.1901, "lon": -73.0683}, {"id": "124429", "nombre": "Posta de Salud Rural Colegual", "tipo": "PSR", "comuna": "Llanquihue", "lat": -41.2403, "lon": -73.215}, {"id": "124430", "nombre": "Posta de Salud Rural Casma", "tipo": "PSR", "comuna": "Frutillar", "lat": -41.0118, "lon": -73.1239}, {"id": "124432", "nombre": "Posta de Salud Rural Centinela", "tipo": "PSR", "comuna": "Frutillar", "lat": -41.1016, "lon": -73.2293}, {"id": "124433", "nombre": "Posta de Salud Rural Parga", "tipo": "PSR", "comuna": "Fresia", "lat": -41.217, "lon": -73.4884}, {"id": "124434", "nombre": "Consultorio general tegualda", "tipo": "PSR", "comuna": "Fresia", "lat": -41.0395, "lon": -73.4083}, {"id": "124435", "nombre": "Posta de Salud Rural Polizones", "tipo": "PSR", "comuna": "Fresia", "lat": -41.1298, "lon": -73.3724}, {"id": "124436", "nombre": "Posta de Salud Rural Cau Cua", "tipo": "PSR", "comuna": "Fresia", "lat": -41.1151, "lon": -73.5618}, {"id": "124437", "nombre": "Posta de Salud Rural Mañío", "tipo": "PSR", "comuna": "Fresia", "lat": -41.294, "lon": -73.6099}, {"id": "124438", "nombre": "Posta de Salud Rural El Mirador", "tipo": "PSR", "comuna": "Fresia", "lat": -41.0826, "lon": -73.504}, {"id": "124439", "nombre": "Posta de Salud Rural Traiguén (Fresia)", "tipo": "PSR", "comuna": "Fresia", "lat": -41.2003, "lon": -73.7124}, {"id": "124440", "nombre": "Posta de Salud Rural Las Cruces ( Fresia)", "tipo": "PSR", "comuna": "Fresia", "lat": -41.2166, "lon": -73.5943}, {"id": "124441", "nombre": "Posta de Salud Rural Línea Sin Nombre", "tipo": "PSR", "comuna": "Fresia", "lat": -41.2608, "lon": -73.3724}, {"id": "124443", "nombre": "Posta de Salud Rural Misquihue", "tipo": "PSR", "comuna": "Maullín", "lat": -41.5328, "lon": -73.3731}, {"id": "124444", "nombre": "Posta de Salud Rural Peñol", "tipo": "PSR", "comuna": "Maullín", "lat": -41.6072, "lon": -73.4767}, {"id": "124445", "nombre": "Posta de Salud Rural Astillero", "tipo": "PSR", "comuna": "Maullín", "lat": -41.7548, "lon": -73.6023}, {"id": "124446", "nombre": "Posta de Salud Rural La Pasada", "tipo": "PSR", "comuna": "Maullín", "lat": -41.6026, "lon": -73.5937}, {"id": "124447", "nombre": "Posta de Salud Rural Quenuir", "tipo": "PSR", "comuna": "Maullín", "lat": -41.5635, "lon": -73.6763}, {"id": "124448", "nombre": "Posta de Salud Rural Pargua", "tipo": "PSR", "comuna": "Calbuco", "lat": -41.7908, "lon": -73.4603}, {"id": "124449", "nombre": "Posta de Salud Rural Putenio", "tipo": "PSR", "comuna": "Calbuco", "lat": -41.6683, "lon": -73.1352}, {"id": "124450", "nombre": "Centro Comunitario de Salud Familiar Texas", "tipo": "Cecof", "comuna": "Calbuco", "lat": -41.756, "lon": -73.1522}, {"id": "124451", "nombre": "Posta de Salud Rural Aguantao", "tipo": "PSR", "comuna": "Calbuco", "lat": -41.7744, "lon": -73.2895}, {"id": "124452", "nombre": "Posta de Salud Rural Peñasmo", "tipo": "PSR", "comuna": "Calbuco", "lat": -41.7401, "lon": -73.2634}, {"id": "124453", "nombre": "Posta de Salud Rural Avellanal", "tipo": "PSR", "comuna": "Calbuco", "lat": -41.7536, "lon": -73.4085}, {"id": "124454", "nombre": "Posta de Salud Rural Tabón", "tipo": "PSR", "comuna": "Calbuco", "lat": -41.903, "lon": -73.1068}, {"id": "124455", "nombre": "Posta de Salud Rural Huar", "tipo": "PSR", "comuna": "Calbuco", "lat": -41.6709, "lon": -72.9894}, {"id": "124456", "nombre": "Posta de Salud Rural Chauquear", "tipo": "PSR", "comuna": "Calbuco", "lat": -41.8095, "lon": -73.0475}, {"id": "124457", "nombre": "Posta de Salud Rural Chayahue", "tipo": "PSR", "comuna": "Calbuco", "lat": -41.7957, "lon": -73.3574}, {"id": "124458", "nombre": "Posta de Salud Rural Pergue", "tipo": "PSR", "comuna": "Calbuco", "lat": -41.8573, "lon": -72.995}, {"id": "124459", "nombre": "Posta de Salud Rural Quetrulauquén", "tipo": "PSR", "comuna": "Calbuco", "lat": -41.6779, "lon": -72.9376}, {"id": "124460", "nombre": "Posta de Salud Rural San Antonio (Calbuco)", "tipo": "PSR", "comuna": "Calbuco", "lat": -41.774, "lon": -73.2347}, {"id": "124461", "nombre": "Posta de Salud Rural San Agustín (Calbuco)", "tipo": "PSR", "comuna": "Calbuco", "lat": -41.7188, "lon": -73.0573}, {"id": "124462", "nombre": "Posta de Salud Rural Cañitas", "tipo": "PSR", "comuna": "Los Muermos", "lat": -41.3022, "lon": -73.4558}, {"id": "124463", "nombre": "Posta de Salud Rural Los Piques", "tipo": "PSR", "comuna": "Los Muermos", "lat": -41.3662, "lon": -73.6242}, {"id": "124464", "nombre": "Posta de Salud Rural Cumbre Alta", "tipo": "PSR", "comuna": "Los Muermos", "lat": -41.5056, "lon": -73.6186}, {"id": "124465", "nombre": "Posta de Salud Rural Quillagua (Los Muermos)", "tipo": "PSR", "comuna": "Los Muermos", "lat": -41.4973, "lon": -73.7724}, {"id": "124518", "nombre": "Posta de Salud Rural Chulín", "tipo": "PSR", "comuna": "Chaitén", "lat": -42.6305, "lon": -73.0404}, {"id": "124519", "nombre": "Posta de Salud Rural Buill-Reldeche", "tipo": "PSR", "comuna": "Chaitén", "lat": -42.4018, "lon": -72.7177}, {"id": "124520", "nombre": "Posta de Salud Rural Talcán", "tipo": "PSR", "comuna": "Chaitén", "lat": -42.7449, "lon": -72.9619}, {"id": "124521", "nombre": "Posta de Salud Rural Nayahue-Chuit-Auteni", "tipo": "PSR", "comuna": "Chaitén", "lat": -42.7159, "lon": -73.0758}, {"id": "124530", "nombre": "Posta de Salud Rural Chumeldén-Loyola", "tipo": "PSR", "comuna": "Chaitén", "lat": -42.5214, "lon": -72.8113}, {"id": "124532", "nombre": "Posta de Salud Rural El Frío o Santa Lucía", "tipo": "PSR", "comuna": "Chaitén", "lat": -43.4156, "lon": -72.3673}, {"id": "124533", "nombre": "Posta de Salud Rural Chana", "tipo": "PSR", "comuna": "Chaitén", "lat": -42.751, "lon": -72.8345}, {"id": "124534", "nombre": "Posta de Salud Rural Puerto Ramírez", "tipo": "PSR", "comuna": "Palena", "lat": -43.4805, "lon": -72.1288}, {"id": "124535", "nombre": "Posta de Salud Rural El Azul", "tipo": "PSR", "comuna": "Futaleufú", "lat": -43.3231, "lon": -72.0091}, {"id": "124536", "nombre": "Posta de Salud Rural El Malito", "tipo": "PSR", "comuna": "Palena", "lat": -43.6186, "lon": -72.0066}, {"id": "124537", "nombre": "Posta de Salud Rural Chope", "tipo": "PSR", "comuna": "Calbuco", "lat": -41.8186, "lon": -73.075}, {"id": "124539", "nombre": "Posta de Salud Rural Pocoihuén", "tipo": "PSR", "comuna": "Cochamó", "lat": -41.4715, "lon": -72.3318}, {"id": "124543", "nombre": "Posta de Salud Rural Valle El Frío", "tipo": "PSR", "comuna": "Cochamó", "lat": -41.7328, "lon": -71.9236}, {"id": "124544", "nombre": "Posta de Salud Rural Piedra Azul", "tipo": "PSR", "comuna": "Puerto Montt", "lat": -41.5083, "lon": -72.7897}, {"id": "124545", "nombre": "Posta de Salud Rural Estaquilla", "tipo": "PSR", "comuna": "Los Muermos", "lat": -41.4038, "lon": -73.8096}, {"id": "124548", "nombre": "Posta de Salud Rural Hueque", "tipo": "PSR", "comuna": "Chaitén", "lat": -42.2493, "lon": -72.7374}, {"id": "124549", "nombre": "Posta de Salud Rural Macal", "tipo": "PSR", "comuna": "Llanquihue", "lat": -41.1751, "lon": -73.229}, {"id": "124550", "nombre": "Posta de Salud Rural Casa de Pesca", "tipo": "PSR", "comuna": "Chaitén", "lat": -42.5637, "lon": -72.8244}, {"id": "124551", "nombre": "Posta de Salud Rural Machil", "tipo": "PSR", "comuna": "Calbuco", "lat": -41.7763, "lon": -73.0664}, {"id": "124552", "nombre": "Posta de Salud Rural Queullín", "tipo": "PSR", "comuna": "Calbuco", "lat": -41.8773, "lon": -72.9034}, {"id": "124553", "nombre": "Posta de Salud Rural San Ramón (Calbuco)", "tipo": "PSR", "comuna": "Calbuco", "lat": -41.7426, "lon": -73.0598}, {"id": "124554", "nombre": "Posta de Salud Rural Huayún", "tipo": "PSR", "comuna": "Calbuco", "lat": -41.7096, "lon": -73.2428}, {"id": "124555", "nombre": "Posta de Salud Rural Llaguepe", "tipo": "PSR", "comuna": "Cochamó", "lat": -41.7222, "lon": -72.4841}, {"id": "124601", "nombre": "COSAM Puerto Montt", "tipo": "Cosam", "comuna": "Puerto Montt", "lat": -41.4711, "lon": -72.9518}, {"id": "124602", "nombre": "COSAM de Reloncaví", "tipo": "Cosam", "comuna": "Puerto Montt", "lat": -41.4806, "lon": -72.9563}, {"id": "124705", "nombre": "Centro Comunitario de Salud Familiar Anahuac", "tipo": "Cecof", "comuna": "Puerto Montt", "lat": -41.4846, "lon": -72.9763}, {"id": "124710", "nombre": "Centro Comunitario de Salud Familiar Licarayen", "tipo": "Cecof", "comuna": "Puerto Montt", "lat": -41.4571, "lon": -72.93}, {"id": "124715", "nombre": "Centro Comunitario de Salud Familiar Chamiza", "tipo": "Cecof", "comuna": "Puerto Montt", "lat": -41.4839, "lon": -72.8542}, {"id": "124731", "nombre": "Centro Comunitario de Salud Familiar de Ayacara", "tipo": "Cecof", "comuna": "Chaitén", "lat": -42.3185, "lon": -72.7878}, {"id": "124765", "nombre": "Centro Comunitario de Salud Familiar Pantanosa", "tipo": "Cecof", "comuna": "Frutillar", "lat": -41.1118, "lon": -73.0549}, {"id": "124805", "nombre": "SAPU Angelmó", "tipo": "SAPU", "comuna": "Puerto Montt", "lat": -41.4734, "lon": -72.9544}, {"id": "124806", "nombre": "SAPU Antonio Varas", "tipo": "SAPU", "comuna": "Puerto Montt", "lat": -41.4611, "lon": -72.9294}, {"id": "124810", "nombre": "SAR Puerto Varas", "tipo": "SAR", "comuna": "Puerto Varas", "lat": -41.3291, "lon": -72.9692}, {"id": "124881", "nombre": "SAPU Padre Hurtado", "tipo": "SAPU", "comuna": "Puerto Montt", "lat": -41.4748, "lon": -72.9849}, {"id": "124895", "nombre": "SAR Alerce", "tipo": "SAR", "comuna": "Puerto Montt", "lat": -41.3977, "lon": -72.9035}, {"id": "200074", "nombre": "Centro de Sangre Austral Pto. Montt", "tipo": "CDT", "comuna": "Puerto Montt", "lat": -41.4679, "lon": -72.9361}, {"id": "200076", "nombre": "Hospital de Chaitén", "tipo": "Hospital", "comuna": "Chaitén", "lat": -42.9186, "lon": -72.7103}, {"id": "200082", "nombre": "Posta de Salud Rural Chauchil", "tipo": "PSR", "comuna": "Hualaihué", "lat": -41.9737, "lon": -72.7999}, {"id": "200167", "nombre": "SAPU Carmela Carvajal", "tipo": "SAPU", "comuna": "Puerto Montt", "lat": -41.4687, "lon": -72.9163}, {"id": "200168", "nombre": "SAPU Frutillar", "tipo": "SAPU", "comuna": "Frutillar", "lat": -41.1296, "lon": -73.0596}, {"id": "200169", "nombre": "SAPU Los Muermos", "tipo": "SAPU", "comuna": "Los Muermos", "lat": -41.3986, "lon": -73.4597}, {"id": "200280", "nombre": "Laboratorio Clínico DESAM Puerto Montt", "tipo": "Laboratorio", "comuna": "Puerto Montt", "lat": -41.4684, "lon": -72.9166}, {"id": "200292", "nombre": "Centro Comunitario de Salud Familiar Puerta Sur", "tipo": "Cecof", "comuna": "Puerto Montt", "lat": -41.4619, "lon": -72.9961}, {"id": "200440", "nombre": "Centro Comunitario de Salud Familiar Alerce Norte", "tipo": "Cecof", "comuna": "Puerto Montt", "lat": -41.384, "lon": -72.9158}, {"id": "200536", "nombre": "Centro de Especialidades Odontológicas", "tipo": "Clínica", "comuna": "Puerto Montt", "lat": -41.4728, "lon": -72.947}];
+const CENTROS = [{"id": "124010", "nombre": "Actividades gestionadas por la Dirección del Servicio para apoyo de la Red (S.S Del Reloncaví)", "tipo": "Dirección", "comuna": "Puerto Montt", "lat": -41.4721, "lon": -72.9359}, {"id": "124011", "nombre": "PRAIS (S.S Del Reloncaví)", "tipo": "PRAIS", "comuna": "Puerto Montt", "lat": -41.4721, "lon": -72.9359}, {"id": "124105", "nombre": "Hospital de Puerto Montt", "tipo": "Hospital", "comuna": "Puerto Montt", "lat": -41.4485, "lon": -72.9573}, {"id": "124110", "nombre": "Hospital de Llanquihue", "tipo": "Hospital", "comuna": "Llanquihue", "lat": -41.2565, "lon": -73.0106}, {"id": "124115", "nombre": "Hospital de Frutillar", "tipo": "Hospital", "comuna": "Frutillar", "lat": -41.1381, "lon": -73.0315}, {"id": "124120", "nombre": "Hospital de Fresia", "tipo": "Hospital", "comuna": "Fresia", "lat": -41.1553, "lon": -73.423}, {"id": "124125", "nombre": "Hospital de Maullín", "tipo": "Hospital", "comuna": "Maullín", "lat": -41.6169, "lon": -73.5985}, {"id": "124130", "nombre": "Hospital de Calbuco", "tipo": "Hospital", "comuna": "Calbuco", "lat": -41.7698, "lon": -73.1332}, {"id": "124140", "nombre": "Hospital de Palena", "tipo": "Hospital", "comuna": "Palena", "lat": -43.6179, "lon": -71.8081}, {"id": "124145", "nombre": "Hospital de Futaleufú", "tipo": "Hospital", "comuna": "Futaleufú", "lat": -43.1834, "lon": -71.8691}, {"id": "124305", "nombre": "Centro de Salud Familiar Angelmó", "tipo": "Cesfam", "comuna": "Puerto Montt", "lat": -41.4733, "lon": -72.9541}, {"id": "124310", "nombre": "Centro de Salud Familiar Antonio Varas", "tipo": "Cesfam", "comuna": "Puerto Montt", "lat": -41.4612, "lon": -72.9295}, {"id": "124315", "nombre": "Centro de Salud Familiar Carmela Carvajal", "tipo": "Cesfam", "comuna": "Puerto Montt", "lat": -41.4684, "lon": -72.9166}, {"id": "124320", "nombre": "Centro de Salud Familiar Techo para todos (ONG)", "tipo": "ONG", "comuna": "Puerto Montt", "lat": -41.4618, "lon": -72.9651}, {"id": "124325", "nombre": "Centro de Salud Familiar Carelmapu", "tipo": "Cesfam", "comuna": "Maullín", "lat": -41.7411, "lon": -73.7016}, {"id": "124330", "nombre": "Centro de Salud Familiar Los Muermos", "tipo": "Cesfam", "comuna": "Los Muermos", "lat": -41.3988, "lon": -73.4595}, {"id": "124335", "nombre": "Centro de Salud Familiar Nº 1 Puerto Varas", "tipo": "Cesfam", "comuna": "Puerto Varas", "lat": -41.329, "lon": -72.9691}, {"id": "124365", "nombre": "Centro de Salud Familiar Frutillar Alto", "tipo": "Cesfam", "comuna": "Frutillar", "lat": -41.1295, "lon": -73.0594}, {"id": "124370", "nombre": "Centro de Salud Familiar Los Volcanes", "tipo": "Cesfam", "comuna": "Llanquihue", "lat": -41.2688, "lon": -72.9987}, {"id": "124380", "nombre": "Centro de Salud Familiar Río Negro Hornopirén", "tipo": "Cesfam", "comuna": "Hualaihué", "lat": -41.9627, "lon": -72.4689}, {"id": "124381", "nombre": "Centro de Salud Familiar Padre Hurtado", "tipo": "Cesfam", "comuna": "Puerto Montt", "lat": -41.475, "lon": -72.9846}, {"id": "124385", "nombre": "Centro de Salud Familiar San Pablo Mirasol (ONG)", "tipo": "ONG", "comuna": "Puerto Montt", "lat": -41.4751, "lon": -72.9619}, {"id": "124395", "nombre": "Centro de Salud Familiar Alerce", "tipo": "Cesfam", "comuna": "Puerto Montt", "lat": -41.3976, "lon": -72.9035}, {"id": "124396", "nombre": "Centro de Salud Familiar Calbuco", "tipo": "Cesfam", "comuna": "Calbuco", "lat": -41.7697, "lon": -73.1294}, {"id": "124401", "nombre": "Posta de Salud Rural Lago Chapo", "tipo": "PSR", "comuna": "Puerto Montt", "lat": -41.4157, "lon": -72.5947}, {"id": "124402", "nombre": "Posta de Salud Rural Correntoso", "tipo": "PSR", "comuna": "Puerto Montt", "lat": -41.4532, "lon": -72.6584}, {"id": "124403", "nombre": "Posta de Salud Rural Chaicas", "tipo": "PSR", "comuna": "Puerto Montt", "lat": -41.6147, "lon": -72.6544}, {"id": "124404", "nombre": "Posta de Salud Rural Lenca", "tipo": "PSR", "comuna": "Puerto Montt", "lat": -41.6044, "lon": -72.6886}, {"id": "124405", "nombre": "Posta de Salud Rural Las Quemas (Puerto Montt)", "tipo": "PSR", "comuna": "Puerto Montt", "lat": -41.402, "lon": -73.1793}, {"id": "124406", "nombre": "Posta de Salud Rural Maillén", "tipo": "PSR", "comuna": "Puerto Montt", "lat": -41.5831, "lon": -73.0002}, {"id": "124407", "nombre": "Posta de Salud Rural Salto Grande", "tipo": "PSR", "comuna": "Puerto Montt", "lat": -41.538, "lon": -73.2769}, {"id": "124408", "nombre": "Posta de Salud Rural Salto Chico", "tipo": "PSR", "comuna": "Puerto Montt", "lat": -41.4857, "lon": -73.2742}, {"id": "124409", "nombre": "Posta de Salud Rural Trapén", "tipo": "PSR", "comuna": "Puerto Montt", "lat": -41.529, "lon": -73.1231}, {"id": "124410", "nombre": "Posta de Salud Rural Panitao", "tipo": "PSR", "comuna": "Puerto Montt", "lat": -41.5724, "lon": -73.0936}, {"id": "124411", "nombre": "Posta de Salud Rural Cochamó", "tipo": "PSR", "comuna": "Cochamó", "lat": -41.4925, "lon": -72.3087}, {"id": "124412", "nombre": "Centro de Salud Familiar Cochamó", "tipo": "Cesfam", "comuna": "Cochamó", "lat": -41.6641, "lon": -72.2958}, {"id": "124413", "nombre": "Posta de Salud Rural Sotomó", "tipo": "PSR", "comuna": "Cochamó", "lat": -41.6473, "lon": -72.3169}, {"id": "124414", "nombre": "Posta de Salud Rural Llanada Grande", "tipo": "PSR", "comuna": "Cochamó", "lat": -41.8743, "lon": -71.936}, {"id": "124415", "nombre": "Posta de Salud Rural Paso El Bolsón o Segundo Corral", "tipo": "PSR", "comuna": "Cochamó", "lat": -42.0664, "lon": -71.8554}, {"id": "124416", "nombre": "Posta de Salud Rural Paso El León", "tipo": "PSR", "comuna": "Cochamó", "lat": -41.5047, "lon": -71.8575}, {"id": "124420", "nombre": "Centro Comunitario de Salud Familiar Hualaihué", "tipo": "Cecof", "comuna": "Hualaihué", "lat": -42.0233, "lon": -72.6866}, {"id": "124421", "nombre": "Posta de Salud Rural Ensenada", "tipo": "PSR", "comuna": "Puerto Varas", "lat": -41.2266, "lon": -72.5671}, {"id": "124422", "nombre": "Posta de Salud Rural Peulla", "tipo": "PSR", "comuna": "Puerto Varas", "lat": -41.0856, "lon": -72.0193}, {"id": "124423", "nombre": "Posta de Salud Rural Nueva Braunau", "tipo": "PSR", "comuna": "Puerto Varas", "lat": -41.3248, "lon": -73.0726}, {"id": "124424", "nombre": "Posta de Salud Rural Petrohué", "tipo": "PSR", "comuna": "Puerto Varas", "lat": -41.1372, "lon": -72.4017}, {"id": "124425", "nombre": "Posta de Salud Rural Colonia Río Sur", "tipo": "PSR", "comuna": "Puerto Varas", "lat": -41.3398, "lon": -72.7007}, {"id": "124426", "nombre": "Posta de Salud Rural Ralún", "tipo": "PSR", "comuna": "Puerto Varas", "lat": -41.3886, "lon": -72.3279}, {"id": "124427", "nombre": "Posta de Salud Rural Loncotoro", "tipo": "PSR", "comuna": "Llanquihue", "lat": -41.2925, "lon": -73.2137}, {"id": "124428", "nombre": "Posta de Salud Rural Pellines (Llanquihue)", "tipo": "PSR", "comuna": "Llanquihue", "lat": -41.1901, "lon": -73.0683}, {"id": "124429", "nombre": "Posta de Salud Rural Colegual", "tipo": "PSR", "comuna": "Llanquihue", "lat": -41.2403, "lon": -73.215}, {"id": "124430", "nombre": "Posta de Salud Rural Casma", "tipo": "PSR", "comuna": "Frutillar", "lat": -41.0118, "lon": -73.1239}, {"id": "124432", "nombre": "Posta de Salud Rural Visor", "tipo": "PSR", "comuna": "Frutillar", "lat": -41.1016, "lon": -73.2293}, {"id": "124433", "nombre": "Posta de Salud Rural Parga", "tipo": "PSR", "comuna": "Fresia", "lat": -41.217, "lon": -73.4884}, {"id": "124434", "nombre": "Consultorio general tegualda", "tipo": "PSR", "comuna": "Fresia", "lat": -41.0395, "lon": -73.4083}, {"id": "124435", "nombre": "Posta de Salud Rural Polizones", "tipo": "PSR", "comuna": "Fresia", "lat": -41.1298, "lon": -73.3724}, {"id": "124436", "nombre": "Posta de Salud Rural Cau Cua", "tipo": "PSR", "comuna": "Fresia", "lat": -41.1151, "lon": -73.5618}, {"id": "124437", "nombre": "Posta de Salud Rural Mañío", "tipo": "PSR", "comuna": "Fresia", "lat": -41.294, "lon": -73.6099}, {"id": "124438", "nombre": "Posta de Salud Rural El Mirador", "tipo": "PSR", "comuna": "Fresia", "lat": -41.0826, "lon": -73.504}, {"id": "124439", "nombre": "Posta de Salud Rural Traiguén (Fresia)", "tipo": "PSR", "comuna": "Fresia", "lat": -41.2003, "lon": -73.7124}, {"id": "124440", "nombre": "Posta de Salud Rural Las Cruces ( Fresia)", "tipo": "PSR", "comuna": "Fresia", "lat": -41.2166, "lon": -73.5943}, {"id": "124441", "nombre": "Posta de Salud Rural Línea Sin Nombre", "tipo": "PSR", "comuna": "Fresia", "lat": -41.2608, "lon": -73.3724}, {"id": "124443", "nombre": "Posta de Salud Rural Misquihue", "tipo": "PSR", "comuna": "Maullín", "lat": -41.5328, "lon": -73.3731}, {"id": "124444", "nombre": "Posta de Salud Rural Peñol", "tipo": "PSR", "comuna": "Maullín", "lat": -41.6072, "lon": -73.4767}, {"id": "124445", "nombre": "Posta de Salud Rural Astillero", "tipo": "PSR", "comuna": "Maullín", "lat": -41.7548, "lon": -73.6023}, {"id": "124446", "nombre": "Posta de Salud Rural La Pasada", "tipo": "PSR", "comuna": "Maullín", "lat": -41.6026, "lon": -73.5937}, {"id": "124447", "nombre": "Posta de Salud Rural Quenuir", "tipo": "PSR", "comuna": "Maullín", "lat": -41.5635, "lon": -73.6763}, {"id": "124448", "nombre": "Posta de Salud Rural Pargua", "tipo": "PSR", "comuna": "Calbuco", "lat": -41.7908, "lon": -73.4603}, {"id": "124449", "nombre": "Posta de Salud Rural Putenio", "tipo": "PSR", "comuna": "Calbuco", "lat": -41.6683, "lon": -73.1352}, {"id": "124450", "nombre": "Centro Comunitario de Salud Familiar Texas", "tipo": "Cecof", "comuna": "Calbuco", "lat": -41.756, "lon": -73.1522}, {"id": "124451", "nombre": "Posta de Salud Rural Aguantao", "tipo": "PSR", "comuna": "Calbuco", "lat": -41.7744, "lon": -73.2895}, {"id": "124452", "nombre": "Posta de Salud Rural Peñasmo", "tipo": "PSR", "comuna": "Calbuco", "lat": -41.7401, "lon": -73.2634}, {"id": "124453", "nombre": "Posta de Salud Rural Avellanal", "tipo": "PSR", "comuna": "Calbuco", "lat": -41.7536, "lon": -73.4085}, {"id": "124454", "nombre": "Posta de Salud Rural Tabón", "tipo": "PSR", "comuna": "Calbuco", "lat": -41.903, "lon": -73.1068}, {"id": "124455", "nombre": "Posta de Salud Rural Huar", "tipo": "PSR", "comuna": "Calbuco", "lat": -41.6709, "lon": -72.9894}, {"id": "124456", "nombre": "Posta de Salud Rural Chauquear", "tipo": "PSR", "comuna": "Calbuco", "lat": -41.8095, "lon": -73.0475}, {"id": "124457", "nombre": "Posta de Salud Rural Chayahue", "tipo": "PSR", "comuna": "Calbuco", "lat": -41.7957, "lon": -73.3574}, {"id": "124458", "nombre": "Posta de Salud Rural Pergue", "tipo": "PSR", "comuna": "Calbuco", "lat": -41.8573, "lon": -72.995}, {"id": "124459", "nombre": "Posta de Salud Rural Quetrulauquén", "tipo": "PSR", "comuna": "Calbuco", "lat": -41.6779, "lon": -72.9376}, {"id": "124460", "nombre": "Posta de Salud Rural San Antonio (Calbuco)", "tipo": "PSR", "comuna": "Calbuco", "lat": -41.774, "lon": -73.2347}, {"id": "124461", "nombre": "Posta de Salud Rural San Agustín (Calbuco)", "tipo": "PSR", "comuna": "Calbuco", "lat": -41.7188, "lon": -73.0573}, {"id": "124462", "nombre": "Posta de Salud Rural Cañitas", "tipo": "PSR", "comuna": "Los Muermos", "lat": -41.3022, "lon": -73.4558}, {"id": "124463", "nombre": "Posta de Salud Rural Los Piques", "tipo": "PSR", "comuna": "Los Muermos", "lat": -41.3662, "lon": -73.6242}, {"id": "124464", "nombre": "Posta de Salud Rural Cumbre Alta", "tipo": "PSR", "comuna": "Los Muermos", "lat": -41.5056, "lon": -73.6186}, {"id": "124465", "nombre": "Posta de Salud Rural Quillagua (Los Muermos)", "tipo": "PSR", "comuna": "Los Muermos", "lat": -41.4973, "lon": -73.7724}, {"id": "124518", "nombre": "Posta de Salud Rural Chulín", "tipo": "PSR", "comuna": "Chaitén", "lat": -42.6305, "lon": -73.0404}, {"id": "124519", "nombre": "Posta de Salud Rural Buill-Reldeche", "tipo": "PSR", "comuna": "Chaitén", "lat": -42.4018, "lon": -72.7177}, {"id": "124520", "nombre": "Posta de Salud Rural Talcán", "tipo": "PSR", "comuna": "Chaitén", "lat": -42.7449, "lon": -72.9619}, {"id": "124521", "nombre": "Posta de Salud Rural Nayahue-Chuit-Auteni", "tipo": "PSR", "comuna": "Chaitén", "lat": -42.7159, "lon": -73.0758}, {"id": "124530", "nombre": "Posta de Salud Rural Chumeldén-Loyola", "tipo": "PSR", "comuna": "Chaitén", "lat": -42.5214, "lon": -72.8113}, {"id": "124532", "nombre": "Posta de Salud Rural El Frío o Santa Lucía", "tipo": "PSR", "comuna": "Chaitén", "lat": -43.4156, "lon": -72.3673}, {"id": "124533", "nombre": "Posta de Salud Rural Chana", "tipo": "PSR", "comuna": "Chaitén", "lat": -42.751, "lon": -72.8345}, {"id": "124534", "nombre": "Posta de Salud Rural Puerto Ramírez", "tipo": "PSR", "comuna": "Palena", "lat": -43.4805, "lon": -72.1288}, {"id": "124535", "nombre": "Posta de Salud Rural El Azul", "tipo": "PSR", "comuna": "Futaleufú", "lat": -43.3231, "lon": -72.0091}, {"id": "124536", "nombre": "Posta de Salud Rural El Malito", "tipo": "PSR", "comuna": "Palena", "lat": -43.6186, "lon": -72.0066}, {"id": "124537", "nombre": "Posta de Salud Rural Chope", "tipo": "PSR", "comuna": "Calbuco", "lat": -41.8186, "lon": -73.075}, {"id": "124539", "nombre": "Posta de Salud Rural Pocoihuén", "tipo": "PSR", "comuna": "Cochamó", "lat": -41.4715, "lon": -72.3318}, {"id": "124543", "nombre": "Posta de Salud Rural Valle El Frío", "tipo": "PSR", "comuna": "Cochamó", "lat": -41.7328, "lon": -71.9236}, {"id": "124544", "nombre": "Posta de Salud Rural Piedra Azul", "tipo": "PSR", "comuna": "Puerto Montt", "lat": -41.5083, "lon": -72.7897}, {"id": "124545", "nombre": "Posta de Salud Rural Estaquilla", "tipo": "PSR", "comuna": "Los Muermos", "lat": -41.4038, "lon": -73.8096}, {"id": "124548", "nombre": "Posta de Salud Rural Hueque", "tipo": "PSR", "comuna": "Chaitén", "lat": -42.2493, "lon": -72.7374}, {"id": "124549", "nombre": "Posta de Salud Rural Macal", "tipo": "PSR", "comuna": "Llanquihue", "lat": -41.1751, "lon": -73.229}, {"id": "124550", "nombre": "Posta de Salud Rural Casa de Pesca", "tipo": "PSR", "comuna": "Chaitén", "lat": -42.5637, "lon": -72.8244}, {"id": "124551", "nombre": "Posta de Salud Rural Machil", "tipo": "PSR", "comuna": "Calbuco", "lat": -41.7763, "lon": -73.0664}, {"id": "124552", "nombre": "Posta de Salud Rural Queullín", "tipo": "PSR", "comuna": "Calbuco", "lat": -41.8773, "lon": -72.9034}, {"id": "124553", "nombre": "Posta de Salud Rural San Ramón (Calbuco)", "tipo": "PSR", "comuna": "Calbuco", "lat": -41.7426, "lon": -73.0598}, {"id": "124554", "nombre": "Posta de Salud Rural Huayún", "tipo": "PSR", "comuna": "Calbuco", "lat": -41.7096, "lon": -73.2428}, {"id": "124555", "nombre": "Posta de Salud Rural Llaguepe", "tipo": "PSR", "comuna": "Cochamó", "lat": -41.7222, "lon": -72.4841}, {"id": "124601", "nombre": "COSAM Puerto Montt", "tipo": "Cosam", "comuna": "Puerto Montt", "lat": -41.4711, "lon": -72.9518}, {"id": "124602", "nombre": "COSAM de Reloncaví", "tipo": "Cosam", "comuna": "Puerto Montt", "lat": -41.4806, "lon": -72.9563}, {"id": "124705", "nombre": "Centro Comunitario de Salud Familiar Anahuac", "tipo": "Cecof", "comuna": "Puerto Montt", "lat": -41.4846, "lon": -72.9763}, {"id": "124710", "nombre": "Centro Comunitario de Salud Familiar Licarayen", "tipo": "Cecof", "comuna": "Puerto Montt", "lat": -41.4571, "lon": -72.93}, {"id": "124715", "nombre": "Centro Comunitario de Salud Familiar Chamiza", "tipo": "Cecof", "comuna": "Puerto Montt", "lat": -41.4839, "lon": -72.8542}, {"id": "124731", "nombre": "Centro Comunitario de Salud Familiar de Ayacara", "tipo": "Cecof", "comuna": "Chaitén", "lat": -42.3185, "lon": -72.7878}, {"id": "124765", "nombre": "Centro Comunitario de Salud Familiar Pantanosa", "tipo": "Cecof", "comuna": "Frutillar", "lat": -41.1118, "lon": -73.0549}, {"id": "124805", "nombre": "SAPU Angelmó", "tipo": "SAPU", "comuna": "Puerto Montt", "lat": -41.4734, "lon": -72.9544}, {"id": "124806", "nombre": "SAPU Antonio Varas", "tipo": "SAPU", "comuna": "Puerto Montt", "lat": -41.4611, "lon": -72.9294}, {"id": "124810", "nombre": "SAR Puerto Varas", "tipo": "SAR", "comuna": "Puerto Varas", "lat": -41.3291, "lon": -72.9692}, {"id": "124881", "nombre": "SAPU Padre Hurtado", "tipo": "SAPU", "comuna": "Puerto Montt", "lat": -41.4748, "lon": -72.9849}, {"id": "124895", "nombre": "SAR Alerce", "tipo": "SAR", "comuna": "Puerto Montt", "lat": -41.3977, "lon": -72.9035}, {"id": "200074", "nombre": "Centro de Sangre Austral Pto. Montt", "tipo": "CDT", "comuna": "Puerto Montt", "lat": -41.4679, "lon": -72.9361}, {"id": "200076", "nombre": "Hospital de Chaitén", "tipo": "Hospital", "comuna": "Chaitén", "lat": -42.9186, "lon": -72.7103}, {"id": "200082", "nombre": "Posta de Salud Rural Chauchil", "tipo": "PSR", "comuna": "Hualaihué", "lat": -41.9737, "lon": -72.7999}, {"id": "200167", "nombre": "SAPU Carmela Carvajal", "tipo": "SAPU", "comuna": "Puerto Montt", "lat": -41.4687, "lon": -72.9163}, {"id": "200168", "nombre": "SAPU Frutillar", "tipo": "SAPU", "comuna": "Frutillar", "lat": -41.1296, "lon": -73.0596}, {"id": "200169", "nombre": "SAPU Los Muermos", "tipo": "SAPU", "comuna": "Los Muermos", "lat": -41.3986, "lon": -73.4597}, {"id": "200280", "nombre": "Laboratorio Clínico DESAM Puerto Montt", "tipo": "Laboratorio", "comuna": "Puerto Montt", "lat": -41.4684, "lon": -72.9166}, {"id": "200292", "nombre": "Centro Comunitario de Salud Familiar Puerta Sur", "tipo": "Cecof", "comuna": "Puerto Montt", "lat": -41.4619, "lon": -72.9961}, {"id": "200440", "nombre": "Centro Comunitario de Salud Familiar Alerce Norte", "tipo": "Cecof", "comuna": "Puerto Montt", "lat": -41.384, "lon": -72.9158}, {"id": "200536", "nombre": "Centro de Especialidades Odontológicas", "tipo": "Clínica", "comuna": "Puerto Montt", "lat": -41.4728, "lon": -72.947}];
 
 (function(){
 
@@ -317,7 +415,7 @@ const CENTROS = [{"id": "124010", "nombre": "Actividades gestionadas por la Dire
     return "--c-media"; // En trámite, Sin información
   }
 
-  let state = { tipo: "todas", cred: "todas", provincia: "todas", comuna: "todas", etario: "todas", centro: "todas", search: "" };
+  let state = { tipo: "todas", subtipo: "todas", cred: "todas", provincia: "todas", comuna: "todas", etario: "todas", centro: "todas", search: "" };
   let visibleCount = 30;
   const PAGE = 30;
   let activeId = null;
@@ -331,11 +429,13 @@ const CENTROS = [{"id": "124010", "nombre": "Actividades gestionadas por la Dire
     b.setAttribute("aria-pressed", val===state.tipo ? "true":"false");
     if (val !== "todas") b.style.setProperty("--sw", `var(${TIPO_VAR[val]})`);
     b.innerHTML = (val!=="todas" ? '<span class="swatch"></span>' : '') + label;
-    b.addEventListener("click", ()=>{ state.tipo = val; state.cred = "todas"; actualizarEquipos(); visibleCount = PAGE; render(); });
+    b.addEventListener("click", ()=>{ state.tipo = val; state.subtipo = "todas"; state.cred = "todas"; actualizarEquipos(); visibleCount = PAGE; render(); });
     b.dataset.val = val;
     tipoChips.appendChild(b);
   });
 
+  const subtipoSelect = document.getElementById("subtipoSelect");
+  subtipoSelect.addEventListener("change",()=>{state.subtipo=subtipoSelect.value;state.cred="todas";visibleCount=PAGE;render();});
   const centroSelect = document.getElementById("centroSelect");
   const centroTodas = document.createElement("option"); centroTodas.value="todas"; centroTodas.textContent="Todos"; centroSelect.appendChild(centroTodas);
   centroSelect.addEventListener("change",()=>{state.centro=centroSelect.value;visibleCount=PAGE;render();});
@@ -382,7 +482,7 @@ const CENTROS = [{"id": "124010", "nombre": "Actividades gestionadas por la Dire
 
   const resetFiltersBtn = document.getElementById("resetFiltersBtn");
   resetFiltersBtn.addEventListener("click", ()=>{
-    state = { tipo:"todas", cred:"todas", provincia:"todas", comuna:"todas", etario:"todas", centro:"todas", search:"" };
+    state = { tipo:"todas", subtipo:"todas", cred:"todas", provincia:"todas", comuna:"todas", etario:"todas", centro:"todas", search:"" };
     visibleCount = PAGE;
     activeId = null;
     credSelect.value = "todas";
@@ -583,75 +683,22 @@ const CENTROS = [{"id": "124010", "nombre": "Actividades gestionadas por la Dire
   let healthLayer = null;
   const htmlSafe = value => String(value ?? "").replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
 
-  function ensureLeafletMap(){
-    if (leafletMap) return;
-    leafletMap = L.map("leafletMap", { zoomControl:true, preferCanvas:true, maxZoom:18 }).setView([-41.55,-72.9], 7);
-    L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}", {
-      subdomains:"abcd",
-      maxZoom:18,
-      maxNativeZoom:18,
-      attribution:'&copy; Esri, OpenStreetMap contributors, GIS User Community'
-    }).addTo(leafletMap);
-    personLayer = L.layerGroup().addTo(leafletMap);
-    healthLayer = L.layerGroup().addTo(leafletMap);
+  let clinicalMap=null;
+  function ensureLeafletMap(){if(!clinicalMap){clinicalMap=ClinicalView.createMap('leafletMap',focusPersona);leafletMap=clinicalMap.map;}return clinicalMap;}
+  function drawMap(adjustView=true){
+    const list=filtered();ensureLeafletMap().update(list,activeId,{fit:adjustView,centers:CENTROS,showCenters:toggleCentros.checked});
+    const located=list.filter(ClinicalView.hasCoordinates).length;
+    document.getElementById('mapResults').innerHTML=`<span><strong>${list.length}</strong> pacientes filtrados</span><span><strong>${located}</strong> representados en el mapa</span><span><strong>${list.length-located}</strong> sin coordenadas</span>`;
+    document.getElementById('mapCaption').textContent='Los grupos muestran su recuento. La selección no altera las coordenadas del registro.';
   }
-
-  function cssColor(variable){
-    return getComputedStyle(document.documentElement).getPropertyValue(variable).trim() || "#64748b";
-  }
-
-  function centerStyle(tipo){ return {emoji:"◆", color:"#526273"}; }
-
-  function drawMap(adjustView = true){
-    ensureLeafletMap();
-    personLayer.clearLayers();
-    healthLayer.clearLayers();
-    const list = filtered();
-    const bounds = [];
-    const repeated = new Map();
-
-    const hasCoords = p => p.lat !== null && p.lat !== undefined && p.lat !== "" && p.lon !== null && p.lon !== undefined && p.lon !== "" && Number.isFinite(Number(p.lat)) && Number.isFinite(Number(p.lon));
-    list.forEach(p=>{
-      if (!hasCoords(p)) return;
-      const key = `${p.lat}|${p.lon}`;
-      const index = repeated.get(key) || 0;
-      repeated.set(key, index + 1);
-      const angle = index * 2.399963;
-      const radius = index ? 0.0015 * Math.sqrt(index) : 0;
-      const lat = Number(p.lat) + Math.sin(angle) * radius;
-      const lon = Number(p.lon) + Math.cos(angle) * radius;
-      const color = cssColor(TIPO_VAR[p.tipo] || "--text-faint");
-      const marker = L.circleMarker([lat,lon], {
-        radius: activeId===p.id ? 9 : 7,
-        color:"#fff", weight:2, fillColor:color, fillOpacity:.9
-      });
-      marker.bindPopup(`<strong>${htmlSafe(p.nombre || p.id)}</strong><br>${htmlSafe(p.comuna)} · ${htmlSafe(TIPO_LABEL[p.tipo] || p.tipo)}<br>Equipo: ${htmlSafe(p.equipo)}<br><small>${htmlSafe(p.geocalidad)}</small>`);
-      marker.on("click", ()=>focusPersona(p.id));
-      marker.addTo(personLayer);
-      bounds.push([lat,lon]);
-    });
-
-    if (toggleCentros.checked){
-      const allowedComunas = new Set(list.map(p=>p.comuna));
-      CENTROS.filter(c=>allowedComunas.has(c.comuna)).forEach(c=>{
-        const cs=centerStyle(c.tipo); const icon = L.divIcon({className:"center-marker", html:`<span title="${htmlSafe(c.tipo)}" style="display:block;width:14px;height:14px;line-height:14px;text-align:center;font-size:16px;font-weight:700;color:${cs.color};text-shadow:0 1px 2px rgba(0,0,0,.35);color:${cs.color};filter:drop-shadow(0 1px 2px rgba(0,0,0,.35))">${cs.emoji}</span>`, iconSize:[14,14], iconAnchor:[7,7]});
-        L.marker([c.lat,c.lon],{icon}).bindPopup(`<strong>${htmlSafe(c.nombre)}</strong><br>${htmlSafe(c.tipo)} · ${htmlSafe(c.comuna)}`).addTo(healthLayer);
-      });
-    }
-
-    if (adjustView) {
-      if (bounds.length) leafletMap.fitBounds(bounds,{padding:[28,28],maxZoom:16});
-      else leafletMap.setView([-41.55,-72.9],7);
-    }
-    const missing = list.filter(p=>!hasCoords(p)).length;
-    document.getElementById("mapCaption").textContent = `${bounds.length} de ${list.length} registros filtrados con coordenadas · coordenadas informadas en el archivo · ${missing} sin coordenadas`;
-    requestAnimationFrame(()=>leafletMap.invalidateSize());
-  }
+  document.getElementById('fitMap').onclick=()=>ensureLeafletMap().fit();
+  document.getElementById('resetNearMap').onclick=()=>resetFiltersBtn.click();
 
   /* ---------------- filtering ---------------- */
   function filtered(){
     return PERSONAS.filter(p=>{
       if (state.tipo !== "todas" && p.tipo !== state.tipo) return false;
+      if (state.subtipo !== "todas" && p.subtipo !== state.subtipo) return false;
       if (state.cred !== "todas" && p.equipo !== state.cred) return false;
       if (state.provincia !== "todas" && p.servicio !== state.provincia) return false;
       if (state.comuna !== "todas" && p.comuna !== state.comuna) return false;
@@ -671,8 +718,50 @@ const CENTROS = [{"id": "124010", "nombre": "Actividades gestionadas por la Dire
   const kpisEl = document.getElementById("kpis");
   function renderKpis(list){
     const metrics = [["Total de personas",list.length],["Oxigenodependientes",list.filter(p=>p.oxi).length],["Electrodependientes",list.filter(p=>p.electro).length],["Adultos",list.filter(p=>p.ge==="Adulto").length],["Niños",list.filter(p=>p.ge==="Niño").length]];
-    kpisEl.innerHTML=metrics.map(([label,value])=>`<div class="kpi"><div class="label">${label}</div><div class="value">${value}</div></div>`).join("");
+    const actions=[["reset",""],["tipo","Solo oxigenodependiente"],["tipo","Solo electrodependiente"],["etario","Adulto"],["etario","Niño"]];
+    kpisEl.innerHTML=metrics.map(([label,value],i)=>{const [field,filterValue]=actions[i];return '<button type="button" class="kpi" data-dashboard-field="'+field+'" data-dashboard-value="'+htmlSafe(filterValue)+'" aria-pressed="'+(field!=="reset"&&state[field]===filterValue)+'" title="'+(field==="reset"?"Restablecer todos los filtros":"Filtrar por "+label)+'"><div class="label">'+label+'</div><div class="value">'+value+'</div><div class="kpi-context">'+(i?chartNumber(value,list.length).split(" (")[1].replace(")","")+" de la selección":"Personas en la selección")+'</div></button>'}).join("");
   }
+
+
+  const dependencySeries=[{label:"Oxigenodependientes",color:"--oxigeno",test:p=>p.oxi},{label:"Electrodependientes",color:"--electro",test:p=>p.electro},{label:"Sin clasificar",color:"--text-faint",test:p=>!p.oxi&&!p.electro}];
+  const ageSeries=[{label:"Adultos",color:"--adult-accent",test:p=>p.ge==="Adulto"},{label:"Niños",color:"--child-accent",test:p=>p.ge==="Niño"},{label:"Sin clasificar",color:"--text-faint",test:p=>p.ge!=="Adulto"&&p.ge!=="Niño"}];
+  function chartGroups(rows,field){const groups=new Map();rows.forEach(p=>{const key=String(p[field]||"Sin información");if(!groups.has(key))groups.set(key,[]);groups.get(key).push(p)});return [...groups].sort((a,b)=>b[1].length-a[1].length||a[0].localeCompare(b[0],"es"));}
+  function chartNumber(value,total){const percent=(total?value/total*100:0).toLocaleString("es-CL",{maximumFractionDigits:1});return value.toLocaleString("es-CL")+" ("+percent+"%)";}
+  function chartRows(groups,series,denominator,field){
+    if(!groups.length)return '<div class="chart-empty">No hay registros para los filtros seleccionados.</div>';
+    const max=Math.max(...groups.map(g=>g[1].length),1);
+    const groupTotal=denominator || groups.reduce((sum,g)=>sum+g[1].length,0);
+    return groups.map(([label,rows])=>{
+      const parts=series.map(s=>({...s,n:rows.filter(s.test).length}));
+      const total=rows.length,base=max;
+      const detail=parts.filter(s=>s.n).map(s=>htmlSafe(s.label)+": "+chartNumber(s.n,denominator||total)).join(" · ");
+      const filterValue=field==="subtipo"?({"Con oxigenoterapia":"oxigenoterapia","Con ventilación mecánica":"ventilacion","Sin subtipo identificado":"sin_especificar"}[label]):label;
+      return '<button type="button" class="chart-row" data-dashboard-field="'+field+'" data-dashboard-value="'+htmlSafe(filterValue)+'" aria-pressed="'+(state[field]===filterValue)+'" title="Filtrar por '+htmlSafe(label)+'"><div class="chart-row-head"><span>'+htmlSafe(label)+'</span><strong>'+chartNumber(total,groupTotal)+'</strong></div><div class="chart-track" role="img" aria-label="'+htmlSafe(label+": "+total+" registros")+'">'+parts.filter(s=>s.n).map(s=>'<span class="chart-segment" style="width:'+(s.n/base*100)+'%;background:var('+s.color+')" title="'+htmlSafe(s.label+": "+s.n)+'"></span>').join("")+'</div><div class="chart-detail">'+detail+'</div></button>';
+    }).join("");
+  }
+function privateColumns(groups,total){
+          if(!groups.length)return '<div class="chart-empty">No hay registros para los filtros seleccionados.</div>';
+          const max=Math.max(...groups.map(g=>g[1].length),1),ceiling=Math.ceil(max/4)*4;
+          return `<div class="column-chart"><div class="axis-labels">${[4,3,2,1,0].map(i=>`<span>${ceiling*i/4}</span>`).join('')}</div><div class="column-plot">${groups.map(([label,rows])=>`<button class="column-item" data-dashboard-field="comuna" data-dashboard-value="${htmlSafe(label)}" aria-pressed="${state.comuna===label}"><span class="column-space"><span class="column-stack" style="height:${100*rows.length/ceiling}%"><span class="column-value">${chartNumber(rows.length,total)}</span>${dependencySeries.map(p=>({label:p.label,color:p.color,n:rows.filter(p.test).length})).filter(p=>p.n).map(p=>`<span title="${htmlSafe(p.label)}: ${chartNumber(p.n,rows.length)}" style="height:${100*p.n/rows.length}%;background:var(${p.color})"></span>`).join('')}</span></span><span class="column-label">${htmlSafe(label)}</span></button>`).join('')}</div></div>`;
+        }
+        
+  let lastDashboardSignature='';
+  function renderDashboard(rows){
+    document.getElementById('dashboardSummary').textContent=rows.length+' registros en la selección · Cantidad y porcentaje juntos · El mapa y las tarjetas corresponden al mismo conjunto.';
+    const signature=JSON.stringify([rows,state]);
+    if(signature!==lastDashboardSignature){ClinicalView.renderCharts(rows,state,applyDashboardFilter);lastDashboardSignature=signature;}
+  }
+  function applyDashboardFilter(field,value){
+    if(field==="reset"){resetFiltersBtn.click();return;}
+    if(!["tipo","etario","comuna","cred","subtipo"].includes(field))return;
+    const next=value;
+    if(field==="tipo"){state.subtipo="todas";state.cred="todas";}
+    if(field==="subtipo"){state.tipo="Solo electrodependiente";state.cred="todas";}
+    state[field]=next;
+    activeId=null;visibleCount=PAGE;
+    render();
+  }
+  document.addEventListener("click",event=>{const button=event.target.closest("[data-dashboard-field]");if(button)applyDashboardFilter(button.dataset.dashboardField,button.dataset.dashboardValue);});
 
   /* ---------------- cards ---------------- */
   const cardsGrid = document.getElementById("cardsGrid");
@@ -684,9 +773,9 @@ const CENTROS = [{"id": "124010", "nombre": "Actividades gestionadas por la Dire
   function renderCards(list){
     if(activeId && !list.some(p=>p.id===activeId)) activeId=null;
     const totalFiltrado=list.length;
-    if(activeId) list=list.filter(p=>p.id===activeId);
+    // Selection highlights a patient without removing other matching cards.
     clearMapSelection.hidden=!activeId;
-    document.getElementById("mapSelectionNote").textContent=activeId ? "— selección del mapa · " + list.length + " de " + totalFiltrado + " registros" : "";
+    document.getElementById("mapSelectionNote").textContent=activeId ? "— un paciente seleccionado · se conserva el conjunto filtrado" : "";
     cardsGrid.innerHTML = "";
     emptyState.style.display = list.length ? "none" : "block";
     const slice = list.slice(0, visibleCount);
@@ -699,37 +788,49 @@ const CENTROS = [{"id": "124010", "nombre": "Actividades gestionadas por la Dire
       const show = value => htmlSafe(value == null || value === "" ? "Sin información" : String(value));
       const ageTag = p.ge === "Adulto" ? "adult" : p.ge === "Niño" ? "child" : "";
       const ageLabel = ageTag ? `<span class="age-tag age-tag--${ageTag}">${show(p.ge)}</span>` : show(p.ge);
-      card.innerHTML = `
-        <div class="row-top"><div><span class="name">${show(p.nombre || p.id)}</span><br><span class="age">RUT: ${show(formatearRut(p.rut,p.dv))} · ${ageLabel}</span></div></div>
-        <div class="addr">Dirección: ${show(p.direccion)}<br><br>Comuna: ${show(p.comuna)}</div>
-        <div class="tipo-line">${show(TIPO_LABEL[p.tipo] || p.tipo)}${p.tipo==="Sin clasificar" && p.dependencia ? " · " + show(p.dependencia) : ""}</div>
-        <div class="tipo-line">Equipo: <b>${show(p.equipo)}</b></div>
-        <div class="oxygen-summary"><span>Flujo (L/m)<b>${show(p.flujo)}</b></span><span>Horas de uso<b>${show(p.horas)}</b></span></div>
-        <div class="meta-list">Establecimiento APS: <b>${show(p.centro)}</b><br>Servicio de Salud: <b>${show(p.servicio)}</b><br>Teléfono: <b>${show(p.telefono)}</b><br>Observación: ${show(p.observacion)}</div>
-        <div class="foot"><span>${p.lat!=null&&p.lon!=null?"Ubicación informada":"Sin ubicación"}</span><span class="coords">${coordsTxt}</span></div>`;
-      card.addEventListener("click", ()=>focusPersona(p.id, false));
+      const datum=(label,value,wide=false)=>value!==null&&value!==undefined&&String(value).trim()!==''?`<div class="${wide?'span-all':''}"><dt>${htmlSafe(label)}</dt><dd>${show(value)}</dd></div>`:'';
+      card.id='patient-'+p.id;
+      card.innerHTML=`<div class="patient-head"><h3>${show(p.nombre||'Registro sin nombre')}</h3><p>RUT: ${show(formatearRut(p.rut,p.dv))}</p><div class="patient-tags">${ageLabel}<span class="patient-tag">${show(etiquetaDependencia(p))}</span>${activeId===p.id?'<span class="patient-selected">✓ Seleccionado</span>':''}</div></div>
+      <div class="patient-body"><dl>${datum('Equipo',p.equipo)}${datum('Comuna',p.comuna)}${datum('Dirección',p.direccion,true)}${datum('Flujo (L/m)',p.flujo)}${datum('Horas de uso',p.horas)}</dl>
+      <details><summary>Ver todos los datos del registro</summary><dl>${datum('Servicio de Salud',p.servicio,true)}${datum('Establecimiento APS',p.centro,true)}${datum('Teléfono',p.telefono)}${datum('Observación',p.observacion,true)}${datum('Latitud',p.lat)}${datum('Longitud',p.lon)}${datum('Calidad de ubicación',p.geocalidad,true)}</dl><p class="results-note">${ClinicalView.hasCoordinates(p)?'Coordenadas informadas; precisión no verificada.':'Sin coordenadas disponibles. Este registro permanece en los indicadores.'}</p></details>
+      <div class="patient-actions"><button type="button" class="primary" data-focus>${ClinicalView.hasCoordinates(p)?'Seleccionar y ver en mapa':'Seleccionar registro'}</button></div></div>`;
+      card.querySelector('[data-focus]').onclick=()=>focusPersona(p.id,false);
+      card.addEventListener('click',e=>{if(!e.target.closest('button,summary,details,a,input'))focusPersona(p.id,false);});
       cardsGrid.appendChild(card);
     });
     loadMoreWrap.style.display = list.length > visibleCount ? "flex" : "none";
   }
 
-  function focusPersona(id, scrollToCard){
-    activeId = (activeId === id) ? null : id;
-    renderCards(filtered());
-    drawMap(false);
-    if (activeId && scrollToCard !== false) cardsGrid.scrollIntoView({behavior:"smooth",block:"start"});
+  function focusPersona(id,scrollToCard){
+    activeId=id;const list=filtered(),index=list.findIndex(p=>p.id===id);if(index<0){activeId=null;return;}
+    visibleCount=Math.max(visibleCount,index+1);renderCards(list);drawMap(false);
+    if(scrollToCard!==false)document.getElementById('patient-'+id)?.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'nearest'});
+    else ensureLeafletMap().focus(id);
   }
+  function renderActiveFilters(){
+    const labels={tipo:'Dependencia',subtipo:'Modalidad',cred:'Equipo',provincia:'Servicio',comuna:'Comuna',etario:'Edad',centro:'APS',search:'Búsqueda'};
+    const active=Object.entries(state).filter(([k,v])=>v&&v!=='todas');
+    const host=document.getElementById('activeFilters');host.innerHTML=active.length?'<span>Filtros activos:</span>'+active.map(([k,v])=>`<button type="button" data-remove-filter="${k}" aria-label="Quitar filtro ${htmlSafe(labels[k])}">${htmlSafe(labels[k])}: ${htmlSafe(v)} <span aria-hidden="true">×</span></button>`).join(''):'<span>Todos los registros autorizados · Sin filtros</span>';
+    host.querySelectorAll('button').forEach(b=>b.onclick=()=>{const key=b.dataset.removeFilter;state[key]=key==='search'?'':'todas';if(key==='tipo'){state.subtipo='todas';state.cred='todas';}if(key==='subtipo')state.cred='todas';searchInput.value=state.search;activeId=null;visibleCount=PAGE;populateComunas();render();});
+  }
+  document.addEventListener('click',e=>{if(!e.target.closest('#charts')||e.target.closest('button,select,summary,details,table,.viz-mark,.viz-legend,.viz-tools'))return;if(Object.values(state).some(v=>v&&v!=='todas')&&!window.getSelection()?.toString().trim())resetFiltersBtn.click();},true);
 
   function updateChipStates(){
     tipoChips.querySelectorAll(".chip").forEach(b=>b.setAttribute("aria-pressed", b.dataset.val===state.tipo ? "true":"false"));
   }
 
   function render(){
+    document.getElementById("subtipoFilter").hidden=state.tipo!=="Solo electrodependiente";
+    if(state.tipo!=="Solo electrodependiente") state.subtipo="todas";
+    subtipoSelect.value=state.subtipo;
     actualizarEquipos();
+    comunaSelect.value=state.comuna;etarioSelect.value=state.etario;provinciaSelect.value=state.provincia;centroSelect.value=state.centro;
     updateChipStates();
     const list = filtered();
     document.getElementById("resultsNote").textContent = Math.min(visibleCount,list.length) + " de " + list.length + " filtrados (" + PERSONAS.length + " en total)";
+    renderActiveFilters();
     renderKpis(list);
+    renderDashboard(list);
     renderCards(list);
     drawMap();
   }
@@ -750,23 +851,35 @@ const CENTROS = [{"id": "124010", "nombre": "Actividades gestionadas por la Dire
   function clasificacion(value){ const key=normalizarEncabezado(value); return key==="adulto"?"Adulto":["nino","nina"].includes(key)?"Niño":value; }
   function coordenada(value, limite){ if(!String(value).trim()) return null; const n=Number(String(value).replace(",",".")); return Number.isFinite(n)&&Math.abs(n)<=limite?n:null; }
   function normalizarEquipo(value){
-    const nombres = {cilindro:"Cilindro",termo:"Termo",concentrador:"Concentrador",ventiladormecanico:"Ventilador mecánico"};
+    const nombres = {cilindro:"Cilindro",termo:"Termo",concentrador:"Concentrador",ventiladormecanico:"Ventilador mecánico",ventiladormecanicoinvasivo:"Ventilador mecánico invasivo"};
     return nombres[normalizarEncabezado(value)] || String(value || "").trim() || "Sin información";
   }
   function clasificarDependencia(value,equipo){
     const key=normalizarEncabezado(value);
+    if(/^electrodependientes?con(oxigenoterapia|ventilacionmecanica)$/.test(key)) return "Solo electrodependiente";
     if(!key) return tipoEquipo(equipo);
     if(["oxigenodependiente","oxigenodependientes","oxigenodependencia","solooxigenodependiente","oxigeno","oxi"].includes(key)) return "Solo oxigenodependiente";
     if(["electrodependiente","electrodependientes","electrodependencia","soloelectrodependiente","electro"].includes(key)) return "Solo electrodependiente";
     return "Sin clasificar";
   }
+  function subtipoDependencia(tipo,equipo){
+    if(tipo!=="Solo electrodependiente") return "";
+    if(equipo==="Concentrador") return "oxigenoterapia";
+    if(["Ventilador mecánico","Ventilador mecánico invasivo"].includes(equipo)) return "ventilacion";
+    return "sin_especificar";
+  }
+  function etiquetaDependencia(p){
+    if(p.tipo==="Solo electrodependiente" && p.subtipo==="oxigenoterapia") return "Electrodependientes con oxigenoterapia";
+    if(p.tipo==="Solo electrodependiente" && p.subtipo==="ventilacion") return "Electrodependientes con ventilación mecánica";
+    return TIPO_LABEL[p.tipo] || p.tipo;
+  }
   function tipoEquipo(equipo){
     if (["Cilindro","Termo"].includes(equipo)) return "Solo oxigenodependiente";
-    if (["Concentrador","Ventilador mecánico"].includes(equipo)) return "Solo electrodependiente";
+    if (["Concentrador","Ventilador mecánico","Ventilador mecánico invasivo"].includes(equipo)) return "Solo electrodependiente";
     return "Sin clasificar";
   }
   function actualizarEquipos(){
-    const pool=state.tipo==="todas"?PERSONAS:PERSONAS.filter(p=>p.tipo===state.tipo);
+    const pool=PERSONAS.filter(p=>(state.tipo==="todas"||p.tipo===state.tipo)&&(state.subtipo==="todas"||p.subtipo===state.subtipo));
     const disponibles=[...new Set(pool.map(p=>p.equipo))].sort();
     if(!disponibles.includes(state.cred)) state.cred="todas";
     credSelect.innerHTML="";
@@ -775,55 +888,43 @@ const CENTROS = [{"id": "124010", "nombre": "Actividades gestionadas por la Dire
     });
     credSelect.value=state.cred;
   }
+  let demoRows=[];
+  window.DemoRecords={get:()=>demoRows.map(r=>({...r})),set:rows=>cargarRegistros(rows,{name:"Prueba temporal"})};
   function cargarRegistros(rows, archivo){
+    demoRows=rows.map(r=>({...r}));
     PERSONAS = rows.filter(row => Object.values(row).some(value => String(value ?? "").trim())).map((row, index) => {
       const edad = valorFila(row,"edad");
       const equipo = normalizarEquipo(valorFila(row,"equipo","equipamiento"));
       const dependencia = valorFila(row,"dependencia","tipodependencia","tipo");
       const tipo = clasificarDependencia(dependencia,equipo);
       const electro = tipo === "Solo electrodependiente", oxi = tipo === "Solo oxigenodependiente";
-      return { servicio:valorFila(row,"serviciodesalud","servicio"), rut:valorFila(row,"rut"), dv:valorFila(row,"digitoverificador","dv").toUpperCase(), nombre:valorFila(row,"nombreapellido","nombre","nombres"), flujo:valorFila(row,"flujolm","flujo"), horas:valorFila(row,"horas"), direccion:valorFila(row,"direccion"), observacion:valorFila(row,"observacion","observaciones"), telefono:valorFila(row,"numerotelefono","telefono"), id:valorFila(row,"rut","id","identificador","codigo","folio") || `REG_${String(index+1).padStart(4,"0")}`, edad:edad || null, sexo:valorFila(row,"sexo","genero") || "Sin información", ge:clasificacion(valorFila(row,"adultonino","grupoetario","ge")) || grupoEtario(edad), geo:index, area:valorFila(row,"area","zonageografica") || "Sin información", comuna:valorFila(row,"comuna") || "Sin información", provincia:valorFila(row,"provincia") || "Sin información", electro, oxi, tipo, dependencia, equipo, respaldo:valorFila(row,"respaldo","respaldoelectrico") || "Sin información", autonomia:valorFila(row,"autonomia","autonomiah") || null, cuidador:valorFila(row,"cuidador") || "Sin información", credencial:valorFila(row,"credencial","estadocredencial") || "Sin información", centro:valorFila(row,"establecimientoaps","centro","establecimiento","centrosalud") || "Sin información", lat:coordenada(valorFila(row,"lat","latitud"),90), lon:coordenada(valorFila(row,"lon","lng","longitud","longitude"),180), geocalidad:valorFila(row,"geocalidad","referenciaubicacion") || "Sin información" };
+      return { servicio:valorFila(row,"serviciodesalud","servicio"), rut:valorFila(row,"rut"), dv:valorFila(row,"digitoverificador","dv").toUpperCase(), nombre:valorFila(row,"nombreapellido","nombre","nombres"), flujo:valorFila(row,"flujolm","flujo"), horas:valorFila(row,"horas"), direccion:valorFila(row,"direccion"), observacion:valorFila(row,"observacion","observaciones"), telefono:valorFila(row,"numerotelefono","telefono"), id:valorFila(row,"id") || valorFila(row,"rut","identificador","codigo","folio") || `REG_${String(index+1).padStart(4,"0")}`, edad:edad || null, sexo:valorFila(row,"sexo","genero") || "Sin información", ge:clasificacion(valorFila(row,"adultonino","grupoetario","ge")) || grupoEtario(edad), geo:index, area:valorFila(row,"area","zonageografica") || "Sin información", comuna:valorFila(row,"comuna") || "Sin información", provincia:valorFila(row,"provincia") || "Sin información", electro, oxi, tipo, subtipo:subtipoDependencia(tipo,equipo), dependencia, equipo, respaldo:valorFila(row,"respaldo","respaldoelectrico") || "Sin información", autonomia:valorFila(row,"autonomia","autonomiah") || null, cuidador:valorFila(row,"cuidador") || "Sin información", credencial:valorFila(row,"credencial","estadocredencial") || "Sin información", centro:valorFila(row,"establecimientoaps","centro","establecimiento","centrosalud") || "Sin información", lat:coordenada(valorFila(row,"lat","latitud"),90), lon:coordenada(valorFila(row,"lon","lng","longitud","longitude"),180), geocalidad:valorFila(row,"geocalidad","referenciaubicacion") || "Sin información" };
     });
     const opciones = (select, values, todas) => { select.innerHTML=""; const primera=document.createElement("option"); primera.value="todas"; primera.textContent=todas; select.appendChild(primera); [...new Set(values.filter(Boolean))].sort().forEach(value=>{ const option=document.createElement("option"); option.value=value; option.textContent=value; select.appendChild(option); }); };
     opciones(credSelect, PERSONAS.map(p=>p.equipo), "Todas"); opciones(provinciaSelect, PERSONAS.map(p=>p.servicio), "Todas"); opciones(etarioSelect, PERSONAS.map(p=>p.ge), "Todos");
     opciones(centroSelect, PERSONAS.map(p=>p.centro), "Todos");
     document.getElementById("servicioFilter").hidden = new Set(PERSONAS.map(p=>p.servicio).filter(Boolean)).size <= 1;
-    searchInput.value=""; state = { tipo:"todas", cred:"todas", provincia:"todas", comuna:"todas", etario:"todas", centro:"todas", search:"" }; visibleCount=PAGE; activeId=null; populateComunas(); render();
+    searchInput.value=""; state = { tipo:"todas", subtipo:"todas", cred:"todas", provincia:"todas", comuna:"todas", etario:"todas", centro:"todas", search:"" }; visibleCount=PAGE; activeId=null; populateComunas(); render();
     document.getElementById("loadNote").textContent = `${archivo.name}: ${PERSONAS.length} registros cargados localmente.`;
   }
-  document.getElementById("fileInput").addEventListener("change", event => {
-    const input=event.target, archivo=input.files[0];
-    if(!archivo) return;
-    if(typeof XLSX === "undefined"){
-      alert("No se cargó la biblioteca para leer Excel/CSV. Verifique la conexión a Internet y recargue el visor.");
-      input.value=""; return;
-    }
-    const lector=new FileReader();
-    lector.onerror=()=>{alert("No fue posible acceder al archivo. Compruebe que esté disponible en este equipo.");input.value="";};
-    lector.onload=load=>{
-      let rows;
-      try {
-        const libro=XLSX.read(load.target.result,{type:archivo.name.toLowerCase().endsWith(".csv")?"string":"array"});
-        const hoja=libro.Sheets[libro.SheetNames[0]];
-        if(!hoja) throw new Error("El archivo no contiene una hoja de datos.");
-        rows=XLSX.utils.sheet_to_json(hoja,{defval:""});
-      } catch(error){
-        alert("No fue posible leer el Excel/CSV. Compruebe el formato y la primera hoja del archivo.");
-        input.value="";return;
-      }
-      try { cargarRegistros(rows,archivo); }
-      catch(error){ alert("El archivo se leyó, pero ocurrió un error al mostrar los registros. Detalle: " + error.message); }
-      finally { input.value=""; }
-    };
-    archivo.name.toLowerCase().endsWith(".csv")?lector.readAsText(archivo,"UTF-8"):lector.readAsArrayBuffer(archivo);
+  document.getElementById('exportCsvBtn').hidden=true;
+  document.getElementById('clearLoaded').onclick=()=>{cargarRegistros([],{name:'Carga vaciada'});document.getElementById('loadNote').textContent='Sin datos cargados. Puede seleccionar otro archivo.';window.dispatchEvent(new Event('demo-loaded'));};
+  document.getElementById('fileInput').addEventListener('change',async event=>{
+    const input=event.target,file=input.files[0];if(!file)return;
+    try{
+      const book=XLSX.read(await file.arrayBuffer(),{type:'array'});
+      const sheet=book.Sheets[book.SheetNames[0]];if(!sheet)throw Error('Sin hoja');
+      const rows=XLSX.utils.sheet_to_json(sheet,{defval:''});
+      if(!rows.length)throw Error('Sin registros');
+      const keys=Object.keys(rows[0]).map(normalizarEncabezado);
+      if(!keys.includes('equipo')||!keys.includes('dependencia'))throw Error('Cabeceras');
+      cargarRegistros(rows.map((r,i)=>({...r,id:'PRUEBA_'+(i+1)})),{name:'Archivo de prueba'});window.dispatchEvent(new Event('demo-loaded'));
+    }catch(e){document.getElementById('loadNote').textContent='No se pudo cargar. Revise la primera hoja y las columnas Dependencia y Equipo. La carga anterior se conserva si no se pudo leer el archivo.';}
+    finally{input.value='';}
   });
+  window.addEventListener('pageshow',e=>{if(e.persisted)location.reload();});
   render();
 })();
 </script>
-</body>
+<script src="visor_prueba_assets/demo-access.js"></script></body>
 </html>
-
-
-
-
-
